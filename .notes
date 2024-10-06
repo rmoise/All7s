@@ -1,0 +1,9 @@
+music & video allows for new content 
+downloadable images on about page 
+on music & video page - video: plays, music=image that turns over & turns to a player 
+shadow/smoke on scroll 
+scroll to center of page -- animation where stak image 'comes into focus' by the image on top with lower opacity moves into position (or does it fade as the page scrolls) at top of page as it fades + smoke effect 
+
+stak page animation effect: it slides into position (at the top of page) and then the page scrolls
+p5 can go in front, as long as it doesn't go up to the menu 
+choose minor fonts 

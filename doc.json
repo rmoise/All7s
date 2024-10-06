@@ -1,0 +1,26 @@
+ {
+    "_createdAt": "2022-11-01T04:59:32Z",
+    "_id": "35b2d00c-42f8-4eb9-a8f5-4bdc420402d4",
+    "_rev": "KF0KuhCyo0ViTwHBI3zySv",
+    "_type": "about",
+    "_updatedAt": "2022-11-08T09:05:45Z",
+    "body": [
+      {
+        "_key": "9c818fcc2a0b",
+        "_type": "block",
+        "children": [
+          {
+            "_key": "9efa1d462b7e0",
+            "_type": "span",
+            "marks": [],
+            "text": "All7z 7777777 IS A BRAND FOR MUSIC 7777777 MERCH 7777777 AND MORE. 7777777 PRESS KIT HERE."
+          }
+        ],
+        "markDefs": [],
+        "style": "normal"
+      }
+    ],
+    "title": "OG - ABOUT"
+  }
+  
+  
