@@ -1,53 +1,65 @@
 import { client, urlFor } from '../../lib/client'
+import post from '../../sanity_staksite/schemas/post'
 import { PortableText } from '@portabletext/react'
 import { useState, useEffect } from 'react'
 import imageUrlBuilder from '@sanity/image-url'
 
+// const bodyImageComponent = {
+
+// }
+
 const components = {
     types: {
-        image: ({ value }) => {
-            if (!value?.asset) return null;
-            return <img className="mt-8" src={urlFor(value.asset).url()} alt="Body Image" />;
-        }
+        image:({value}) => <img className="mt-8" src={urlFor(value.asset)}/>,
+
     },
+
     block: {
-        h1: ({ children }) => <h1 className="text-7xl">{children}</h1>,
-        normal: ({ children }) => <p className="text-xl mt-12">{children}</p>
+        h1:({children}) => <h1 className="text-7xl">{children}</h1>,
+        normal: ({children})=><p className="text-xl mt-12">{children}</p>
     }
+
 }
 
-const Details = ({ title, body, mainImage }) => {
-    const [imageUrl, setImageUrl] = useState('');
-    const [mounted, setMounted] = useState(false);
+const Details = ({title, body, mainImage }) => {
+    const [imageUrl, setImageUrl] = useState ('');
+
+
+useEffect(()=>{
+    const builder=imageUrlBuilder({client})
+    function urlFor() {
+        return builder.image()
+    }
+})
 
     useEffect(() => {
-        setMounted(true);
-    }, []);
+    const imgBuilder = imageUrlBuilder({
+        projectId: '1gxdk71x',
+        dataset: 'production'
+         })
 
-    useEffect(() => {
-        if (mainImage) {
-            const builder = imageUrlBuilder({ projectId: '1gxdk71x', dataset: 'production' });
-            setImageUrl(builder.image(mainImage).url());
-        }
+    setImageUrl(imgBuilder.image(mainImage))
     }, [mainImage]);
 
     return (
-        <div className="flex flex-col items-center mt-28">
-            <h1 className="text-9xl font-Headline">{title}</h1>
-            {mounted && mainImage && imageUrl && (
-                <img className="mt-8 w-3/4" src={imageUrl} alt="Main Image" />
-            )}
-            {mounted && body && (
-                <div className="w-3/4 text-xl mt-28 px-12">
-                    <PortableText value={body} components={components} />
-                </div>
-            )}
+       <div className="flex flex-col items-center mt-28">
+        <h1 className="text-9xl font-Headline">{title}</h1>
+        {imageUrl && <img className="mt-8 w-3/4" src={imageUrl}/>}
+        <p className="w-3/4 text-xl mt-28 px-12"></p>
+
+       <div className="mt-20 portable-text flex flex-col gap-y-30">
+        <PortableText value={body} components={components}/>
         </div>
-    );
+
+        {/* {console.log(bodyImageComponent.types.image)} */}
+
+     </div>
+    )
 }
 
-export const getServerSideProps = async (pageContext) => {
-    const pageSlug = pageContext.query.id;
+export const getServerSideProps = async pageContext => {
+    const pageSlug = pageContext.query.id
+    // console.log(pageSlug)
 
     if (!pageSlug) {
         return {
@@ -56,23 +68,28 @@ export const getServerSideProps = async (pageContext) => {
     }
 
     const query = encodeURIComponent(`*[ _type == "post" && slug.current == "${pageSlug}" ]`);
-    const url = `https://1gxdk71x.api.sanity.io/v1/data/query/production?query=${query}`;
+    const url=`https://1gxdk71x.api.sanity.io/v1/data/query/production?query=${query}`
     const result = await fetch(url).then(res => res.json());
-    const post = result.result[0];
+    const post = result.result[0]
+    // console.log(post)
+
 
     if (!post) {
         return {
             notFound: true
         }
+
     } else {
         return {
-            props: {
-                title: post.title,
-                body: post.body,
-                mainImage: post.mainImage,
+        props: {
+            title: post.title,
+            body: post.body,
+            mainImage: post.mainImage,
             }
         }
     }
 }
+
+
 
 export default Details;

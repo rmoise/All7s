@@ -1,87 +1,117 @@
-<!DOCTYPE html>
-<form name="stak-contact" method="POST" class="mt-9 grid grid-cols-1 gap-y-6 sm:grid-cols-2 sm:gap-x-8" netlify="true">
+<form name="stak-contact" method="POST" className="mt-9 grid grid-cols-1 gap-y-6 sm:grid-cols-2 sm:gap-x-8" data-netlify="true"></form>
   <input type="hidden" name="form-name" value="stak-contact" />
 
     <div>
-      <label for="first-name" class="block text-sm font-medium text-gray-700">
+      <label htmlFor="first-name" className="block text-sm font-medium text-gray-700">
         FIRST
       </label>
-      <div class="mt-1">
+      <div className="mt-1">
         <input
           type="text"
           name="site-first-name"
           id="first-name"
-          class="block w-full rounded-md border-gray-300 shadow-sm focus:border-grape-500 focus:ring-grape-500 sm:text-sm"
+          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-grape-500 focus:ring-grape-500 sm:text-sm"
         />
       </div>
     </div>
     <div id="mario">
-      <label for="last-name" class="block text-sm font-medium text-gray-700">
+      <label htmlFor="last-name" className="block text-sm font-medium text-gray-700">
         LAST
       </label>
-      <div class="mt-1">
+      <div className="mt-1">
         <input
           type="text"
           name="site-last-name"
           id="last-name"
-          autocomplete="family-name"
-          class="block w-full rounded-md border-gray-300 shadow-sm focus:border-grape-500 focus:ring-grape-500 sm:text-sm"
+          autoComplete="family-name"
+          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-grape-500 focus:ring-grape-500 sm:text-sm"
         />
       </div>
     </div>
-    <div class="sm:col-span-2">
-      <label for="email" class="block text-sm font-medium text-gray-700">
+    <div className="sm:col-span-2">
+      <label htmlFor="email" className="block text-sm font-medium text-gray-700">
         EMAIL
       </label>
-      <div class="mt-1">
+      <div className="mt-1">
         <input
           id="email"
           name="site-email"
           type="email"
-          autocomplete="email"
-          class="block w-full rounded-md border-gray-300 shadow-sm focus:border-grape-500 focus:ring-grape-500 sm:text-sm"
+          autoComplete="email"
+          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-grape-500 focus:ring-grape-500 sm:text-sm"
+        />
+      </div>
+    </div>
+    <div>
+      <label htmlFor="city" className="block text-sm font-medium text-gray-700">
+        CITY
+      </label>
+      <div className="mt-1">
+        <input
+          type="text"
+          name="site-city"
+          id="city"
+          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-grape-500 focus:ring-grape-500 sm:text-sm"
+        />
+      </div>
+    </div>
+    <div>
+      <label htmlFor="state" className="block text-sm font-medium text-gray-700">
+        STATE
+      </label>
+      <div className="mt-1">
+        <input
+          type="text"
+          name="site-state"
+          id="state"
+          autoComplete="state"
+          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-grape-500 focus:ring-grape-500 sm:text-sm"
         />
       </div>
     </div>
 
-    <div class="flex items-end">
-      <label for="newsletter" class="block text-sm font-medium text-gray-700">
+
+
+    <div className="flex items-end">
+      <label htmlFor="email" className="block text-sm font-medium text-gray-700">
        TUNE IN, TURN ON DROP US YOUR INFO!
       </label>
-      <div class="mt-1">
+      <div className="mt-1">
+
         <input
           id="newsletter"
           name="agree-newsletter"
           type="checkbox"
-          class="rounded-md border-gray-300 shadow-sm focus:border-grape-500 focus:ring-grape-500"
+          autoComplete=""
+          className="rounded-md border-gray-300 shadow-sm focus:border-grape-500 focus:ring-grape-500 "
         />
       </div>
     </div>
 
-    <div class="sm:col-span-2">
-      <div class="flex justify-between">
-        <label for="how-can-we-help" class="block text-sm font-medium text-gray-700">
+    <div className="sm:col-span-2">
+      <div className="flex justify-between">
+        <label htmlFor="how-can-we-help" className="block text-sm font-medium text-gray-700">
          LEAVE A COMMENT
         </label>
-        <span id="how-can-we-help-description" class="text-sm text-gray-500">
-          MAX. 500 CHARACTERS
+        <span id="how-can-we-help-description" className="text-sm text-gray-500">
+          MX. 500 CHARACTERS
         </span>
       </div>
-      <div class="mt-1">
+      <div className="mt-1">
         <textarea
           id="how-can-we-help"
           name="how-can-we-help"
           aria-describedby="how-can-we-help-description"
-          rows="4"
-          class="block w-full rounded-md border-gray-300 shadow-sm sm:text-sm"></textarea>
+          rows={4}
+          className="block w-full rounded-md border-gray-300 shadow-sm sm:text-sm"></textarea>
       </div>
     </div>
 
 
-    <div class="text-right sm:col-span-2">
+    <div className="text-right sm:col-span-2">
       <button
         type="submit"
-        class="inline-flex justify-center rounded-md border border-transparent bg-grape-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-grape-700 focus:outline-none focus:ring-2 focus:ring-grape-500 focus:ring-offset-2"
+        className="inline-flex justify-center rounded-md border border-transparent bg-grape-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-grape-700 focus:outline-none focus:ring-2 focus:ring-grape-500 focus:ring-offset-2"
       >
         SUBMIT
       </button>

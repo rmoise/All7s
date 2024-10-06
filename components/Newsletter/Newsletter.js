@@ -1,3 +1,17 @@
+/*
+  This example requires some changes to your config:
+
+  ```
+  // tailwind.config.js
+  module.exports = {
+    // ...
+    plugins: [
+      // ...
+      require('@tailwindcss/forms'),
+    ],
+  }
+  ```
+*/
 export default function Newsletter() {
     return (
       <div className="bg-black h-max mb-28">
@@ -11,8 +25,11 @@ export default function Newsletter() {
             </p>
           </div>
           <div className="mt-8 lg:mt-0 lg:ml-8">
-            <form name="newsletter" method="POST" className="sm:flex" data-netlify="true">
+            <form name="newsletter" method="POST" className="sm:flex" netlify>
               <input type="hidden" name="form-name" value="newsletter"/>
+              {/* <label htmlFor="email-address" className="">
+                Email address
+              </label> */}
               <input
                 id="email-address"
                 name="email-address"
@@ -31,8 +48,15 @@ export default function Newsletter() {
                 </button>
               </div>
             </form>
+            {/* <p className="mt-3 text-sm text-gray-300">
+              We care about the protection of your data. Read our{' '}
+              <a href="#" className="font-medium text-white underline">
+                Privacy Policy.
+              </a>
+            </p> */}
           </div>
         </div>
       </div>
-    );
-}
+    )
+  }
+  
