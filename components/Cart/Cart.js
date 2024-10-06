@@ -53,8 +53,7 @@ const Cart = () => {
           {cartItems.length >= 1 &&
             cartItems.map((item) => (
               <div className="product" key={item._id}>
-                <img src={urlFor(item?.image[0]) || '/images/placeholder.png'}
-                     className="cart-product-image mt-12" alt={item.name} />
+                <img src={urlFor(item?.image[0]) || '/images/placeholder.png'} className="cart-product-image mt-12" alt={item.name} />
                 <div className="text-black">
                   <div className="flex flex-col">
                     <h5>{item.name}</h5>

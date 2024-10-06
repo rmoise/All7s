@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import getYouTubeID from 'get-youtube-id';
 import anime from 'animejs';
 import { urlFor } from '../../lib/client';
+import DOMPurify from 'dompurify';
 
 export default function MusicAndVideo(videoPreLink) {
   const soundCloudMusic = videoPreLink?.videoPreLink?.musicLink?.map((album) => {
@@ -42,8 +43,8 @@ export default function MusicAndVideo(videoPreLink) {
             <img
               className="bg-black/20 z-30 mb-8 w-1/2 h-auto transition-all hover:border-red-400/50 hover:scale-75 border-black/50 border-8 rounded-lg ease-linear duration-500"
               id="album"
-              src={urlFor(album?.image)}
-              alt={album?.description}
+              src={urlFor(album?.image) || '/images/placeholder.png'}
+              alt={album?.description || 'Album image'}
             />
           </div>
         </div>
@@ -55,7 +56,7 @@ export default function MusicAndVideo(videoPreLink) {
     setPlay(
       <div className="flex items-center justify-center flex-wrap gap-x-12">
         {soundCloudMusic.map((album, index) => (
-          <div key={index} className="album div w-96 mb-12" dangerouslySetInnerHTML={{ __html: album?.body?.[0]?.children?.[0]?.text || 'No content' }}></div>
+          <div key={index} className="album div w-96 mb-12" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(album?.body?.[0]?.children?.[0]?.text || 'No content') }}></div>
         ))}
       </div>
     );
@@ -85,6 +86,10 @@ export default function MusicAndVideo(videoPreLink) {
   useEffect(() => {
     if (!/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
       const video = document.querySelector('.vid');
+      if (!video) {
+        console.warn("Video element not found, skipping IntersectionObserver setup.");
+        return;
+      }
       let playState = null;
       const observer = new IntersectionObserver((entries) => {
         entries.forEach((entry) => {
@@ -98,6 +103,7 @@ export default function MusicAndVideo(videoPreLink) {
         });
       });
       observer.observe(video);
+
       const onVisibilityChange = () => {
         if (document.hidden || !playState) {
           video.pause();
@@ -106,18 +112,19 @@ export default function MusicAndVideo(videoPreLink) {
         }
       };
       document.addEventListener('visibilitychange', onVisibilityChange);
+
+      return () => {
+        observer.disconnect();
+        document.removeEventListener('visibilitychange', onVisibilityChange);
+      };
     }
-  });
+  }, []);
 
   const [mobile, setMobile] = useState(false);
 
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth < 768) {
-        setMobile(true);
-      } else {
-        setMobile(false);
-      }
+      setMobile(window.innerWidth < 768);
     };
     handleResize();
     window.addEventListener('resize', handleResize);
