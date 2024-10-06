@@ -31,14 +31,14 @@ export default function MusicAndVideo(videoPreLink) {
       default:
         break;
     }
-   return album;
+    return album;
   }).sort((a, b) => a.order - b.order);
 
   const [play, setPlay] = useState(
     <div className="text-9xl flex flex-col justify-center items-center">
       {soundCloudMusic.map((album, index) => (
         <div
-          key={index}
+          key={index} // Ensure a unique key for each child
           className="album-div flex flex-col items-center justify-center"
           onClick={() => handleClick()}
         >
@@ -70,29 +70,30 @@ export default function MusicAndVideo(videoPreLink) {
       </div>
     );
 
+    // Trigger an animation when an album is clicked
     anime({
       targets: '.album-div',
-      translateX: [-10, 0],
+      translateX: [-10, 0], // Move elements slightly left, then back to the original position
       duration: 2000,
       easing: 'easeOutQuad',
     });
   }
 
+  // Animation effect on scrolling for album divs
   useEffect(() => {
     let elementClicked = false;
 
     anime({
       targets: '.album-div',
-      translateX: elementClicked ? -20 : 0,
+      translateX: elementClicked ? -20 : 0, // Scroll animation for album div
       duration: 4000,
       easing: 'easeOutQuad',
     });
-  }, [play]);
+  }, [play]); // Re-run the animation every time `play` state changes
 
-  // Safe check for `videoPreLink.videoPreLink.heroLink`
-  const getUrl = videoPreLink.videoPreLink?.heroLink?.[0]?.url;
-  const id = getUrl ? getYouTubeID(getUrl) : null;
-  const url = id ? `https://www.youtube.com/embed/${id}` : '';
+  const getUrl = videoPreLink.videoPreLink.heroLink[0].url;
+  const id = getYouTubeID(getUrl);
+  const url = `https://www.youtube.com/embed/${id}`;
 
   useEffect(() => {
     if (!/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
@@ -155,22 +156,18 @@ export default function MusicAndVideo(videoPreLink) {
               LOOK
             </p>
           </div>
-          {url ? (
-            <iframe
-              className="w-3/4 h-screen border-8 border-black/50"
-              src={url}
-              title="YouTube video player"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              modestbranding="1"
-              frameBorder="0"
-            />
-          ) : (
-            <p>No video available</p>
-          )}
+          <iframe
+            className="w-3/4 h-screen border-8 border-black/50"
+            src={url}
+            title="YouTube video player"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            modestbranding="1"
+            frameBorder="0"
+          />
         </div>
 
         <div className="w-screen grid-container px-12 mt-12 sm:grid sm:grid-cols-2 sm:gap-x-6 sm:gap-y-12 sm:space-y-0 lg:grid-cols-2 z-50">
-          {videoPreLink.videoPreLink?.vidLink?.map((video, i) => {
+          {videoPreLink.videoPreLink.vidLink.map((video, i) => {
             const getVid = video.url;
             const id2 = getYouTubeID(getVid);
             const url2 = `https://www.youtube.com/embed/${id2}`;

@@ -1,10 +1,16 @@
-import { CameraIcon } from '@heroicons/react/20/solid'
-import Image from 'next/image'
-import {PortableText} from '@portabletext/react'
-import about from '../../sanity_staksite/schemas/about'
-import doc from '../../doc.json'
+import { useEffect } from 'react';  // Import useEffect
+import { CameraIcon } from '@heroicons/react/20/solid';
+import Image from 'next/image';
+import { PortableText } from '@portabletext/react';
+import about from '../../sanity_staksite/schemas/about';
+import doc from '../../doc.json';
 
 export default function About({ sectionCopy }) {
+  // Log the sectionCopy to check its structure
+  useEffect(() => {
+    console.log('sectionCopy data:', sectionCopy);
+  }, [sectionCopy]);
+
   return (
     <>
       <div className="absolute w-screen h-screen z-20 lg:text-[5.25rem] text-[2.5rem]" id="about">
@@ -28,5 +34,5 @@ export default function About({ sectionCopy }) {
         />
       </div>
     </>
-  )
+  );
 }

@@ -11,47 +11,41 @@ import { client } from '../lib/client'
 import { PortableText } from '@portabletext/react'
 import Newsletter from '../components/Newsletter'
 
-const Home=(clientFetch) =>{
-
+const Home = ({ aboutCopy, videoData }) => {
   return (
-
     <div className={StylesObj.container}>
-      {/* {console.log(JSON.stringify(aboutCopy.aboutCopy, null, 2))} */}
       <Splash/>
       <Newsletter/>
-       <About sectionCopy={clientFetch.clientFetch}/>
+      {/* Pass the fetched 'about' data to the About component */}
+      <About sectionCopy={aboutCopy} />
+      {/* Pass all video-related data to MusicAndVideo */}
+      <MusicAndVideo videoPreLink={videoData} />
 
-       <MusicAndVideo videoPreLink={clientFetch}/>
-      {/* {console.log(clientFetch.vidLink)} */}
-
-      {/* <Featured/>
-      <Contact/>  */}
-
+      {/* Uncomment if you want to use these sections */}
+      {/* <Featured />
+      <Contact /> */}
     </div>
   )
 }
 
-
-
-
 export default Home;
 
-export const getServerSideProps = async() => {
-  const query = "*[_type == 'about']" //is this the wrong query & why I am not getting the expected results? the return differs from a simple copy of the json
-  const clientFetch = await client.fetch(query)
-  const query2 = "*[_type == 'videoLink']"
-  const query3 = "*[_type == 'heroVideo']"
-  const vidLink = await client.fetch(query2)
-  const heroLink = await client.fetch(query3)
-  const query4 = "*[_type == 'musicLink']"
-  const musicLink = await client.fetch(query4)
+export const getServerSideProps = async () => {
+  // Fetch 'about' content
+  const aboutQuery = "*[_type == 'about']";
+  const aboutCopy = await client.fetch(aboutQuery);
+
+  // Fetch video-related content
+  const videoData = {
+    vidLink: await client.fetch("*[_type == 'videoLink']"),
+    heroLink: await client.fetch("*[_type == 'heroVideo']"),
+    musicLink: await client.fetch("*[_type == 'musicLink']"),
+  };
 
   return {
-   props: {
-      clientFetch,
-      vidLink,
-      heroLink,
-      musicLink
-      }
+    props: {
+      aboutCopy,  // Pass the 'about' data
+      videoData   // Combine all video-related data in one object
     }
-  }
+  };
+};

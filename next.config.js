@@ -3,16 +3,14 @@ const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
   images: {
-    remotePatterns:[
+    remotePatterns: [
       {
-        protocol:'https',
-        hostname:'ik.imagekit.io',
+        protocol: 'https',
+        hostname: 'ik.imagekit.io',
+        pathname: '/**', // This ensures that all paths under this domain are allowed
       }
     ],
-    domains: ['ik.imagekit.io'],
+  },
+};
 
-
-  }
-}
-
-module.exports = nextConfig
+module.exports = nextConfig;
