@@ -6,38 +6,18 @@
 [context.production]
   command = "npm run build"
   publish = ".next"
-  [context.production.environment]
-    NEXT_PUBLIC_SANITY_DATASET = "$NEXT_PUBLIC_SANITY_DATASET"
-    NEXT_PUBLIC_SANITY_TOKEN = "$NEXT_PUBLIC_SANITY_TOKEN"
-    NEXT_PUBLIC_SANITY_PROJECT_ID = "$NEXT_PUBLIC_SANITY_PROJECT_ID"
-    NEXT_PUBLIC_ENVIRONMENT = "production"
 
 # Staging-specific settings
 [context.staging]
   command = "npm run build"
   publish = ".next"
-  [context.staging.environment]
-    NEXT_PUBLIC_SANITY_DATASET = "$NEXT_PUBLIC_SANITY_DATASET"
-    NEXT_STAGING_SANITY_TOKEN = "$NEXT_STAGING_SANITY_TOKEN"
-    NEXT_PUBLIC_SANITY_PROJECT_ID = "$NEXT_PUBLIC_SANITY_PROJECT_ID"
-    NEXT_PUBLIC_ENVIRONMENT = "staging"
 
 # Deploy previews (pull request builds)
 [context.deploy-preview]
   command = "npm run build"
   publish = ".next"
-  [context.deploy-preview.environment]
-    NEXT_PUBLIC_SANITY_DATASET = "$NEXT_PUBLIC_SANITY_DATASET"
-    NEXT_STAGING_SANITY_TOKEN = "$NEXT_STAGING_SANITY_TOKEN"
-    NEXT_PUBLIC_SANITY_PROJECT_ID = "$NEXT_PUBLIC_SANITY_PROJECT_ID"
-    NEXT_PUBLIC_ENVIRONMENT = "deploy-preview"
 
 # Branch-specific deploy settings
 [context.branch-deploy]
   command = "npm run build"
   publish = ".next"
-  [context.branch-deploy.environment]
-    NEXT_PUBLIC_SANITY_DATASET = "$NEXT_PUBLIC_SANITY_DATASET"
-    NEXT_STAGING_SANITY_TOKEN = "$NEXT_STAGING_SANITY_TOKEN"
-    NEXT_PUBLIC_SANITY_PROJECT_ID = "$NEXT_PUBLIC_SANITY_PROJECT_ID"
-    NEXT_PUBLIC_ENVIRONMENT = "branch-deploy"
