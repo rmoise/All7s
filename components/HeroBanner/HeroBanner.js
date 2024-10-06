@@ -1,12 +1,11 @@
 import React from 'react';
-import { urlFor } from '../../lib/client';
 
 const HeroBanner = ({ heroBanner }) => {
   return (
     <div className="mt-28">
       <div className="flex flex-col items-center ">
         <p className="beats-solo font-Headline ml-0">{heroBanner?.smallText}</p>
-        <h3 className="font-Headline md:text-5xl sm:text-2xl">{heroBanner?.midText}</h3>
+        <h3 className="font-Headline md:text-5xl sm:text-2xl">{heroBanner?.midText}</p>
         <h1 className="font-Headline md:text-8xl sm:text-5xl">{heroBanner?.largeText1}</h1>
       </div>
     </div>

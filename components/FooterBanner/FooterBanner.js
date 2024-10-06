@@ -1,5 +1,4 @@
 import React from 'react';
-import { urlFor } from '../../lib/client';
 
 const FooterBanner = ({ footerBanner: { largeText1, largeText2 } }) => {
   return (
