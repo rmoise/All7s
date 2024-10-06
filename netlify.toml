@@ -1,0 +1,39 @@
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+# Production-specific settings
+[context.production]
+  command = "npm run build"
+  publish = ".next"
+  [context.production.environment]
+    NEXT_PUBLIC_SANITY_DATASET = "production"
+    NEXT_PUBLIC_SANITY_TOKEN = "your-production-token"
+    NEXT_PUBLIC_SANITY_PROJECT_ID = "your-project-id"
+
+# Staging-specific settings
+[context.staging]
+  command = "npm run build"
+  publish = ".next"
+  [context.staging.environment]
+    NEXT_PUBLIC_SANITY_DATASET = "staging"
+    NEXT_STAGING_SANITY_TOKEN = "your-staging-token"
+    NEXT_PUBLIC_SANITY_PROJECT_ID = "your-project-id"
+
+# Deploy previews (pull request builds)
+[context.deploy-preview]
+  command = "npm run build"
+  publish = ".next"
+  [context.deploy-preview.environment]
+    NEXT_PUBLIC_SANITY_DATASET = "staging"
+    NEXT_STAGING_SANITY_TOKEN = "your-staging-token"
+    NEXT_PUBLIC_SANITY_PROJECT_ID = "your-project-id"
+
+# Branch-specific deploy settings
+[context.branch-deploy]
+  command = "npm run build"
+  publish = ".next"
+  [context.branch-deploy.environment]
+    NEXT_PUBLIC_SANITY_DATASET = "staging"
+    NEXT_STAGING_SANITY_TOKEN = "your-staging-token"
+    NEXT_PUBLIC_SANITY_PROJECT_ID = "your-project-id"
