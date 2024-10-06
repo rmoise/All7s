@@ -1,26 +1,26 @@
 {
   "components/Sketch/CustomP5Canvas.js -> p5": {
-    "id": 4035,
+    "id": "components/Sketch/CustomP5Canvas.js -> p5",
     "files": [
-      "static/chunks/0df2afdd.794053f482ca9b57.js"
+      "static/chunks/node_modules_p5_lib_p5_min_js.js"
     ]
   },
   "components/Sketch/Sketch.js -> p5": {
-    "id": 4035,
+    "id": "components/Sketch/Sketch.js -> p5",
     "files": [
-      "static/chunks/0df2afdd.794053f482ca9b57.js"
+      "static/chunks/node_modules_p5_lib_p5_min_js.js"
     ]
   },
   "node_modules/@sanity/client/dist/index.browser.js -> ./_chunks-es/stegaEncodeSourceMap.js": {
-    "id": 4235,
+    "id": "node_modules/@sanity/client/dist/index.browser.js -> ./_chunks-es/stegaEncodeSourceMap.js",
     "files": [
-      "static/chunks/235.18710479bf676a60.js"
+      "static/chunks/node_modules_sanity_client_dist__chunks-es_stegaEncodeSourceMap_js.js"
     ]
   },
   "node_modules/@sanity/client/dist/index.browser.js -> @sanity/eventsource": {
-    "id": 3699,
+    "id": "node_modules/@sanity/client/dist/index.browser.js -> @sanity/eventsource",
     "files": [
-      "static/chunks/699.8e27f84a7e722e76.js"
+      "static/chunks/node_modules_sanity_eventsource_browser_js.js"
     ]
   }
 }
