@@ -10,6 +10,7 @@
     NEXT_PUBLIC_SANITY_DATASET = "production"
     NEXT_PUBLIC_SANITY_TOKEN = "your-production-token"
     NEXT_PUBLIC_SANITY_PROJECT_ID = "your-project-id"
+    NEXT_PUBLIC_ENVIRONMENT = "production"
 
 # Staging-specific settings
 [context.staging]
@@ -19,6 +20,7 @@
     NEXT_PUBLIC_SANITY_DATASET = "staging"
     NEXT_STAGING_SANITY_TOKEN = "your-staging-token"
     NEXT_PUBLIC_SANITY_PROJECT_ID = "your-project-id"
+    NEXT_PUBLIC_ENVIRONMENT = "staging"
 
 # Deploy previews (pull request builds)
 [context.deploy-preview]
@@ -28,6 +30,7 @@
     NEXT_PUBLIC_SANITY_DATASET = "staging"
     NEXT_STAGING_SANITY_TOKEN = "your-staging-token"
     NEXT_PUBLIC_SANITY_PROJECT_ID = "your-project-id"
+    NEXT_PUBLIC_ENVIRONMENT = "deploy-preview"
 
 # Branch-specific deploy settings
 [context.branch-deploy]
@@ -37,3 +40,4 @@
     NEXT_PUBLIC_SANITY_DATASET = "staging"
     NEXT_STAGING_SANITY_TOKEN = "your-staging-token"
     NEXT_PUBLIC_SANITY_PROJECT_ID = "your-project-id"
+    NEXT_PUBLIC_ENVIRONMENT = "branch-deploy"
