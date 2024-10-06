@@ -6,6 +6,11 @@ import Link from 'next/link';
 import toast from 'react-hot-toast';
 
 const ProductDetails = ({ product, products }) => {
+  // Add a fallback if the product object is undefined
+  if (!product) {
+    return <div>Product not found</div>;
+  }
+
   const { image, name, details, price } = product;
   const [index, setIndex] = useState(0);
   const { decQty, incQty, qty, onAdd, setShowCart, cartCheck, setCartCheck } = useStateContext();
