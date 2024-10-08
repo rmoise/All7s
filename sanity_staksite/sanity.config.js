@@ -4,15 +4,22 @@ import { visionTool } from '@sanity/vision';
 import schemas from './schemas/schema';
 import DatasetSwitcher from './components/DatasetSwitcher.jsx';
 
-// Default to staging dataset unless explicitly specified in localStorage
-const defaultDataset = localStorage.getItem('sanityDataset') || 'staging';
+// Helper function to get the default dataset
+const getDefaultDataset = () => {
+  // Check if running in the browser
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem('sanityDataset') || 'staging'; // Use localStorage for dataset on the client side
+  }
+  // Fallback to default on the server side
+  return process.env.SANITY_STUDIO_DATASET || 'staging';
+};
 
 export default defineConfig({
   name: 'default',
   title: 'Your Project Title',
 
   projectId: process.env.SANITY_STUDIO_PROJECT_ID,
-  dataset: defaultDataset, // Use dataset from localStorage or default to staging
+  dataset: getDefaultDataset(), // Dynamically get dataset
 
   schema: {
     types: schemas, // Include your schema types here
