@@ -1,41 +1,59 @@
-import Head from 'next/head'
-import Image from 'next/image'
-import styles from '../styles/Home.module.css'
-import StylesObj from '../components/styles.js'
-import Splash from '../components/Splash'
-import About from '../components/About'
-import Featured from '../components/Featured'
-import Contact from '../components/Contact'
-import MusicAndVideo from '../components/MusicAndVideo'
-import { client } from '../lib/client'
-import { PortableText } from '@portabletext/react'
-import Newsletter from '../components/Newsletter'
+import { createClient } from '@sanity/client';
+import imageUrlBuilder from '@sanity/image-url';
+import Head from 'next/head';
+import Image from 'next/image';
+import StylesObj from '../components/styles.js';
+import Splash from '../components/Splash';
+import About from '../components/About';
+import MusicAndVideo from '../components/MusicAndVideo';
+import Newsletter from '../components/Newsletter';
+
+const getSanityConfig = () => {
+  let dataset, token;
+
+  if (typeof window !== 'undefined') {
+    // Client-side logic
+    dataset = localStorage.getItem('sanityDataset') || process.env.NEXT_PUBLIC_SANITY_DATASET || 'production';
+    token = localStorage.getItem('sanityToken') || process.env.NEXT_PUBLIC_SANITY_TOKEN;
+  } else {
+    // Server-side logic
+    dataset = process.env.NEXT_PUBLIC_SANITY_DATASET || 'production';
+    token = process.env.NEXT_PUBLIC_SANITY_TOKEN || null;
+  }
+
+  return {
+    projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID,
+    dataset,
+    apiVersion: '2022-10-29',
+    useCdn: dataset === 'production', // Only use CDN for production
+    token,
+  };
+};
+
+// Create the Sanity client using the configuration
+export const client = createClient(getSanityConfig());
+
+// Helper function to build image URLs
+export const urlFor = (source) => imageUrlBuilder(client).image(source);
 
 const Home = ({ aboutCopy, videoData }) => {
   return (
     <div className={StylesObj.container}>
-      <Splash/>
-      <Newsletter/>
-      {/* Pass the fetched 'about' data to the About component */}
+      <Splash />
+      <Newsletter />
       <About sectionCopy={aboutCopy} />
-      {/* Pass all video-related data to MusicAndVideo */}
       <MusicAndVideo videoPreLink={videoData} />
-
-      {/* Uncomment if you want to use these sections */}
-      {/* <Featured />
-      <Contact /> */}
     </div>
-  )
-}
+  );
+};
 
 export default Home;
 
 export const getServerSideProps = async () => {
-  // Fetch 'about' content
+  const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET || 'production';
   const aboutQuery = "*[_type == 'about']";
   const aboutCopy = await client.fetch(aboutQuery);
 
-  // Fetch video-related content
   const videoData = {
     vidLink: await client.fetch("*[_type == 'videoLink']"),
     heroLink: await client.fetch("*[_type == 'heroVideo']"),
@@ -44,8 +62,8 @@ export const getServerSideProps = async () => {
 
   return {
     props: {
-      aboutCopy,  // Pass the 'about' data
-      videoData   // Combine all video-related data in one object
-    }
+      aboutCopy,
+      videoData,
+    },
   };
 };

@@ -21,7 +21,7 @@ export default {
       name: 'author',
       title: 'Author',
       type: 'reference',
-      to: {type: 'author'},
+      to: { type: 'author' },
     },
     {
       name: 'mainImage',
@@ -31,37 +31,17 @@ export default {
         hotspot: true,
       },
     },
-
     {
       name: 'categories',
       title: 'Categories',
       type: 'array',
-      of: [{type: 'reference', to: {type: 'category'}}],
+      of: [{ type: 'reference', to: { type: 'category' } }],
     },
-   
     {
       name: 'body',
       title: 'Body',
       type: 'blockContent',
     },
-
-    // {
-    //   title: "Color List",
-    //   description: "Pick a color",
-    //   name: "colors",
-    //   type: "color", // required
-    //   options: {
-    //     list: [
-    //       { title: "Red", value: "#f16d70" },
-    //       { title: "Teal", value: "#88c6db" },
-    //       { title: "Purple", value: "#aca0cc" },
-    //       { title: "Green", value: "#bdcdcb" },
-    //       { title: "White", value: "white" }
-    //     ]
-    //   }
-    // },
-
-
   ],
 
   preview: {
@@ -71,10 +51,11 @@ export default {
       media: 'mainImage',
     },
     prepare(selection) {
-      const {author} = selection
-      return Object.assign({}, selection, {
+      const { author } = selection;
+      return {
+        ...selection,
         subtitle: author && `by ${author}`,
-      })
+      };
     },
   },
-}
+};

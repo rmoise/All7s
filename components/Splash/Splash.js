@@ -16,11 +16,11 @@ import Image from 'next/image'
 
 export default function Splash() {
 // const [mobile, setMobile] = useState(false)
-  
+
 //   useEffect(()=>{
 //     if (window.innerWidth < 768){ setMobile(true)}
 //   },[])
-  
+
 //   if (!mobile){
 //   useEffect(()=> {
 //     window.scrollTo(95, 95)
@@ -40,15 +40,15 @@ export default function Splash() {
 // }
 
 
- 
 
 
 
 
 
-    
-   
-   
+
+
+
+
 
   // const styles = {
   //   width:  500,
@@ -71,7 +71,7 @@ export default function Splash() {
           }
         }
         />
-      
+
       {/* { !mobile &&
         <div className="bg-black absolute top-5 w-screen h-screen opacity-40 sm:bg-cover" id="focus-mask">
         <Image
@@ -87,10 +87,10 @@ export default function Splash() {
         </div>
     } */}
         {/* <div className="w-full h-1/4 absolute -bottom-40 bg-gradient-to-b from-green-500/0 to-[#f1831b]">
-         
-          
+
+
         </div> */}
-        
+
       </div>
   )
 }

@@ -4,8 +4,7 @@ import anime from 'animejs';
 import { urlFor } from '../../lib/client';
 
 export default function MusicAndVideo(videoPreLink) {
-  // Preprocess albums before the rendering
-  const soundCloudMusic = videoPreLink.videoPreLink.musicLink.map((album) => {
+  const soundCloudMusic = videoPreLink?.videoPreLink?.musicLink?.map((album) => {
     switch (album.description) {
       case 'ALLOW IT, BELIEVE IT (2022)':
         album.order = 1;
@@ -32,13 +31,13 @@ export default function MusicAndVideo(videoPreLink) {
         break;
     }
     return album;
-  }).sort((a, b) => a.order - b.order);
+  })?.sort((a, b) => a.order - b.order) || [];
 
   const [play, setPlay] = useState(
     <div className="text-9xl flex flex-col justify-center items-center">
       {soundCloudMusic.map((album, index) => (
         <div
-          key={index} // Ensure a unique key for each child
+          key={album?.id || index}
           className="album-div flex flex-col items-center justify-center"
           onClick={() => handleClick()}
         >
@@ -49,7 +48,7 @@ export default function MusicAndVideo(videoPreLink) {
             <img
               className="bg-black/20 z-30 mb-8 w-1/2 h-auto transition-all hover:border-red-400/50 hover:scale-75 border-black/50 border-8 rounded-lg ease-linear duration-500"
               id="album"
-              src={urlFor(album.image)}
+              src={urlFor(album?.image)}
             />
           </div>
         </div>
@@ -62,69 +61,69 @@ export default function MusicAndVideo(videoPreLink) {
       <div className="flex items-center justify-center flex-wrap gap-x-12">
         {soundCloudMusic.map((album, index) => (
           <div
-            key={index}
+            key={album?.id || index}
             className="album div w-96 mb-12"
-            dangerouslySetInnerHTML={{ __html: album.body[0].children[0].text }}
+            dangerouslySetInnerHTML={{ __html: album?.body?.[0]?.children?.[0]?.text || '' }}
           ></div>
         ))}
       </div>
     );
 
-    // Trigger an animation when an album is clicked
     anime({
       targets: '.album-div',
-      translateX: [-10, 0], // Move elements slightly left, then back to the original position
+      translateX: [-10, 0],
       duration: 2000,
       easing: 'easeOutQuad',
     });
   }
 
-  // Animation effect on scrolling for album divs
   useEffect(() => {
     let elementClicked = false;
 
     anime({
       targets: '.album-div',
-      translateX: elementClicked ? -20 : 0, // Scroll animation for album div
+      translateX: elementClicked ? -20 : 0,
       duration: 4000,
       easing: 'easeOutQuad',
     });
-  }, [play]); // Re-run the animation every time `play` state changes
+  }, [play]);
 
-  const getUrl = videoPreLink.videoPreLink.heroLink[0].url;
+  const getUrl = videoPreLink?.videoPreLink?.heroLink?.[0]?.url || '';
   const id = getYouTubeID(getUrl);
-  const url = `https://www.youtube.com/embed/${id}`;
+  const url = id ? `https://www.youtube.com/embed/${id}` : null;
 
   useEffect(() => {
     if (!/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
       const video = document.querySelector('.vid');
-      let playState = null;
+      if (video) {
+        let playState = null;
 
-      const observer = new IntersectionObserver((entries) => {
-        entries.forEach((entry) => {
-          if (!entry.isIntersecting) {
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach((entry) => {
+            if (!entry.isIntersecting) {
+              video.pause();
+              playState = false;
+            } else {
+              video.play();
+              playState = true;
+            }
+          });
+        });
+
+        observer.observe(video);
+
+        const onVisibilityChange = () => {
+          if (document.hidden || !playState) {
             video.pause();
-            playState = false;
           } else {
             video.play();
-            playState = true;
           }
-        });
-      });
+        };
 
-      observer.observe(video);
-
-      const onVisibilityChange = () => {
-        if (document.hidden || !playState) {
-          video.pause();
-        } else {
-          video.play();
-        }
-      };
-
-      document.addEventListener('visibilitychange', onVisibilityChange);
+        document.addEventListener('visibilitychange', onVisibilityChange);
+      }
     }
-  });
+  }, []);
 
   useEffect(() => {
     if (window.innerWidth < 768) {
@@ -156,22 +155,26 @@ export default function MusicAndVideo(videoPreLink) {
               LOOK
             </p>
           </div>
-          <iframe
-            className="w-3/4 h-screen border-8 border-black/50"
-            src={url}
-            title="YouTube video player"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            modestbranding="1"
-            frameBorder="0"
-          />
+          {url ? (
+            <iframe
+              className="w-3/4 h-screen border-8 border-black/50"
+              src={url}
+              title="YouTube video player"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              modestbranding="1"
+              frameBorder="0"
+            />
+          ) : (
+            <p>No video available</p>
+          )}
         </div>
 
         <div className="w-screen grid-container px-12 mt-12 sm:grid sm:grid-cols-2 sm:gap-x-6 sm:gap-y-12 sm:space-y-0 lg:grid-cols-2 z-50">
-          {videoPreLink.videoPreLink.vidLink.map((video, i) => {
-            const getVid = video.url;
+          {videoPreLink?.videoPreLink?.vidLink?.map((video, i) => {
+            const getVid = video?.url || '';
             const id2 = getYouTubeID(getVid);
-            const url2 = `https://www.youtube.com/embed/${id2}`;
-            return (
+            const url2 = id2 ? `https://www.youtube.com/embed/${id2}` : null;
+            return url2 ? (
               <iframe
                 key={i}
                 className="w-full z-50 border-8 border-black/50 rounded-lg"
@@ -181,6 +184,8 @@ export default function MusicAndVideo(videoPreLink) {
                 alt=""
                 allow="fullscreen"
               />
+            ) : (
+              <p key={i}>No video available</p>
             );
           })}
         </div>
