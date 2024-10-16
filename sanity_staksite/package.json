@@ -9,21 +9,30 @@
   "scripts": {
     "start": "sanity start",
     "build": "sanity build",
-    "lint": "eslint . --cache --fix"
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
+    "postinstall": "npm uninstall @rushstack/eslint-patch --no-save"
   },
   "keywords": [
     "sanity"
   ],
   "dependencies": {
-    "@portabletext/react": "^2.0.0",
+    "@heroicons/react": "^2.1.5",
+    "@portabletext/react": "^3.1.0",
     "@sanity/cli": "^3.60.0",
     "@sanity/client": "^6.22.1",
-    "@sanity/color-input": "^4.0.1",
-    "@sanity/eslint-config-studio": "^4.0.0",
+    "@sanity/color-input": "^3.1.2",
     "@sanity/image-url": "^1.0.2",
+    "@sanity/ui": "^2.0.0",
     "@sanity/vision": "^3.60.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
+    "autoprefixer": "^10.4.20",
+    "caniuse-lite": "^1.0.30001668",
+    "eslint-config-next": "^13.0.0",
+    "lodash": "^4.17.21",
+    "patch-package": "^8.0.0",
+    "postcss": "^8.4.47",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-icons": "^5.3.0",
     "sanity": "^3.60.0",
     "styled-components": "^6.1.13"
   },
@@ -35,9 +44,15 @@
     "@babel/core": "^7.25.7",
     "@babel/eslint-parser": "^7.25.7",
     "@babel/preset-env": "^7.25.7",
+    "@typescript-eslint/eslint-plugin": "^8.8.1",
+    "@typescript-eslint/parser": "^8.8.1",
     "eslint": "^8.57.1",
+    "eslint-config-prettier": "^9.1.0",
     "eslint-define-config": "^2.1.0",
-    "eslint-plugin-react": "^7.37.1"
+    "eslint-plugin-jsx-a11y": "^6.10.0",
+    "eslint-plugin-react": "^7.37.1",
+    "prettier": "^3.3.3",
+    "typescript": "^5.1.6"
   },
   "babel": {
     "presets": [

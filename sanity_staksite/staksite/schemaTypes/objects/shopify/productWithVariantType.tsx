@@ -105,12 +105,12 @@ export const productWithVariantType = defineField({
 
       const productVariantTitle = variantTitle || defaultVariantTitle
 
-      let previewTitle = [title]
+      const previewTitle = [title]
       if (productVariantTitle) {
         previewTitle.push(`[${productVariantTitle}]`)
       }
 
-      let description = [
+      const description = [
         variantCount ? pluralize('variant', variantCount, true) : 'No variants',
         optionCount ? pluralize('option', optionCount, true) : 'No options',
       ]

@@ -2,7 +2,8 @@ import { Fragment, useState } from 'react'
 import { Popover, Transition } from '@headlessui/react'
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
 import { ArrowTopRightOnSquareIcon } from '@heroicons/react/20/solid'
-import Sketch from '../Sketch'
+import Sketch from '../media/Sketch'
+
 
 const navigation = [
   { name: 'Work', href: '#' },

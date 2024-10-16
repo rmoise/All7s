@@ -1,69 +1,152 @@
-import { createClient } from '@sanity/client';
-import imageUrlBuilder from '@sanity/image-url';
-import Head from 'next/head';
-import Image from 'next/image';
-import StylesObj from '../components/styles.js';
-import Splash from '../components/Splash';
-import About from '../components/About';
-import MusicAndVideo from '../components/MusicAndVideo';
-import Newsletter from '../components/Newsletter';
+// pages/index.js
+import React from 'react';
+import { client } from '../lib/client';
+import Splash from '../components/home/Splash';
+import About from '../components/home/About';
+import MusicAndVideo from '../components/Music/MusicAndVideo';
+import Newsletter from '../components/common/Newsletter';
+import HeroBanner from '../components/home/HeroBanner';
+import SEO from '../components/common/SEO';
 
-const getSanityConfig = () => {
-  let dataset, token;
+const Home = ({ contentBlocks, metaTitle, metaDescription, siteSettings, navbarData }) => {
+  const pageTitle =
+    metaTitle
+      ? `${metaTitle} - ${siteSettings?.title || ''}`.trim()
+      : siteSettings?.seo?.metaTitle
+      ? `${siteSettings.seo.metaTitle} - ${siteSettings?.title || ''}`.trim()
+      : siteSettings?.title || 'Default Site Title';
 
-  if (typeof window !== 'undefined') {
-    // Client-side logic
-    dataset = localStorage.getItem('sanityDataset') || process.env.NEXT_PUBLIC_SANITY_DATASET || 'production';
-    token = localStorage.getItem('sanityToken') || process.env.NEXT_PUBLIC_SANITY_TOKEN;
-  } else {
-    // Server-side logic
-    dataset = process.env.NEXT_PUBLIC_SANITY_DATASET || 'production';
-    token = process.env.NEXT_PUBLIC_SANITY_TOKEN || null;
-  }
-
-  return {
-    projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID,
-    dataset,
-    apiVersion: '2022-10-29',
-    useCdn: dataset === 'production', // Only use CDN for production
-    token,
-  };
-};
-
-// Create the Sanity client using the configuration
-export const client = createClient(getSanityConfig());
-
-// Helper function to build image URLs
-export const urlFor = (source) => imageUrlBuilder(client).image(source);
-
-const Home = ({ aboutCopy, videoData }) => {
   return (
-    <div className={StylesObj.container}>
-      <Splash />
-      <Newsletter />
-      <About sectionCopy={aboutCopy} />
-      <MusicAndVideo videoPreLink={videoData} />
-    </div>
+    <>
+      <SEO
+        title={pageTitle}
+        description={
+          metaDescription ||
+          siteSettings?.seo?.metaDescription ||
+          'Explore the All 7z Brand. West Coast Music, Lifestyle, Merch'
+        }
+        faviconUrl={siteSettings?.favicon?.asset?.url}
+        openGraphImageUrl={siteSettings?.seo?.openGraphImage?.asset?.url}
+        siteName={siteSettings?.title}
+      />
+
+      {contentBlocks.map((block, index) => {
+        switch (block._type) {
+          case 'splash':
+            return <Splash key={block._key || index} {...block} />;
+          case 'about':
+            return <About key={block._key || index} aboutData={block} />;
+          case 'musicAndVideo':
+            return <MusicAndVideo key={block._key || index} videoPreLink={block} />;
+          case 'newsletter':
+            return <Newsletter key={block._key || index} newsletter={block} />;
+          case 'heroBanner':
+            return <HeroBanner key={block._key || index} heroBanner={block} />;
+          default:
+            return null;
+        }
+      })}
+    </>
   );
 };
 
 export default Home;
 
 export const getServerSideProps = async () => {
-  const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET || 'production';
-  const aboutQuery = "*[_type == 'about']";
-  const aboutCopy = await client.fetch(aboutQuery);
+  const homePageQuery = `*[_type == "homePage"][0]{
+    title,
+    metaTitle,
+    metaDescription,
+    contentBlocks[] {
+      ...,
+      _type == 'musicAndVideo' => {
+        lookTitle,
+        listenTitle,
+        vidLink,
+        heroLink,
+        backgroundVideo {
+          backgroundVideoUrl,
+          backgroundVideoFile {
+            asset-> {
+              _ref,
+              url
+            }
+          }
+        },
+        musicLink[]-> {
+          title,
+          description,
+           artist,
+          embedUrl,
+          customImage {
+            asset-> {
+              url
+            }
+          },
+          songs[] {
+            trackTitle,
+            file {
+              asset-> {
+                url
+              }
+            }
+          }
+        }
+      }
+    }
+  }`;
 
-  const videoData = {
-    vidLink: await client.fetch("*[_type == 'videoLink']"),
-    heroLink: await client.fetch("*[_type == 'heroVideo']"),
-    musicLink: await client.fetch("*[_type == 'musicLink']"),
-  };
+  const siteSettingsQuery = `*[_type == "siteSettings"][0]{
+    title,
+    favicon {
+      asset-> {
+        url,
+        _updatedAt
+      }
+    },
+    seo {
+      metaTitle,
+      metaDescription,
+      openGraphImage {
+        asset-> {
+          url
+        }
+      }
+    }
+  }`;
+
+  const navbarQuery = `*[_type == "navbar"][0]{
+    logo,
+    navigationLinks,
+    backgroundColor,
+    isTransparent
+  }`;
+
+  const homePage = await client.fetch(homePageQuery);
+  const siteSettings = await client.fetch(siteSettingsQuery);
+  const navbarData = await client.fetch(navbarQuery);
+
+  // Extracting the LOOK and LISTEN titles to be added to navigationLinks
+  let updatedNavbarData = { ...navbarData };
+  updatedNavbarData.navigationLinks = [...(navbarData.navigationLinks || [])];
+
+  const musicAndVideoSection = homePage?.contentBlocks?.find(block => block._type === 'musicAndVideo');
+  if (musicAndVideoSection) {
+    if (musicAndVideoSection.lookTitle) {
+      updatedNavbarData.navigationLinks.push({ name: musicAndVideoSection.lookTitle, href: '/#LOOK' });
+    }
+    if (musicAndVideoSection.listenTitle) {
+      updatedNavbarData.navigationLinks.push({ name: musicAndVideoSection.listenTitle, href: '/#LISTEN' });
+    }
+  }
 
   return {
     props: {
-      aboutCopy,
-      videoData,
+      contentBlocks: homePage?.contentBlocks || [],
+      metaTitle: homePage?.metaTitle || null,
+      metaDescription: homePage?.metaDescription || null,
+      siteSettings: siteSettings || null,
+      navbarData: updatedNavbarData || null,
     },
   };
 };

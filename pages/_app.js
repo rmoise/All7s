@@ -1,36 +1,112 @@
-import React from 'react'
-import '../styles/globals.css'
-import Head from 'next/head'
-import Layout from '../components/layout'
-import { StateContext } from '../context/StateContext'
-import { Toaster } from 'react-hot-toast'
-function MyApp({ Component, pageProps }) {
+// pages/_app.js
+import React from 'react';
+import '../styles/globals.css';
+import Layout from '../components/Layout';
+import { StateContext } from '../context/StateContext';
+import { Toaster } from 'react-hot-toast';
+import SEO from '../components/common/SEO';
+import { NavbarProvider } from '../context/NavbarContext.jsx';
+
+// Font Awesome setup
+import { config } from '@fortawesome/fontawesome-svg-core';
+import '@fortawesome/fontawesome-svg-core/styles.css'; // Import the CSS
+config.autoAddCss = false; // Prevent Font Awesome from adding the CSS automatically
+
+function MyApp({ Component, pageProps, footerData, siteSettings, navbarData }) {
+  if (!siteSettings) {
+    return <div>Loading site settings...</div>;
+  }
 
   return (
-  <>
-  <Head>
-    <title>ALL7Z</title>
-    {/* <link rel="icon" href="../public/white-rabbit-cursor.png" /> */}
-    <link rel="icon" href="/favicon.ico" />
-       <meta name="viewport" content="initial-scale=1.0, width=device-width" />
-       <meta name="description" content="All 7z: Music, Lifestyle, Merch" />
-       <meta name="robots" content="index, follow"/>
-       <meta property="og:title" content="All 7z: Music, Lifestyle, Merch"/>
-       <meta property="og:site_name" content="All 7z Brand"/>
-       <meta property="og:description" content="Explore the All 7z Brand. West Coast Music, Lifestyle, Merch"/>
-       <meta property="twitter:title" content="All 7z: Music, Lifestyle, Merch"/>
-       <meta property="twitter:description" content="Explore the All 7z Brand. West Coast Music, Lifestyle, Merch"/>
-      
-  </Head>
+    <>
+      <SEO
+        title={pageProps?.metaTitle}
+        description={pageProps?.metaDescription || siteSettings?.seo?.metaDescription}
+        faviconUrl={siteSettings?.favicon?.asset?.url}
+        openGraphImageUrl={siteSettings?.seo?.openGraphImage?.asset?.url}
+        siteName={siteSettings?.title}
+      />
 
-  <StateContext>
-  <Layout>
-    <Toaster/>
-      <Component {...pageProps} />
-  </Layout>
-  </StateContext>
-  </>
-  )
+      <StateContext>
+        <NavbarProvider initialNavbarData={navbarData}>
+          <Layout footerData={footerData}>
+            <Toaster />
+            <Component {...pageProps} />
+          </Layout>
+        </NavbarProvider>
+      </StateContext>
+    </>
+  );
 }
 
-export default MyApp
+MyApp.getInitialProps = async () => {
+  // Fetch data for footer, navbar, and site settings
+  try {
+    const footerQuery = `*[_type == "footer"][0]{
+      copyrightText,
+      footerLinks[]{
+        text,
+        url
+      },
+      socialLinks[]{
+        platform,
+        url,
+        iconUrl
+      },
+      fontColor,
+      alignment
+    }`;
+
+    const navbarQuery = `*[_type == "navbar"][0]{
+      logo,
+      navigationLinks[]{
+        name,
+        href
+      },
+      backgroundColor,
+      isTransparent
+    }`;
+
+    const siteSettingsQuery = `*[_type == "siteSettings"][0]{
+      title,
+      favicon{
+        asset->{
+          url,
+          _updatedAt
+        }
+      },
+      seo{
+        metaTitle,
+        metaDescription,
+        openGraphImage{
+          asset->{
+            url
+          }
+        }
+      }
+    }`;
+
+    // Initialize the Sanity client
+    const createClient = require('@sanity/client').createClient;
+    const client = createClient({
+      projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID,
+      dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || 'production',
+      apiVersion: '2022-10-29',
+      useCdn: false,
+    });
+
+    // Fetch footer, navbar, and site settings concurrently
+    const [footerData, siteSettings, navbarData] = await Promise.all([
+      client.fetch(footerQuery),
+      client.fetch(siteSettingsQuery),
+      client.fetch(navbarQuery),
+    ]);
+
+    return { footerData, siteSettings, navbarData };
+  } catch (error) {
+    console.error("Error fetching global data:", error);
+    return { footerData: null, siteSettings: null, navbarData: null };
+  }
+};
+
+export default MyApp;

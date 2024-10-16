@@ -1,16 +1,15 @@
 import { defineConfig } from 'sanity';
 import { deskTool } from 'sanity/desk';
 import { visionTool } from '@sanity/vision';
+import { colorInput } from '@sanity/color-input';  // Import color input plugin
 import schemas from './schemas/schema';
 import DatasetSwitcher from './components/DatasetSwitcher.jsx';
 
 // Helper function to get the default dataset
 const getDefaultDataset = () => {
-  // Check if running in the browser
   if (typeof window !== 'undefined') {
-    return localStorage.getItem('sanityDataset') || 'staging'; // Use localStorage for dataset on the client side
+    return localStorage.getItem('sanityDataset') || 'staging';
   }
-  // Fallback to default on the server side
   return process.env.SANITY_STUDIO_DATASET || 'staging';
 };
 
@@ -19,10 +18,10 @@ export default defineConfig({
   title: 'Your Project Title',
 
   projectId: process.env.SANITY_STUDIO_PROJECT_ID,
-  dataset: getDefaultDataset(), // Dynamically get dataset
+  dataset: getDefaultDataset(),
 
   schema: {
-    types: schemas, // Include your schema types here
+    types: schemas,
   },
 
   plugins: [
@@ -42,6 +41,7 @@ export default defineConfig({
             ...S.documentTypeListItems(),
           ]),
     }),
-    visionTool(), // Optional: include visionTool if needed
+    visionTool(),
+    colorInput(),  // Add color input plugin here
   ],
 });

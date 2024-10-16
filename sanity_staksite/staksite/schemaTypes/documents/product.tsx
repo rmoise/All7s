@@ -100,7 +100,7 @@ export const productType = defineType({
       const optionCount = options?.length
       const variantCount = variants?.length
 
-      let description = [
+      const description = [
         variantCount ? pluralize('variant', variantCount, true) : 'No variants',
         optionCount ? pluralize('option', optionCount, true) : 'No options',
       ]

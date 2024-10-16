@@ -1,4 +1,3 @@
-
 /** @type {import('tailwindcss').Config} */
 const defaultTheme = require("tailwindcss/defaultTheme");
 
@@ -7,15 +6,22 @@ module.exports = {
     "./pages/**/*.{js,ts,jsx,tsx}",
     "./components/**/*.{js,ts,jsx,tsx}",
   ],
+  safelist: [
+    'justify-start',
+    'justify-center',
+    'justify-end',
+  ],
   theme: {
-    fontFamily: {
-      'Headline': ['roc-grotesk-wide', ...defaultTheme.fontFamily.sans],
+    extend: {
+      zIndex: {
+        '-10': '-10',
+        '-1': '-1',
+      },
+      fontFamily: {
+        Headline: ['roc-grotesk-wide', ...defaultTheme.fontFamily.sans],
+      },
     },
   },
-  variants:{
-    extend:{},
-  },
-  plugins: [
-
-  ],
+  plugins: [    require('@tailwindcss/aspect-ratio'),
+],
 };
