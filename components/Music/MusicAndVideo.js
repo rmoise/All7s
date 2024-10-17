@@ -190,6 +190,7 @@ export default function MusicAndVideo({ videoPreLink }) {
             muted
             autoPlay
             loop
+            playsInline
             controls={false}
           />
         </div>
