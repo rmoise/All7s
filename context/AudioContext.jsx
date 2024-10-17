@@ -8,7 +8,7 @@ const AudioContext = createContext();
 export const AudioProvider = ({ children }) => {
   const [currentHowl, setCurrentHowl] = useState(null);
   const [currentAlbumId, setCurrentAlbumId] = useState(null);
-  const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
+  const [currentTrackIndex, setCurrentTrackIndex] = useState(null); // Changed to null
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
 
@@ -17,9 +17,11 @@ export const AudioProvider = ({ children }) => {
 
     const update = () => {
       if (currentHowl && currentHowl.playing()) {
-        setCurrentTime(currentHowl.seek());
+        const seek = currentHowl.seek();
+        setCurrentTime(typeof seek === 'number' ? seek : 0);
         rafId = requestAnimationFrame(update);
       }
+      // Removed the else block to prevent resetting currentTime
     };
 
     if (currentHowl && currentHowl.playing()) {
@@ -33,57 +35,65 @@ export const AudioProvider = ({ children }) => {
     };
   }, [currentHowl, isPlaying]);
 
-  // Function to play a track
+  // Function to play or resume a track
   const playTrack = (url, albumId, trackIndex = 0) => {
-    // If a track is already playing, stop it
-    if (currentHowl) {
-      currentHowl.stop();
-      setCurrentHowl(null);
-      setCurrentAlbumId(null);
-      setIsPlaying(false);
-      setCurrentTime(0);
-      setCurrentTrackIndex(0);
-    }
-
-    // Create a new Howl instance for the new track
-    const newHowl = new Howl({
-      src: [url],
-      html5: true, // Ensures proper playback on mobile
-      preload: true,
-      onplay: () => {
+    // Check if the same track is already loaded
+    if (
+      currentHowl &&
+      currentAlbumId === albumId &&
+      currentTrackIndex === trackIndex
+    ) {
+      if (!isPlaying) {
+        currentHowl.play();
         setIsPlaying(true);
-        setCurrentAlbumId(albumId);
-        setCurrentTrackIndex(trackIndex);
-        requestAnimationFrame(updateTime);
-      },
-      onpause: () => {
-        setIsPlaying(false);
-      },
-      onstop: () => {
-        setIsPlaying(false);
-        setCurrentAlbumId(null);
-        setCurrentTime(0);
-        setCurrentTrackIndex(0);
-      },
-      onend: () => {
-        setIsPlaying(false);
-        setCurrentAlbumId(null);
-        setCurrentTime(0);
-        setCurrentTrackIndex(0);
-      },
-      onloaderror: (id, error) => {
-        console.error(`Error loading track: ${error}`);
-      },
-      onplayerror: (id, error) => {
-        console.error(`Error playing track: ${error}`);
-        newHowl.once('unlock', () => {
-          newHowl.play();
-        });
-      },
-    });
+      }
+      // If already playing, do nothing
+    } else {
+      // Stop any existing track
+      if (currentHowl) {
+        currentHowl.stop();
+      }
 
-    setCurrentHowl(newHowl);
-    newHowl.play();
+      // Create a new Howl instance for the new track
+      const newHowl = new Howl({
+        src: [url],
+        html5: true, // Ensures proper playback on mobile
+        preload: false, // Do not preload to save bandwidth
+        onplay: () => {
+          setIsPlaying(true);
+          setCurrentAlbumId(albumId);
+          setCurrentTrackIndex(trackIndex);
+          requestAnimationFrame(updateTime);
+        },
+        onpause: () => {
+          setIsPlaying(false);
+        },
+        onstop: () => {
+          setIsPlaying(false);
+          setCurrentAlbumId(null);
+          setCurrentTime(0); // Reset time to 0 when the track is stopped
+          setCurrentTrackIndex(null); // Changed to null
+        },
+        onend: () => {
+          setIsPlaying(false);
+          setCurrentAlbumId(null);
+          setCurrentTime(0); // Reset time to 0 when the track ends
+          setCurrentTrackIndex(null); // Changed to null
+        },
+        onloaderror: (id, error) => {
+          console.error(`Error loading track: ${error}`);
+        },
+        onplayerror: (id, error) => {
+          console.error(`Error playing track: ${error}`);
+          newHowl.once('unlock', () => {
+            newHowl.play();
+          });
+        },
+      });
+
+      setCurrentHowl(newHowl);
+      newHowl.play();
+    }
   };
 
   // Function to pause the current track
@@ -101,7 +111,7 @@ export const AudioProvider = ({ children }) => {
       setCurrentAlbumId(null);
       setIsPlaying(false);
       setCurrentTime(0);
-      setCurrentTrackIndex(0);
+      setCurrentTrackIndex(null);
     }
   };
 
@@ -116,7 +126,8 @@ export const AudioProvider = ({ children }) => {
   // Function to update current time
   const updateTime = () => {
     if (currentHowl && currentHowl.playing()) {
-      setCurrentTime(currentHowl.seek());
+      const seek = currentHowl.seek();
+      setCurrentTime(typeof seek === 'number' ? seek : 0);
       requestAnimationFrame(updateTime);
     }
   };

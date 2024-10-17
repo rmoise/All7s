@@ -1,3 +1,5 @@
+// schemas/album.js
+
 import { defineType } from 'sanity';
 
 export default defineType({
@@ -91,10 +93,16 @@ export default defineType({
               },
               description: 'Upload the audio file for this track.',
             },
+            {
+              name: 'duration',
+              title: 'Duration (seconds)',
+              type: 'number',
+              description: 'Duration of the track in seconds.',
+            },
           ],
         },
       ],
-      description: 'Upload individual song files for the release (optional). Each song can have its own title.',
+      description: 'Upload individual song files for the release (optional). Each song can have its own title and duration.',
     },
   ],
   preview: {

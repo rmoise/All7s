@@ -76,7 +76,7 @@ export const getServerSideProps = async () => {
         musicLink[]-> {
           title,
           description,
-           artist,
+          artist,
           embedUrl,
           customImage {
             asset-> {
@@ -85,11 +85,8 @@ export const getServerSideProps = async () => {
           },
           songs[] {
             trackTitle,
-            file {
-              asset-> {
-                url
-              }
-            }
+            "url": file.asset->url,
+            duration  // <-- Include this to fetch the song duration
           }
         }
       }
@@ -150,3 +147,4 @@ export const getServerSideProps = async () => {
     },
   };
 };
+
