@@ -192,6 +192,7 @@ export default function MusicAndVideo({ videoPreLink }) {
             loop
             playsInline
             controls={false}
+            preload="auto"
           />
         </div>
       )}
