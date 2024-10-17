@@ -6,11 +6,15 @@ export default async function handler(req, res) {
   }
 
   try {
+    console.log('Spotify Client ID:', process.env.SPOTIFY_CLIENT_ID);
+    console.log('Spotify Client Secret:', process.env.SPOTIFY_CLIENT_SECRET);
+
     const spotifyUrlMatch = url.match(/https:\/\/open\.spotify\.com\/embed\/album\/([a-zA-Z0-9]+)/);
     if (!spotifyUrlMatch) {
       throw new Error('Invalid Spotify URL');
     }
     const albumId = spotifyUrlMatch[1];
+    console.log('Album ID:', albumId);
 
     // Get Spotify access token
     const authResponse = await fetch('https://accounts.spotify.com/api/token', {
@@ -44,6 +48,9 @@ export default async function handler(req, res) {
 
     const albumData = await albumResponse.json();
     const highResImage = albumData.images.length ? albumData.images[0].url : '/images/placeholder.png';
+
+    // CORS Header
+    res.setHeader('Access-Control-Allow-Origin', '*');
 
     res.status(200).json({
       title: albumData.name,
