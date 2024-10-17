@@ -23,7 +23,8 @@ export default async function handler(req, res) {
     });
 
     if (!authResponse.ok) {
-      throw new Error('Failed to authenticate with Spotify');
+      const authError = await authResponse.text();
+      throw new Error(`Failed to authenticate with Spotify: ${authError}`);
     }
 
     const authData = await authResponse.json();
@@ -37,7 +38,8 @@ export default async function handler(req, res) {
     });
 
     if (!albumResponse.ok) {
-      throw new Error(`Failed to fetch album data: ${albumResponse.status} ${albumResponse.statusText}`);
+      const albumError = await albumResponse.text();
+      throw new Error(`Failed to fetch album data: ${albumResponse.status} ${albumResponse.statusText} - ${albumError}`);
     }
 
     const albumData = await albumResponse.json();
