@@ -1,4 +1,5 @@
 const fetch = require('node-fetch');
+const { getSpotifyAccessToken } = require('../../lib/spotify');
 
 exports.handler = async (event, context) => {
   const { url } = event.queryStringParameters;
@@ -20,26 +21,8 @@ exports.handler = async (event, context) => {
     }
     const albumId = spotifyUrlMatch[1];
 
-    // Get Spotify access token
-    const authResponse = await fetch('https://accounts.spotify.com/api/token', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        Authorization: `Basic ${Buffer.from(`${process.env.SPOTIFY_CLIENT_ID}:${process.env.SPOTIFY_CLIENT_SECRET}`).toString('base64')}`,
-      },
-      body: 'grant_type=client_credentials',
-    });
-
-    if (!authResponse.ok) {
-      const authError = await authResponse.text();
-      console.error('Spotify auth error:', authError);
-      return {
-        statusCode: 500,
-        body: JSON.stringify({ error: `Failed to authenticate with Spotify: ${authError}` }),
-      };
-    }
-
-    const { access_token: accessToken } = await authResponse.json();
+    // Get Spotify access token using the imported function
+    const accessToken = await getSpotifyAccessToken();
 
     // Fetch album data from Spotify API
     const albumResponse = await fetch(`https://api.spotify.com/v1/albums/${albumId}`, {

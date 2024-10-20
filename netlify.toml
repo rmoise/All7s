@@ -47,4 +47,4 @@
   included_files = ["lib/extractDurations.js"]
 
 [functions.spotify-metadata]
-  included_files = []
+  included_files = ["lib/spotify.js"]
