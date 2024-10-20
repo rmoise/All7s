@@ -178,7 +178,7 @@ export default function MusicAndVideo({ videoPreLink }) {
       let spotifyMetadata = {};
       if (spotifyUrls.length > 0) {
         try {
-          const response = await fetch('/api/fetchBatchSpotifyMetadata', {
+          const response = await fetch('/.netlify/functions/fetchBatchSpotifyMetadata', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ urls: spotifyUrls }),
