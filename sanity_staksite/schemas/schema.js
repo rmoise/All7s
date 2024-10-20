@@ -11,39 +11,38 @@ import heroVideo from './objects/heroVideo';
 import product from './documents/product';
 import banner from './modules/banner';
 import comments from './documents/comments';
-import footer from './documents/footer';         // Import Footer schema
-import heroBanner from './objects/heroBanner'; // Import HeroBanner schema
+import footer from './documents/footer';
+import heroBanner from './objects/heroBanner';
 import homePage from './documents/home';
-import newsletter from './objects/newsletter'; // Import Newsletter schema
+import newsletter from './objects/newsletter';
 import navbar from './documents/navbar';
-import siteSettings from './documents/settings'; // Import SiteSettings schema
+import siteSettings from './documents/settings';
 import contactPage from './documents/contactPage';
 import musicAndVideo from './objects/musicAndVideo';
 import album from './objects/album';
-import colorTheme from './documents/colorTheme'; // or wherever it's located
-import page from './documents/page' // or wherever it's located
-import collection from './documents/collection' // or wherever it's located
+import colorTheme from './documents/colorTheme';
+import page from './documents/page';
+import collection from './documents/collection';
 
-// Export all schemas
-export const schemaTypes = [
+export default [
+  blockContent,
+  category,
   post,
   author,
-  category,
   about,
   youtube,
-  blockContent,
   musicLink,
   videoLink,
   heroVideo,
-  banner,
   product,
+  banner,
   comments,
-  footer,          // Add Footer schema
-  heroBanner,      // Add HeroBanner schema
-  homePage,        // Add home page schema
+  footer,
+  heroBanner,
+  homePage,
   newsletter,
-  navbar,          // Add Navbar schema
-  siteSettings,    // Add SiteSettings schema for favicon and SEO
+  navbar,
+  siteSettings,
   contactPage,
   musicAndVideo,
   album,

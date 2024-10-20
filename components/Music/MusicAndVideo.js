@@ -162,13 +162,6 @@ export default function MusicAndVideo({ videoPreLink }) {
   }, [lookTitle, listenTitle, setNavbarData]);
 
   const fetchAlbumData = useCallback(async () => {
-    // Comment out or remove this block
-    // const cachedAlbums = getCachedData('albums');
-    // if (cachedAlbums) {
-    //   setAlbums(cachedAlbums);
-    //   return;
-    // }
-
     if (memoizedVideoPreLink?.musicLink) {
       const spotifyUrls = memoizedVideoPreLink.musicLink
         .filter(album => album?.embedUrl?.includes('spotify.com'))
@@ -178,7 +171,15 @@ export default function MusicAndVideo({ videoPreLink }) {
       let spotifyMetadata = {};
       if (spotifyUrls.length > 0) {
         try {
-          const response = await fetch('/.netlify/functions/fetchBatchSpotifyMetadata', {
+          const isNetlify = process.env.NEXT_PUBLIC_NETLIFY === 'true';
+          console.log('Is Netlify:', isNetlify); // Add this line for debugging
+          const functionUrl = isNetlify
+            ? '/.netlify/functions/fetchBatchSpotifyMetadata'
+            : '/api/fetchBatchSpotifyMetadata';
+
+          console.log('Function URL:', functionUrl); // Add this line for debugging
+
+          const response = await fetch(functionUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ urls: spotifyUrls }),
@@ -189,6 +190,8 @@ export default function MusicAndVideo({ videoPreLink }) {
               acc[spotifyUrls[index]] = item;
               return acc;
             }, {});
+          } else {
+            console.error('Error response:', await response.text()); // Add this line for debugging
           }
         } catch (error) {
           console.error('Error fetching batch Spotify metadata:', error);

@@ -1,7 +1,7 @@
 const fetch = require('node-fetch');
 
 async function getSpotifyAccessToken() {
-  const authResponse = await fetch('https://accounts.spotify.com/api/token', {
+  const response = await fetch('https://accounts.spotify.com/api/token', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
@@ -10,13 +10,12 @@ async function getSpotifyAccessToken() {
     body: 'grant_type=client_credentials',
   });
 
-  if (!authResponse.ok) {
-    const authError = await authResponse.text();
-    throw new Error(`Failed to authenticate with Spotify: ${authError}`);
+  if (!response.ok) {
+    throw new Error(`Failed to authenticate with Spotify: ${response.status} ${response.statusText}`);
   }
 
-  const { access_token: accessToken } = await authResponse.json();
-  return accessToken;
+  const data = await response.json();
+  return data.access_token;
 }
 
 async function fetchAlbumData(albumId, accessToken) {

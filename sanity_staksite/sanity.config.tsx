@@ -2,11 +2,11 @@ import {defineConfig} from 'sanity'
 import {deskTool} from 'sanity/desk'
 import {visionTool} from '@sanity/vision'
 import {media} from 'sanity-plugin-media'
-import {schemaTypes} from './schemas/schema'
 import {imageHotspotArrayPlugin} from 'sanity-plugin-hotspot-array'
 import {colorInput} from '@sanity/color-input'
 import deskStructure from './deskStructure'
 import {CustomStudioLayout} from './CustomStudioLayout'
+import schemaTypes from './schemas/schema'
 
 // Helper function to get the default dataset
 const getDefaultDataset = (): string => {
@@ -51,8 +51,5 @@ export default defineConfig({
     components: {
       layout: CustomStudioLayout
     },
-  },
-  babel: {
-    presets: ['@babel/preset-env', '@babel/preset-react', '@babel/preset-typescript']
   },
 })

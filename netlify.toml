@@ -12,6 +12,7 @@
     NEXT_PUBLIC_SANITY_DATASET = "production"
     NEXT_PUBLIC_SANITY_PROJECT_ID = "1gxdk71x"
     NEXT_PUBLIC_SANITY_TOKEN = "env(NEXT_PUBLIC_SANITY_TOKEN)"
+    NEXT_PUBLIC_NETLIFY = "true"
 
 # Staging-specific settings
 [context.staging]
@@ -22,6 +23,7 @@
     NEXT_PUBLIC_SANITY_DATASET = "staging"
     NEXT_PUBLIC_SANITY_PROJECT_ID = "1gxdk71x"
     NEXT_PUBLIC_SANITY_TOKEN = "env(NEXT_STAGING_SANITY_TOKEN)"
+    NEXT_PUBLIC_NETLIFY = "true"
 
 # Deploy previews (pull request builds)
 [context.deploy-preview]
@@ -55,3 +57,20 @@
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
+
+[dev]
+  command = "next dev"
+  targetPort = 3000
+  port = 8888
+  publish = ".next"
+  jwtRolePath = "app_metadata.authorization.roles"
+  autoLaunch = true
+
+[dev.environment]
+  NEXT_PUBLIC_NETLIFY = "true"
+  SPOTIFY_CLIENT_ID = "97a3d4f4fe1b479b8475eeb6e9c3aadd"
+  SPOTIFY_CLIENT_SECRET = "cdc787572eff43719fa4a44c58726f56"
+
+[build.environment]
+  NETLIFY = "true"
+  NEXT_PUBLIC_NETLIFY = "true"

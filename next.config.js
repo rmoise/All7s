@@ -11,6 +11,7 @@ const nextConfig = {
     NEXT_PUBLIC_SANITY_TOKEN: process.env.NEXT_PUBLIC_ENVIRONMENT === 'staging'
       ? process.env.NEXT_STAGING_SANITY_TOKEN || 'staging-token'
       : process.env.NEXT_PUBLIC_SANITY_TOKEN || 'production-token',
+    NEXT_PUBLIC_NETLIFY: process.env.NEXT_PUBLIC_NETLIFY || process.env.NETLIFY || 'false',
   },
 
   images: {
