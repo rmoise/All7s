@@ -54,22 +54,28 @@ export const NavbarProvider = ({ children }) => {
 
       if (musicAndVideoSection) {
         const { lookTitle, listenTitle } = musicAndVideoSection;
+        const lookId = lookTitle?.replace(/\s+/g, '-') || 'LOOK';
+        const listenId = listenTitle?.replace(/\s+/g, '-') || 'LISTEN';
 
-        // Update the LOOK link if found
+        console.log('NavbarContext - Generated IDs:', { lookId, listenId });
+
+        // Update the LOOK link
         const lookIndex = updatedNavbarData.navigationLinks.findIndex(
-          (link) => link.href === '/#LOOK'
+          (link) => link.href.toLowerCase() === '/#look'
         );
         if (lookIndex > -1) {
-          updatedNavbarData.navigationLinks[lookIndex].name = lookTitle || 'LOOK';
+          updatedNavbarData.navigationLinks[lookIndex] = { name: lookTitle || 'LOOK', href: `/#${lookId}` };
         }
 
-        // Update the LISTEN link if found
+        // Update the LISTEN link
         const listenIndex = updatedNavbarData.navigationLinks.findIndex(
-          (link) => link.href === '/#LISTEN'
+          (link) => link.href.toLowerCase() === '/#listen'
         );
         if (listenIndex > -1) {
-          updatedNavbarData.navigationLinks[listenIndex].name = listenTitle || 'LISTEN';
+          updatedNavbarData.navigationLinks[listenIndex] = { name: listenTitle || 'LISTEN', href: `/#${listenId}` };
         }
+
+        console.log('Updated navigation links:', updatedNavbarData.navigationLinks);
       }
 
       setNavbarData(updatedNavbarData);

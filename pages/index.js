@@ -32,7 +32,7 @@ const Home = ({ contentBlocks, metaTitle, metaDescription, siteSettings }) => {
           case 'about':
             return <About key={key} aboutData={block} />;
           case 'musicAndVideo':
-            return <MusicAndVideo key={key} videoPreLink={block} />;
+            return <MusicAndVideo key={block._key} videoPreLink={block} />;
           case 'newsletter':
             return <Newsletter key={key} newsletter={block} />;
           case 'heroBanner':
@@ -135,29 +135,12 @@ export const getServerSideProps = async () => {
       client.fetch(queries.siteSettingsQuery),
     ]);
 
-    // Extract and update navigation links with LOOK and LISTEN titles
-    const updatedNavbarData = {
-      ...siteSettings.navbar,
-      navigationLinks: [
-        ...(siteSettings.navbar.navigationLinks || []),
-        ...(homePage.contentBlocks
-          ?.find(block => block._type === 'musicAndVideo') || {}
-        ).lookTitle ? [{ name: homePage.contentBlocks.find(block => block._type === 'musicAndVideo').lookTitle, href: '/#LOOK' }] : [],
-        ...(homePage.contentBlocks
-          ?.find(block => block._type === 'musicAndVideo') || {}
-        ).listenTitle ? [{ name: homePage.contentBlocks.find(block => block._type === 'musicAndVideo').listenTitle, href: '/#LISTEN' }] : []
-      ],
-    };
-
     return {
       props: {
         contentBlocks: homePage?.contentBlocks || [],
         metaTitle: homePage?.metaTitle || null,
         metaDescription: homePage?.metaDescription || null,
-        siteSettings: {
-          ...siteSettings,
-          navbar: updatedNavbarData,
-        } || null,
+        siteSettings: siteSettings || null,
         footerData: siteSettings?.footer || null,
       },
     };

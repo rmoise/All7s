@@ -1,7 +1,27 @@
-// schemas/objects/album.js
+// schemas/objects/album.tsx
 
-import { defineType, defineField } from 'sanity';
+import React from 'react';
+import { defineType, defineField, StringInputProps, StringSchemaType } from 'sanity';
 import EmbedUrlInput from '../../components/EmbedUrlInput';
+
+// Wrapper component to provide the additional props EmbedUrlInput needs
+const EmbedUrlInputWrapper: React.FC<StringInputProps<StringSchemaType>> = (props) => {
+  const onSetFieldValue = (field: string, value: string | null) => {
+    // Implement the logic to set other fields in your document
+    // This might involve using Sanity's client to patch the document
+    console.log(`Setting ${field} to ${value}`);
+    // You might want to use the Sanity client here to update the document
+    // For example:
+    // client.patch(props.document._id).set({[field]: value}).commit()
+  };
+
+  return (
+    <EmbedUrlInput
+      {...props}
+      onSetFieldValue={onSetFieldValue}
+    />
+  );
+};
 
 export default defineType({
   name: 'album',
@@ -12,10 +32,9 @@ export default defineType({
       name: 'embedUrl',
       title: 'Embed URL',
       type: 'string',
-      description: 'Paste the Spotify or SoundCloud embed URL here. Make sure to use the embed version of the link.',
       components: {
-        input: EmbedUrlInput,
-      },
+        input: EmbedUrlInputWrapper
+      }
     }),
     defineField({
       name: 'title',
@@ -34,13 +53,13 @@ export default defineType({
       name: 'spotifyTitle',
       title: 'Spotify Title',
       type: 'string',
-      description: 'Title fetched from Spotify. Can be edited if needed.',
+      readOnly: true,
     }),
     defineField({
       name: 'spotifyArtist',
       title: 'Spotify Artist',
       type: 'string',
-      description: 'Artist name fetched from Spotify. Can be edited if needed.',
+      readOnly: true,
     }),
     defineField({
       name: 'releaseType',

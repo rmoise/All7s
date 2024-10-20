@@ -125,6 +125,8 @@ const toBase64 = (str) =>
     : window.btoa(str);
 
 export default function MusicAndVideo({ videoPreLink }) {
+  console.log('MusicAndVideo rendering, videoPreLink:', videoPreLink);
+
   const [albums, setAlbums] = useState([]);
   const [flippedAlbums, setFlippedAlbums] = useState(new Set());
   const { setNavbarData } = useNavbar();
@@ -139,6 +141,13 @@ export default function MusicAndVideo({ videoPreLink }) {
   const backgroundVideoFileUrl = useMemo(() => memoizedVideoPreLink?.backgroundVideo?.backgroundVideoFile?.asset?.url, [memoizedVideoPreLink]);
   const backgroundVideoUrl = useMemo(() => backgroundVideoFileUrl || memoizedVideoPreLink?.backgroundVideo?.backgroundVideoUrl, [backgroundVideoFileUrl, memoizedVideoPreLink]);
 
+  const lookId = videoPreLink?.lookTitle?.replace(/\s+/g, '-') || 'LOOK';
+  const listenId = videoPreLink?.listenTitle?.replace(/\s+/g, '-') || 'LISTEN';
+
+  console.log('Generated IDs:', { lookId, listenId });
+
+  const listenRef = useRef(null);
+
   useEffect(() => {
     if (setNavbarData) {
       setNavbarData((prevData) => {
@@ -149,8 +158,8 @@ export default function MusicAndVideo({ videoPreLink }) {
         );
 
         updatedNavigationLinks.push(
-          { name: lookTitle, href: '/#LOOK' },
-          { name: listenTitle, href: '/#LISTEN' }
+          { name: lookTitle, href: `/#${lookId}` },
+          { name: listenTitle, href: `/#${listenId}` }
         );
 
         return {
@@ -163,10 +172,14 @@ export default function MusicAndVideo({ videoPreLink }) {
 
   const fetchAlbumData = useCallback(async () => {
     if (memoizedVideoPreLink?.musicLink) {
+      console.log('Music links:', memoizedVideoPreLink.musicLink);
+
       const spotifyUrls = memoizedVideoPreLink.musicLink
         .filter(album => album?.embedUrl?.includes('spotify.com'))
         .map(album => album.embedUrl)
         .filter(Boolean);
+
+      console.log('Spotify URLs:', spotifyUrls);
 
       let spotifyMetadata = {};
       if (spotifyUrls.length > 0) {
@@ -176,6 +189,8 @@ export default function MusicAndVideo({ videoPreLink }) {
             ? '/.netlify/functions/fetchBatchSpotifyMetadata'
             : '/api/fetchBatchSpotifyMetadata';
 
+          console.log('Fetching Spotify metadata from:', functionUrl);
+
           const response = await fetch(functionUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -183,15 +198,20 @@ export default function MusicAndVideo({ videoPreLink }) {
           });
           if (response.ok) {
             const data = await response.json();
+            console.log('Received Spotify metadata:', data);
             spotifyMetadata = data.reduce((acc, item, index) => {
               acc[spotifyUrls[index]] = item;
               return acc;
             }, {});
+          } else {
+            console.error('Failed to fetch Spotify metadata:', response.status, response.statusText);
           }
         } catch (error) {
           console.error('Error fetching batch Spotify metadata:', error);
         }
       }
+
+      console.log('Processed Spotify metadata:', spotifyMetadata);
 
       const albumData = memoizedVideoPreLink.musicLink.map((album, index) => {
         if (album?.embedUrl?.includes('spotify.com') && spotifyMetadata[album.embedUrl]) {
@@ -199,7 +219,7 @@ export default function MusicAndVideo({ videoPreLink }) {
           return {
             ...album,
             parsedEmbedUrl: spotifyData.embedUrl,
-            imageUrl: album.customImage ? urlFor(album.customImage).url() : spotifyData.imageUrl, // Prioritize custom image
+            imageUrl: album.customImage ? urlFor(album.customImage).url() : spotifyData.imageUrl,
             title: album.title || spotifyData.title,
             index,
             albumId: album._id || `album-${index}`,
@@ -216,6 +236,8 @@ export default function MusicAndVideo({ videoPreLink }) {
           };
         }
       });
+
+      console.log('Processed album data:', albumData);
 
       const filteredData = albumData.filter((album) => album !== null);
       setAlbums(filteredData);
@@ -290,6 +312,19 @@ export default function MusicAndVideo({ videoPreLink }) {
     };
   }, [albums]);
 
+  useEffect(() => {
+    console.log('Listen element:', listenRef.current);
+  }, []);
+
+  useEffect(() => {
+    console.log('MusicAndVideo props:', JSON.stringify(videoPreLink, null, 2));
+  }, [videoPreLink]);
+
+  console.log('Rendered titles:', {
+    lookTitle: videoPreLink?.lookTitle || 'LOOK',
+    listenTitle: videoPreLink?.listenTitle || 'LISTEN'
+  });
+
   return (
     <AudioProvider>
       <YouTubeAPIProvider>
@@ -318,7 +353,7 @@ export default function MusicAndVideo({ videoPreLink }) {
                 <div className="mb-8 sm:mb-16 rounded-lg w-full text-center">
                   <p
                     className="mt-8 text-5xl sm:text-7xl font-Headline text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-pink-600 to-purple-600 font-bold"
-                    id="LOOK"
+                    id={lookId}
                   >
                     {lookTitle}
                   </p>
@@ -353,13 +388,14 @@ export default function MusicAndVideo({ videoPreLink }) {
               </div>
 
               {/* LISTEN Section */}
-              <div className="w-full flex mt-8 sm:mt-12 gap-y-8 sm:gap-y-12 flex-col items-center z-50 px-4">
+              <div
+                ref={listenRef}
+                id={listenId}
+                className="w-full flex mt-8 sm:mt-12 gap-y-8 sm:gap-y-12 flex-col items-center z-50 px-4"
+              >
                 <div className="mt-16 mb-8 sm:mb-12 rounded-lg flex items-center justify-center w-full sm:w-1/2">
-                  <p
-                    className="text-5xl sm:text-7xl font-Headline text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-pink-600 to-purple-600 font-bold"
-                    id="LISTEN"
-                  >
-                    {listenTitle}
+                  <p className="text-5xl sm:text-7xl font-Headline text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-pink-600 to-purple-600 font-bold">
+                    {videoPreLink?.listenTitle || 'LISTEN'}
                   </p>
                 </div>
 

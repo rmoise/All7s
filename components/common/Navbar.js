@@ -1,9 +1,10 @@
-import { Fragment, useState, useEffect } from 'react';
+import { Fragment, useState, useEffect, useCallback } from 'react';
 import { Disclosure } from '@headlessui/react';
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 import { AiOutlineShopping } from 'react-icons/ai';
 import anime from 'animejs';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import Cart from '../shop/Cart';
 import { useStateContext } from '../../context/StateContext';
 import { useNavbar } from '../../context/NavbarContext';
@@ -15,6 +16,7 @@ const generateKey = (item, index) => `${item.name}-${index}-${item.href}`;
 const classNames = (...classes) => classes.filter(Boolean).join(' ');
 
 const Navbar = () => {
+  const router = useRouter();
   const { navbarData, loading } = useNavbar();
   const { showCart, setShowCart, totalQuantities } = useStateContext();
   const [hydrated, setHydrated] = useState(false);
@@ -52,6 +54,44 @@ const Navbar = () => {
     }
   }, [isMobile]);
 
+  // Smooth scrolling effect
+  const handleSmoothScroll = useCallback((e, href) => {
+    e.preventDefault();
+    console.log('Clicked link:', href);
+
+    if (href.startsWith('/#')) {
+      const targetId = href.substring(2);
+      console.log('Target ID:', targetId);
+
+      // Log all elements with IDs
+      console.log('All elements with IDs:',
+        Array.from(document.querySelectorAll('[id]')).map(el => ({ id: el.id, element: el }))
+      );
+
+      const targetElement = document.getElementById(targetId);
+
+      if (targetElement) {
+        console.log('Target element found:', targetElement);
+        targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        window.history.pushState(null, '', href);
+      } else {
+        console.log('Target element not found');
+        // Fallback: try case-insensitive search
+        const lowercaseTargetId = targetId.toLowerCase();
+        const fallbackElement = Array.from(document.querySelectorAll('[id]')).find(el => el.id.toLowerCase() === lowercaseTargetId);
+        if (fallbackElement) {
+          console.log('Fallback element found:', fallbackElement);
+          fallbackElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          window.history.pushState(null, '', href);
+        } else {
+          console.log('No matching element found, even with case-insensitive search');
+        }
+      }
+    } else {
+      router.push(href);
+    }
+  }, [router]);
+
   // Render nothing while loading or if navbar data isn't ready
   if (loading || !navbarData || !hydrated) {
     return null;
@@ -59,6 +99,39 @@ const Navbar = () => {
 
   const logoUrl = navbarData.logo ? urlFor(navbarData.logo).url() : '/default-logo.png';
   const navbarBgColor = navbarData.isTransparent ? 'transparent' : navbarData.backgroundColor?.hex || 'black';
+
+  const renderNavLinks = (isMobile = false) => {
+    return navbarData.navigationLinks?.map((item, index) => {
+      const linkProps = {
+        key: generateKey(item, index),
+        href: item.href,
+        className: classNames(
+          item.name === 'BUY' ? 'text-green-400' : 'text-white',
+          'px-2 py-2 rounded-md text-sm font-medium hover:text-green-400'
+        ),
+        onClick: (e) => handleSmoothScroll(e, item.href)
+      };
+
+      const linkContent = item.name;
+
+      if (isMobile) {
+        return (
+          <Disclosure.Button
+            as="a"
+            {...linkProps}
+            className={classNames(
+              item.current ? 'bg-gray-900 text-white' : 'bg-gray-500/50 text-white hover:bg-black hover:text-white',
+              'block px-3 py-2 rounded-md text-base font-medium'
+            )}
+          >
+            {linkContent}
+          </Disclosure.Button>
+        );
+      }
+
+      return <Link {...linkProps}>{linkContent}</Link>;
+    });
+  };
 
   return (
     <Disclosure as="nav" id="nav" className={`fixed top-0 w-full h-auto px-8 z-50 font-Headline text-white`} style={{ backgroundColor: navbarBgColor }}>
@@ -92,18 +165,7 @@ const Navbar = () => {
               {/* Desktop Navigation */}
               <div className="hidden sm:flex sm:items-center sm:space-x-4">
                 <div className="flex space-x-8">
-                  {navbarData.navigationLinks?.map((item, index) => (
-                    <Link
-                      key={generateKey(item, index)}
-                      href={item.href}
-                      className={classNames(
-                        item.name === 'BUY' ? 'text-green-400' : 'text-white',
-                        'px-2 py-2 rounded-md text-sm font-medium hover:text-green-400'
-                      )}
-                    >
-                      {item.name}
-                    </Link>
-                  ))}
+                  {renderNavLinks()}
                 </div>
 
                 {/* Shopping Cart Icon */}
@@ -138,20 +200,7 @@ const Navbar = () => {
           {/* Mobile Navigation Menu */}
           <Disclosure.Panel className="sm:hidden">
             <div className="space-y-1 px-2 pt-2 pb-3">
-              {navbarData.navigationLinks?.map((item, index) => (
-                <Disclosure.Button
-                  key={generateKey(item, index)}
-                  as="a"
-                  href={item.href}
-                  className={classNames(
-                    item.current ? 'bg-gray-900 text-white' : 'bg-gray-500/50 text-white hover:bg-black hover:text-white',
-                    'block px-3 py-2 rounded-md text-base font-medium'
-                  )}
-                  aria-current={item.current ? 'page' : undefined}
-                >
-                  {item.name}
-                </Disclosure.Button>
-              ))}
+              {renderNavLinks(true)}
             </div>
           </Disclosure.Panel>
         </>

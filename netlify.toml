@@ -38,13 +38,9 @@
 # Add this section for redirects
 [[redirects]]
   from = "/api/*"
-  to = "/.netlify/functions/nextjs-server-side-renderer"
-  status = 200
-
-[[redirects]]
-  from = "/.netlify/functions/*"
   to = "/.netlify/functions/:splat"
   status = 200
+  force = true
 
 # New section for functions configuration
 [functions]
@@ -64,10 +60,10 @@
   package = "@netlify/plugin-nextjs"
 
 [dev]
-  command = "next dev"
+  command = "npm run dev"
   targetPort = 3000
   port = 8888
-  publish = ".next"
+  publish = "public"
   jwtRolePath = "app_metadata.authorization.roles"
   autoLaunch = true
 
