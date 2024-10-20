@@ -19,18 +19,31 @@ const EmbedUrlInput = (props: EmbedUrlInputProps) => {
   const handleChange = useCallback(
     async (event: React.ChangeEvent<HTMLInputElement>) => {
       const value = event.target.value;
+      console.log('Input value:', value); // Log the input value
 
       if (value === '') {
         props.onChange(unset());
-      } else {
-        props.onChange(set(value));
+        setError(null);
+        return;
       }
 
+      props.onChange(set(value));
+
       if (value) {
-        const apiUrl = `/.netlify/functions/spotify-metadata?url=${encodeURIComponent(value)}`;
-        console.log('Fetching from:', apiUrl);
+        const encodedUrl = encodeURIComponent(value);
+        const apiUrl = `${process.env.SANITY_STUDIO_NETLIFY_FUNCTION_URL}/spotify-metadata?url=${encodedUrl}`;
+        console.log('Fetching from:', apiUrl); // Log the full API URL
         try {
-          const response = await fetch(apiUrl);
+          const response = await fetch(apiUrl, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
+
+          console.log('Response status:', response.status);
+          console.log('Response headers:', response.headers);
+
           const text = await response.text();
           console.log('Raw response:', text);
 
@@ -47,7 +60,6 @@ const EmbedUrlInput = (props: EmbedUrlInputProps) => {
           }
 
           // Update Spotify fields
-          props.onChange(set(value));
           props.onSetFieldValue('spotifyTitle', data.title);
           props.onSetFieldValue('spotifyArtist', data.artist);
 

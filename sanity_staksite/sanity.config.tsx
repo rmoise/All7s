@@ -16,6 +16,16 @@ const getDefaultDataset = (): string => {
   return process.env.SANITY_STUDIO_DATASET || 'staging'
 }
 
+// Helper function to get the correct Netlify URL based on the environment
+const getNetlifyUrl = (): string => {
+  if (process.env.SANITY_STUDIO_NETLIFY_URL) {
+    return process.env.SANITY_STUDIO_NETLIFY_URL
+  }
+  return process.env.NODE_ENV === 'production'
+    ? 'https://all7z.netlify.app/'
+    : 'https://staging--all7z.netlify.app/'
+}
+
 const devOnlyPlugins = [visionTool()]
 
 export default defineConfig({
@@ -51,5 +61,20 @@ export default defineConfig({
     components: {
       layout: CustomStudioLayout
     },
+  },
+  api: {
+    projectId: process.env.SANITY_STUDIO_PROJECT_ID || '',
+    dataset: getDefaultDataset(),
+    cors: {
+      allowOrigins: [
+        'http://localhost:8888', // Local Netlify development server
+        getNetlifyUrl(),
+        'https://all7z.netlify.app/',
+        'https://staging--all7z.netlify.app/',
+      ],
+    },
+  },
+  env: {
+    NETLIFY_FUNCTION_URL: process.env.SANITY_STUDIO_NETLIFY_FUNCTION_URL || `${getNetlifyUrl()}/.netlify/functions`,
   },
 })
