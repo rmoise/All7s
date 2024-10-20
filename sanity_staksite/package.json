@@ -1,0 +1,66 @@
+{
+  "name": "staksite",
+  "private": true,
+  "version": "1.0.0",
+  "description": "",
+  "main": "package.json",
+  "author": "Evan Burton <evan@heyevan.com>",
+  "license": "UNLICENSED",
+  "type": "module",
+  "scripts": {
+    "dev": "sanity dev",
+    "start": "sanity start",
+    "build": "sanity build",
+    "deploy": "sanity deploy",
+    "deploy-graphql": "sanity graphql deploy",
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx"
+  },
+  "keywords": [
+    "sanity"
+  ],
+  "dependencies": {
+    "@heroicons/react": "^2.1.5",
+    "@portabletext/react": "^3.1.0",
+    "@sanity/asset-utils": "^2.0.6",
+    "@sanity/cli": "^3.61.0",
+    "@sanity/client": "^6.22.2",
+    "@sanity/color-input": "^4.0.1",
+    "@sanity/icons": "^3.4.0",
+    "@sanity/image-url": "^1.0.2",
+    "@sanity/ui": "^2.8.9",
+    "@sanity/vision": "^3.61.0",
+    "lodash": "^4.17.21",
+    "pluralize-esm": "^9.0.5",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-icons": "^5.3.0",
+    "react-intersection-observer": "^9.13.1",
+    "sanity": "^3.61.0",
+    "sanity-plugin-hotspot-array": "^2.1.0",
+    "sanity-plugin-media": "^2.3.2",
+    "slug": "^10.0.0",
+    "styled-components": "^6.1.13"
+  },
+  "devDependencies": {
+ "@sanity/eslint-config-studio": "^3.0.1",
+    "@types/react": "^18.3.11",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-react": "^7.37.1",
+    "postcss": "^8.4.47",
+    "typescript": "^5.6.3"
+  },
+  "prettier": {
+    "semi": false,
+    "printWidth": 100,
+    "bracketSpacing": false,
+    "singleQuote": true
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rmoise/All7s.git"
+  }
+}

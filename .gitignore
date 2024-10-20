@@ -1,0 +1,25 @@
+#dependencies
+node_modules
+
+#environment
+.env
+
+#next-files
+.next
+
+#distribution
+dist
+
+.env.local
+
+.env.production
+
+.env.staging
+
+# Local Netlify folder
+.netlify
+
+.env.development
+
+.env.production.notes
+.notes

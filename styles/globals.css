@@ -1,0 +1,95 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  overscroll-behavior: none;
+}
+
+body,
+#__next {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+#__next {
+  flex: 1;
+}
+
+main {
+  flex-grow: 1;
+}
+
+footer {
+  margin-top: auto;
+}
+
+body {
+  font-family: 'roc-grotesk-wide', -apple-system, BlinkMacSystemFont, Segoe UI,
+    Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue,
+    sans-serif;
+}
+
+::-webkit-scrollbar {
+  width: 0px;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.align-left {
+  @apply text-left;
+}
+
+.align-center {
+  @apply text-center;
+}
+
+.spotify-embed-container {
+  position: relative;
+  width: 100%;
+  padding-bottom: 152%;
+  overflow: hidden;
+}
+
+.spotify-loading {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #121212;
+  color: #ffffff;
+  z-index: 1;
+}
+
+.spotify-iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.spotify-iframe.loaded {
+  opacity: 1;
+}
+
+@media (min-width: 768px) {
+  .spotify-embed-container {
+    padding-bottom: 0;
+    height: 500px;
+  }
+}
