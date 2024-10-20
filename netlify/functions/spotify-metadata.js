@@ -1,5 +1,5 @@
 const axios = require('axios');
-const { getSpotifyAccessToken } = require('./spotify');
+const { getSpotifyAccessToken } = require('../../lib/spotify');
 
 exports.handler = async (event) => {
   const { url } = event.queryStringParameters;
