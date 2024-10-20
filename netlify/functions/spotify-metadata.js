@@ -1,54 +1,23 @@
-const fetch = require('node-fetch');
-const { getSpotifyAccessToken } = require('../../lib/spotify');
+const axios = require('axios');
+const { getSpotifyAccessToken } = require('./spotify');
 
-exports.handler = async (event, context) => {
+exports.handler = async (event) => {
   const { url } = event.queryStringParameters;
 
   if (!url) {
-    return {
-      statusCode: 400,
-      body: JSON.stringify({ error: 'Missing URL parameter' }),
-    };
+    return { statusCode: 400, body: JSON.stringify({ error: 'Missing URL parameter' }) };
   }
 
   try {
-    const spotifyUrlMatch = url.match(/https:\/\/open\.spotify\.com\/(?:embed\/)?album\/([a-zA-Z0-9]+)/);
-    if (!spotifyUrlMatch) {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({ error: 'Invalid Spotify URL' }),
-      };
+    const albumId = url.match(/album\/([a-zA-Z0-9]+)/)?.[1];
+    if (!albumId) {
+      return { statusCode: 400, body: JSON.stringify({ error: 'Invalid Spotify URL' }) };
     }
-    const albumId = spotifyUrlMatch[1];
 
-    // Get Spotify access token using the imported function
     const accessToken = await getSpotifyAccessToken();
-
-    // Fetch album data from Spotify API
-    const albumResponse = await fetch(`https://api.spotify.com/v1/albums/${albumId}`, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
+    const { data: albumData } = await axios.get(`https://api.spotify.com/v1/albums/${albumId}`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
     });
-
-    if (!albumResponse.ok) {
-      const albumError = await albumResponse.text();
-      console.error('Spotify album fetch error:', albumError);
-      return {
-        statusCode: 500,
-        body: JSON.stringify({ error: `Failed to fetch album data: ${albumResponse.status} ${albumResponse.statusText}` }),
-      };
-    }
-
-    const albumData = await albumResponse.json();
-
-    const responseData = {
-      title: albumData.name,
-      artist: albumData.artists[0]?.name,
-      imageUrl: albumData.images[0]?.url,
-      embedUrl: `https://open.spotify.com/embed/album/${albumId}`,
-      releaseType: albumData.album_type,
-    };
 
     return {
       statusCode: 200,
@@ -57,14 +26,16 @@ exports.handler = async (event, context) => {
         'Access-Control-Allow-Headers': 'Content-Type',
         'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
       },
-      body: JSON.stringify(responseData),
+      body: JSON.stringify({
+        title: albumData.name,
+        artist: albumData.artists[0]?.name,
+        imageUrl: albumData.images[0]?.url,
+        embedUrl: `https://open.spotify.com/embed/album/${albumId}`,
+        releaseType: albumData.album_type,
+      }),
     };
-
   } catch (error) {
     console.error('Error in Netlify function:', error);
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ error: error.message }),
-    };
+    return { statusCode: 500, body: JSON.stringify({ error: error.message }) };
   }
 };
