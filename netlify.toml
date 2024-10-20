@@ -42,9 +42,7 @@
 # New section for functions configuration
 [functions]
   directory = "netlify/functions"
+  node_bundler = "esbuild"
 
 [functions.extract-album-durations]
   included_files = ["lib/extractDurations.js"]
-
-[functions.spotify-metadata]
-  included_files = ["lib/spotify.js"]
