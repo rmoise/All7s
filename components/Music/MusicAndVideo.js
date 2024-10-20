@@ -49,7 +49,7 @@ const getSpotifyMetadata = async (url) => {
   }
 
   try {
-    const response = await fetch(`/api/fetchSpotifyMetadata?url=${encodeURIComponent(url)}`);
+    const response = await fetch(`/.netlify/functions/spotify-metadata?url=${encodeURIComponent(url)}`);
     if (!response.ok) {
       throw new Error(`Failed to fetch Spotify metadata: ${response.status} ${response.statusText}`);
     }

@@ -41,8 +41,7 @@
 
 # New section for functions configuration
 [functions]
-  node_bundler = "esbuild"
-  external_node_modules = ["fluent-ffmpeg", "node-fetch"]
+  directory = "netlify/functions"
 
 [functions.extract-album-durations]
   included_files = ["lib/extractDurations.js"]
