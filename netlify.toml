@@ -69,8 +69,8 @@
 
 [dev.environment]
   NEXT_PUBLIC_NETLIFY = "true"
-  SPOTIFY_CLIENT_ID = "97a3d4f4fe1b479b8475eeb6e9c3aadd"
-  SPOTIFY_CLIENT_SECRET = "cdc787572eff43719fa4a44c58726f56"
+  SPOTIFY_CLIENT_ID = "env(SPOTIFY_CLIENT_ID)"
+  SPOTIFY_CLIENT_SECRET = "env(SPOTIFY_CLIENT_SECRET)"
 
 [build.environment]
   NETLIFY = "true"
