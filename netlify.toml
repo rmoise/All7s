@@ -41,6 +41,11 @@
   to = "/.netlify/functions/nextjs-server-side-renderer"
   status = 200
 
+[[redirects]]
+  from = "/.netlify/functions/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
 # New section for functions configuration
 [functions]
   directory = "netlify/functions"

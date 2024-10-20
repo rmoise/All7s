@@ -1,6 +1,6 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { TextInput, Stack, Text, Card } from '@sanity/ui';
-import { set, unset } from 'sanity';
+import { set, unset, useFormValue, useClient } from 'sanity';
 import { StringInputProps } from 'sanity';
 
 interface SpotifyMetadata {
@@ -11,9 +11,9 @@ interface SpotifyMetadata {
   releaseType: string;
 }
 
-const API_URL = process.env.NEXT_PUBLIC_ENVIRONMENT === 'staging'
-  ? 'https://staging--all7z.netlify.app/.netlify/functions/spotify-metadata'
-  : 'https://all7z.com/.netlify/functions/spotify-metadata';
+const API_URL = process.env.NODE_ENV === 'development'
+  ? 'http://localhost:8888/.netlify/functions/spotify-metadata'
+  : '/.netlify/functions/spotify-metadata';
 
 const EmbedUrlInput = (props: StringInputProps) => {
   const { onChange, value = '' } = props;
@@ -22,9 +22,24 @@ const EmbedUrlInput = (props: StringInputProps) => {
   const [error, setError] = useState<string | null>(null);
   const [metadata, setMetadata] = useState<SpotifyMetadata | null>(null);
 
+  // Get the document ID using useFormValue
+  const documentId = useFormValue(['_id']) as string;
+
+  // Use Sanity client for patching
+  const client = useClient();
+
+  useEffect(() => {
+    if (value && !metadata) {
+      fetchMetadata(value);
+    }
+  }, [value]);
+
   const extractSpotifyUrl = (input: string): string => {
-    const urlMatch = input.match(/src="(https:\/\/open\.spotify\.com\/embed\/album\/[^"]+)"/);
-    return urlMatch ? urlMatch[1] : input;
+    console.log('Extracting Spotify URL from:', input);
+    const urlMatch = input.match(/https:\/\/open\.spotify\.com\/(?:embed\/)?album\/([a-zA-Z0-9]+)/);
+    const result = urlMatch ? `https://open.spotify.com/album/${urlMatch[1]}` : input;
+    console.log('Extracted URL:', result);
+    return result;
   };
 
   const fetchMetadata = useCallback(async (url: string) => {
@@ -35,25 +50,40 @@ const EmbedUrlInput = (props: StringInputProps) => {
       const spotifyUrl = extractSpotifyUrl(url);
       console.log('Fetching metadata for URL:', spotifyUrl);
 
-      const response = await fetch(`${API_URL}?url=${encodeURIComponent(spotifyUrl)}`);
+      const encodedUrl = encodeURIComponent(spotifyUrl);
+      const apiUrl = `${API_URL}?url=${encodedUrl}`;
+      console.log('Full API URL:', apiUrl);
+
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
       console.log('API response status:', response.status);
 
       if (!response.ok) {
-        const errorData = await response.json();
-        console.error('API error response:', errorData);
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        console.error('API error response:', errorText);
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
       }
 
-      const data: SpotifyMetadata = await response.json();
-      console.log('Received metadata:', JSON.stringify(data, null, 2));
-
-      if (!data.title || !data.artist) {
-        console.error('Incomplete metadata received:', data);
-        throw new Error('Incomplete metadata received from API');
-      }
+      const data = await response.json();
+      console.log('API response data:', data);
 
       setMetadata(data);
       onChange(set(data.embedUrl));
+
+      // Update Sanity document with Spotify metadata
+      await client
+        .patch(documentId)
+        .set({
+          spotifyTitle: data.title,
+          spotifyArtist: data.artist,
+          releaseType: data.releaseType,
+        })
+        .commit();
+
     } catch (err) {
       console.error('Error fetching metadata:', err);
       setError(err instanceof Error ? err.message : 'An unknown error occurred');
@@ -61,14 +91,17 @@ const EmbedUrlInput = (props: StringInputProps) => {
     } finally {
       setIsLoading(false);
     }
-  }, [onChange]);
+  }, [onChange, client, documentId]);
 
   const handleChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = event.target.value;
+    console.log('Input value changed to:', newValue);
     setInputValue(newValue);
     if (newValue && newValue !== value) {
+      console.log('Triggering fetchMetadata');
       fetchMetadata(newValue);
     } else if (!newValue) {
+      console.log('Clearing metadata');
       onChange(unset());
       setMetadata(null);
     }
@@ -87,8 +120,8 @@ const EmbedUrlInput = (props: StringInputProps) => {
       {metadata && (
         <Card padding={3} radius={2} shadow={1}>
           <Stack space={2}>
-            <Text weight="semibold">Title: {metadata.title}</Text>
-            <Text>Artist: {metadata.artist}</Text>
+            <Text weight="semibold">Fetched Title: {metadata.title}</Text>
+            <Text>Fetched Artist: {metadata.artist}</Text>
             <Text>Release Type: {metadata.releaseType}</Text>
             {metadata.imageUrl && (
               <img src={metadata.imageUrl} alt={metadata.title} style={{ maxWidth: '100%', height: 'auto' }} />

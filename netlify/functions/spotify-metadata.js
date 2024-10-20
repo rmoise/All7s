@@ -2,15 +2,23 @@ const axios = require('axios');
 const { getSpotifyAccessToken } = require('../../lib/spotify');
 
 exports.handler = async (event) => {
+  console.log('Received event:', event);
   const { url } = event.queryStringParameters;
+  console.log('Received URL:', url);
 
   if (!url) {
-    return { statusCode: 400, body: JSON.stringify({ error: 'Missing URL parameter' }) };
+    console.log('No URL provided');
+    return {
+      statusCode: 400,
+      body: JSON.stringify({ error: 'Missing URL parameter' })
+    };
   }
 
   try {
     const albumId = url.match(/album\/([a-zA-Z0-9]+)/)?.[1];
+    console.log('Extracted album ID:', albumId);
     if (!albumId) {
+      console.log('Invalid Spotify URL');
       return { statusCode: 400, body: JSON.stringify({ error: 'Invalid Spotify URL' }) };
     }
 

@@ -172,12 +172,9 @@ export default function MusicAndVideo({ videoPreLink }) {
       if (spotifyUrls.length > 0) {
         try {
           const isNetlify = process.env.NEXT_PUBLIC_NETLIFY === 'true';
-          console.log('Is Netlify:', isNetlify); // Add this line for debugging
           const functionUrl = isNetlify
             ? '/.netlify/functions/fetchBatchSpotifyMetadata'
             : '/api/fetchBatchSpotifyMetadata';
-
-          console.log('Function URL:', functionUrl); // Add this line for debugging
 
           const response = await fetch(functionUrl, {
             method: 'POST',
@@ -190,8 +187,6 @@ export default function MusicAndVideo({ videoPreLink }) {
               acc[spotifyUrls[index]] = item;
               return acc;
             }, {});
-          } else {
-            console.error('Error response:', await response.text()); // Add this line for debugging
           }
         } catch (error) {
           console.error('Error fetching batch Spotify metadata:', error);
@@ -204,7 +199,7 @@ export default function MusicAndVideo({ videoPreLink }) {
           return {
             ...album,
             parsedEmbedUrl: spotifyData.embedUrl,
-            imageUrl: spotifyData.imageUrl, // Prioritize Spotify image
+            imageUrl: album.customImage ? urlFor(album.customImage).url() : spotifyData.imageUrl, // Prioritize custom image
             title: album.title || spotifyData.title,
             index,
             albumId: album._id || `album-${index}`,

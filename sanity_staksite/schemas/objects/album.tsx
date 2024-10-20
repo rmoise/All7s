@@ -31,6 +31,18 @@ export default defineType({
       description: 'Name of the artist. Defaults to Stak but can be changed if needed.',
     }),
     defineField({
+      name: 'spotifyTitle',
+      title: 'Spotify Title',
+      type: 'string',
+      description: 'Title fetched from Spotify. Can be edited if needed.',
+    }),
+    defineField({
+      name: 'spotifyArtist',
+      title: 'Spotify Artist',
+      type: 'string',
+      description: 'Artist name fetched from Spotify. Can be edited if needed.',
+    }),
+    defineField({
       name: 'releaseType',
       title: 'Release Type',
       type: 'string',
@@ -95,8 +107,8 @@ export default defineType({
   ],
   preview: {
     select: {
-      title: 'title',
-      artist: 'artist',
+      title: 'spotifyTitle',
+      artist: 'spotifyArtist',
       customImage: 'customImage',
       releaseType: 'releaseType',
     },
