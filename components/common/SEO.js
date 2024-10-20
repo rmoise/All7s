@@ -9,26 +9,29 @@ const SEO = ({
   siteName = 'Default Site Name',
   canonicalUrl,
 }) => {
-
   useEffect(() => {
     // This useEffect ensures the browser updates the favicon and removes any old references
-    const existingFavicon = document.querySelectorAll("link[rel='icon']");
+    const links = document.getElementsByTagName('link');
+    for (let i = 0; i < links.length; i++) {
+      if (links[i].rel === 'icon' || links[i].rel === 'shortcut icon') {
+        links[i].href = `${faviconUrl}?v=${new Date().getTime()}`;
+      }
+    }
 
-    // Remove any existing favicons
-    existingFavicon.forEach(favicon => favicon.parentNode.removeChild(favicon));
-
-    // Create new favicon link
-    const newFavicon = document.createElement('link');
-    newFavicon.rel = 'icon';
-    newFavicon.href = `${faviconUrl}?v=${Date.now()}`;
-    document.head.appendChild(newFavicon);
+    // If no favicon link exists, create a new one
+    if (!document.querySelector("link[rel*='icon']")) {
+      const newLink = document.createElement('link');
+      newLink.rel = 'icon';
+      newLink.href = `${faviconUrl}?v=${new Date().getTime()}`;
+      document.head.appendChild(newLink);
+    }
   }, [faviconUrl]);
 
   return (
     <Head>
       <title>{title}</title>
       <meta name="description" content={description} />
-
+      <link rel="icon" href={`${faviconUrl}?v=${new Date().getTime()}`} />
       {/* Canonical Link */}
       {canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
 

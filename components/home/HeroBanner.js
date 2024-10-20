@@ -5,15 +5,15 @@ import { urlFor } from '../../lib/client';
 const HeroBanner = ({ heroBanner }) => {
   return (
     <div className="relative w-full aspect-[16/9] z-10 sm:aspect-[16/9] overflow-hidden">
-      {/* Maintain a consistent 16:9 aspect ratio */}
       {heroBanner?.backgroundImage && (
         <div className="absolute inset-0 w-full h-full">
           <Image
             src={urlFor(heroBanner.backgroundImage).url()}
             alt="Hero Banner Background"
-            layout="fill"
+            fill
+            sizes="100vw"
             priority
-            className="object-cover"
+            style={{ objectFit: 'cover' }}
           />
         </div>
       )}

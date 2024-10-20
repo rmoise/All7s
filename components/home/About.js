@@ -25,14 +25,14 @@ export default function About({ aboutData }) {
         <div className="relative w-full aspect-[16/9] sm:h-auto">
           <Image
             alt="About Image"
-            src={urlFor(aboutData.image).url()}
-            layout="responsive"
-            width={1600}
-            height={900}
-            objectFit="cover"
-            quality={100}
+            src={urlFor(aboutData.image).width(2048).url()}
+            fill
+            sizes="100vw"
             priority
-            className="w-full h-full object-cover" // Ensures it fully covers the container area
+            placeholder="blur"
+            blurDataURL={urlFor(aboutData.image).width(50).quality(1).blur(50).url()}
+            style={{ objectFit: 'cover' }}
+            className="w-full h-full object-cover"
           />
           <div
             className={`absolute inset-0 flex items-center justify-center p-2 sm:p-4 lg:p-8 ${alignmentClass}`}

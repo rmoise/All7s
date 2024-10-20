@@ -21,4 +21,5 @@ dist
 
 .env.development
 
-.env.production
+.env.production.notes
+.notes

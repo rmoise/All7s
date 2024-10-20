@@ -1,14 +1,14 @@
-// AudioContext.jsx
-
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, useCallback, useMemo } from 'react';
 import { Howl } from 'howler';
+import { throttle } from 'lodash';
+import Image from 'next/image';
 
 const AudioContext = createContext();
 
 export const AudioProvider = ({ children }) => {
   const [currentHowl, setCurrentHowl] = useState(null);
   const [currentAlbumId, setCurrentAlbumId] = useState(null);
-  const [currentTrackIndex, setCurrentTrackIndex] = useState(null); // Changed to null
+  const [currentTrackIndex, setCurrentTrackIndex] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
 
@@ -21,7 +21,6 @@ export const AudioProvider = ({ children }) => {
         setCurrentTime(typeof seek === 'number' ? seek : 0);
         rafId = requestAnimationFrame(update);
       }
-      // Removed the else block to prevent resetting currentTime
     };
 
     if (currentHowl && currentHowl.playing()) {
@@ -35,9 +34,7 @@ export const AudioProvider = ({ children }) => {
     };
   }, [currentHowl, isPlaying]);
 
-  // Function to play or resume a track
-  const playTrack = (url, albumId, trackIndex = 0) => {
-    // Check if the same track is already loaded
+  const playTrack = useCallback((url, albumId, trackIndex = 0) => {
     if (
       currentHowl &&
       currentAlbumId === albumId &&
@@ -47,64 +44,61 @@ export const AudioProvider = ({ children }) => {
         currentHowl.play();
         setIsPlaying(true);
       }
-      // If already playing, do nothing
-    } else {
-      // Stop any existing track
-      if (currentHowl) {
-        currentHowl.stop();
-      }
-
-      // Create a new Howl instance for the new track
-      const newHowl = new Howl({
-        src: [url],
-        html5: true, // Ensures proper playback on mobile
-        preload: false, // Do not preload to save bandwidth
-        onplay: () => {
-          setIsPlaying(true);
-          setCurrentAlbumId(albumId);
-          setCurrentTrackIndex(trackIndex);
-          requestAnimationFrame(updateTime);
-        },
-        onpause: () => {
-          setIsPlaying(false);
-        },
-        onstop: () => {
-          setIsPlaying(false);
-          setCurrentAlbumId(null);
-          setCurrentTime(0); // Reset time to 0 when the track is stopped
-          setCurrentTrackIndex(null); // Changed to null
-        },
-        onend: () => {
-          setIsPlaying(false);
-          setCurrentAlbumId(null);
-          setCurrentTime(0); // Reset time to 0 when the track ends
-          setCurrentTrackIndex(null); // Changed to null
-        },
-        onloaderror: (id, error) => {
-          console.error(`Error loading track: ${error}`);
-        },
-        onplayerror: (id, error) => {
-          console.error(`Error playing track: ${error}`);
-          newHowl.once('unlock', () => {
-            newHowl.play();
-          });
-        },
-      });
-
-      setCurrentHowl(newHowl);
-      newHowl.play();
+      return;
     }
-  };
 
-  // Function to pause the current track
-  const pauseTrack = () => {
+    if (currentHowl) {
+      currentHowl.stop();
+    }
+
+    const newHowl = new Howl({
+      src: [url],
+      html5: true,
+      preload: false,
+      onplay: () => {
+        setIsPlaying(true);
+        setCurrentAlbumId(albumId);
+        setCurrentTrackIndex(trackIndex);
+      },
+      onpause: () => setIsPlaying(false),
+      onstop: resetAudioState,
+      onend: resetAudioState,
+      onloaderror: (id, error) => console.error(`Error loading track: ${error}`),
+      onplayerror: (id, error) => {
+        console.error(`Error playing track: ${error}`);
+        newHowl.once('unlock', () => newHowl.play());
+      },
+    });
+
+    setCurrentHowl(newHowl);
+    newHowl.play();
+  }, [currentHowl, currentAlbumId, currentTrackIndex, isPlaying]);
+
+  const resetAudioState = useCallback(() => {
+    setIsPlaying(false);
+    setCurrentAlbumId(null);
+    setCurrentTime(0);
+    setCurrentTrackIndex(null);
+  }, []);
+
+  const pauseTrack = useCallback(() => {
     if (currentHowl && currentHowl.playing()) {
       currentHowl.pause();
+      setIsPlaying(false);
     }
-  };
+  }, [currentHowl]);
 
-  // Function to stop the current track
-  const stopTrack = () => {
+  const throttledSeekTo = useMemo(
+    () => throttle((seekTime) => {
+      if (currentHowl && typeof seekTime === 'number') {
+        currentHowl.seek(seekTime);
+        setCurrentTime(seekTime);
+      }
+    }, 100),
+    [currentHowl]
+  );
+
+  const stopTrack = useCallback(() => {
     if (currentHowl) {
       currentHowl.stop();
       setCurrentHowl(null);
@@ -113,26 +107,8 @@ export const AudioProvider = ({ children }) => {
       setCurrentTime(0);
       setCurrentTrackIndex(null);
     }
-  };
+  }, [currentHowl]);
 
-  // Function to seek to a specific time
-  const seekTo = (seekTime) => {
-    if (currentHowl && typeof seekTime === 'number') {
-      currentHowl.seek(seekTime);
-      setCurrentTime(seekTime);
-    }
-  };
-
-  // Function to update current time
-  const updateTime = () => {
-    if (currentHowl && currentHowl.playing()) {
-      const seek = currentHowl.seek();
-      setCurrentTime(typeof seek === 'number' ? seek : 0);
-      requestAnimationFrame(updateTime);
-    }
-  };
-
-  // Cleanup Howl instance on unmount
   useEffect(() => {
     return () => {
       if (currentHowl) {
@@ -141,20 +117,20 @@ export const AudioProvider = ({ children }) => {
     };
   }, [currentHowl]);
 
+  const value = useMemo(() => ({
+    currentHowl,
+    currentAlbumId,
+    currentTrackIndex,
+    isPlaying,
+    currentTime,
+    playTrack,
+    pauseTrack,
+    stopTrack,
+    seekTo: throttledSeekTo,
+  }), [currentHowl, currentAlbumId, currentTrackIndex, isPlaying, currentTime, playTrack, pauseTrack, stopTrack, throttledSeekTo]);
+
   return (
-    <AudioContext.Provider
-      value={{
-        currentHowl,
-        currentAlbumId,
-        currentTrackIndex,
-        isPlaying,
-        currentTime,
-        playTrack,
-        pauseTrack,
-        stopTrack,
-        seekTo,
-      }}
-    >
+    <AudioContext.Provider value={value}>
       {children}
     </AudioContext.Provider>
   );

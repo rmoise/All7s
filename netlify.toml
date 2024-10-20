@@ -1,6 +1,7 @@
 [build]
   command = "npm run build"
   publish = ".next"
+  functions = "netlify/functions"
 
 # Production-specific settings
 [context.production]
@@ -10,7 +11,7 @@
     NEXT_PUBLIC_ENVIRONMENT = "production"
     NEXT_PUBLIC_SANITY_DATASET = "production"
     NEXT_PUBLIC_SANITY_PROJECT_ID = "1gxdk71x"
-    NEXT_PUBLIC_SANITY_TOKEN = "env(NEXT_PUBLIC_SANITY_TOKEN)" # Ensure this is set in the Netlify dashboard
+    NEXT_PUBLIC_SANITY_TOKEN = "env(NEXT_PUBLIC_SANITY_TOKEN)"
 
 # Staging-specific settings
 [context.staging]
@@ -20,7 +21,7 @@
     NEXT_PUBLIC_ENVIRONMENT = "staging"
     NEXT_PUBLIC_SANITY_DATASET = "staging"
     NEXT_PUBLIC_SANITY_PROJECT_ID = "1gxdk71x"
-    NEXT_PUBLIC_SANITY_TOKEN = "env(NEXT_STAGING_SANITY_TOKEN)" # Reference environment variable
+    NEXT_PUBLIC_SANITY_TOKEN = "env(NEXT_STAGING_SANITY_TOKEN)"
 
 # Deploy previews (pull request builds)
 [context.deploy-preview]
@@ -31,3 +32,20 @@
 [context.branch-deploy]
   command = "npm run build"
   publish = ".next"
+
+# Add this section for redirects
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
+# New section for functions configuration
+[functions]
+  node_bundler = "esbuild"
+  external_node_modules = ["fluent-ffmpeg", "node-fetch"]
+
+[functions.extract-album-durations]
+  included_files = ["lib/extractDurations.js"]
+
+[functions.spotify-metadata]
+  included_files = []

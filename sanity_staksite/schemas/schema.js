@@ -13,19 +13,19 @@ import banner from './modules/banner';
 import comments from './documents/comments';
 import footer from './documents/footer';         // Import Footer schema
 import heroBanner from './objects/heroBanner'; // Import HeroBanner schema
-import homePage from './documents/homePage';   // Import home page schema
+import homePage from './documents/home';
 import newsletter from './objects/newsletter'; // Import Newsletter schema
 import navbar from './documents/navbar';
-import siteSettings from './documents/siteSettings'; // Import SiteSettings schema
+import siteSettings from './documents/settings'; // Import SiteSettings schema
 import contactPage from './documents/contactPage';
 import musicAndVideo from './objects/musicAndVideo';
 import album from './objects/album';
-
-
-
+import colorTheme from './documents/colorTheme'; // or wherever it's located
+import page from './documents/page' // or wherever it's located
+import collection from './documents/collection' // or wherever it's located
 
 // Export all schemas
-export default [
+export const schemaTypes = [
   post,
   author,
   category,
@@ -44,7 +44,10 @@ export default [
   newsletter,
   navbar,          // Add Navbar schema
   siteSettings,    // Add SiteSettings schema for favicon and SEO
-   contactPage,
-   musicAndVideo,
-    album,
+  contactPage,
+  musicAndVideo,
+  album,
+  colorTheme,
+  page,
+  collection,
 ];

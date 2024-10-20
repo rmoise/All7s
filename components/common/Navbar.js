@@ -1,5 +1,5 @@
 import { Fragment, useState, useEffect } from 'react';
-import { Disclosure, Menu, Transition } from '@headlessui/react';
+import { Disclosure } from '@headlessui/react';
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 import { AiOutlineShopping } from 'react-icons/ai';
 import anime from 'animejs';
@@ -10,105 +10,71 @@ import { useNavbar } from '../../context/NavbarContext';
 import { urlFor } from '../../lib/client';
 
 // Utility function to generate a unique key for each link
-function generateKey(item, index) {
-  return `${item.name}-${index}-${item.href}`;
-}
+const generateKey = (item, index) => `${item.name}-${index}-${item.href}`;
 
-function classNames(...classes) {
-  return classes.filter(Boolean).join(' ');
-}
+const classNames = (...classes) => classes.filter(Boolean).join(' ');
 
-export default function Navbar() {
-  const { navbarData, loading } = useNavbar(); // Use the navbar context data
+const Navbar = () => {
+  const { navbarData, loading } = useNavbar();
   const { showCart, setShowCart, totalQuantities } = useStateContext();
   const [hydrated, setHydrated] = useState(false);
-  const [mobile, setMobile] = useState(false); // Start mobile state as false
+  const [isMobile, setIsMobile] = useState(false);
 
-  // Ensure component is only rendered client-side
+  // Hydration and mobile state check
   useEffect(() => {
     setHydrated(true);
-    // Check if the window is mobile-sized when the component mounts (client-side only)
-    if (typeof window !== 'undefined') {
-      setMobile(window.innerWidth < 768);
-    }
+    const handleResize = () => {
+      if (typeof window !== 'undefined') {
+        setIsMobile(window.innerWidth < 768);
+      }
+    };
+
+    handleResize(); // Initialize state on mount
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Handle resize event to track window size
+  // Scroll animation for mobile
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const handleResize = () => {
-        setMobile(window.innerWidth < 768);
-      };
-
-      window.addEventListener('resize', handleResize);
-      return () => window.removeEventListener('resize', handleResize);
-    }
-  }, []);
-
-  // Handle scroll animation for mobile devices
-  useEffect(() => {
-    if (mobile && typeof window !== 'undefined') {
+    if (isMobile) {
       let lastScrollTop = 0;
-      const navbar = document.getElementById('nav');
-
       const handleScroll = () => {
         const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-        if (scrollTop > lastScrollTop) {
-          anime({
-            targets: '#nav',
-            translateY: -80,
-          });
-        } else {
-          anime({
-            targets: '#nav',
-            translateY: '15',
-          });
-        }
+        anime({
+          targets: '#nav',
+          translateY: scrollTop > lastScrollTop ? -80 : 15,
+        });
         lastScrollTop = scrollTop;
       };
 
       window.addEventListener('scroll', handleScroll);
-
-      // Cleanup the event listener on unmount
       return () => window.removeEventListener('scroll', handleScroll);
     }
-  }, [mobile]);
+  }, [isMobile]);
 
-  // Log navbarData when it changes for debugging
-  useEffect(() => {
-    if (navbarData) {
-      console.log('Navbar Data in Navbar Component:', navbarData);
-    }
-  }, [navbarData]);
-
-  // Wait for hydration and navbarData loading
+  // Render nothing while loading or if navbar data isn't ready
   if (loading || !navbarData || !hydrated) {
-    return null; // Render nothing if still loading or navbarData isn't ready
+    return null;
   }
 
-  // Extract data from navbarData
   const logoUrl = navbarData.logo ? urlFor(navbarData.logo).url() : '/default-logo.png';
   const navbarBgColor = navbarData.isTransparent ? 'transparent' : navbarData.backgroundColor?.hex || 'black';
 
   return (
-    <Disclosure as="nav" className={`fixed top-0 w-full h-auto px-8 z-50 font-Headline text-white`} id="nav" style={{ backgroundColor: navbarBgColor }}>
+    <Disclosure as="nav" id="nav" className={`fixed top-0 w-full h-auto px-8 z-50 font-Headline text-white`} style={{ backgroundColor: navbarBgColor }}>
       {({ open }) => (
         <>
           <div className="mx-auto max-w-7xl px-4 sm:px-8 lg:px-16">
             <div className="relative flex h-16 items-center justify-between">
-              {/* Mobile menu button on the left */}
+              {/* Mobile menu button */}
               <div className="absolute inset-y-0 left-0 flex items-center sm:hidden">
                 <Disclosure.Button className="inline-flex items-center justify-center rounded-md p-2 text-white hover:bg-black hover:text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white">
                   <span className="sr-only">Open main menu</span>
-                  {open ? (
-                    <XMarkIcon className="block h-6 w-6" aria-hidden="true" />
-                  ) : (
-                    <Bars3Icon className="block h-6 w-6" aria-hidden="true" />
-                  )}
+                  {open ? <XMarkIcon className="block h-6 w-6" aria-hidden="true" /> : <Bars3Icon className="block h-6 w-6" aria-hidden="true" />}
                 </Disclosure.Button>
               </div>
 
-              {/* Centered logo for mobile and left aligned for desktop */}
+              {/* Logo */}
               <div className="flex-1 flex items-center justify-center sm:justify-start">
                 <Link href="/">
                   <img
@@ -128,11 +94,11 @@ export default function Navbar() {
                 <div className="flex space-x-8">
                   {navbarData.navigationLinks?.map((item, index) => (
                     <Link
-                      key={generateKey(item, index)} // Generate a unique key for each item
+                      key={generateKey(item, index)}
                       href={item.href}
                       className={classNames(
                         item.name === 'BUY' ? 'text-green-400' : 'text-white',
-                        'px-2 py-2 rounded-md text-sm font-medium font-Headline hover:text-green-400'
+                        'px-2 py-2 rounded-md text-sm font-medium hover:text-green-400'
                       )}
                     >
                       {item.name}
@@ -145,7 +111,7 @@ export default function Navbar() {
                   <button type="button" className="cart-icon flex items-center" onClick={() => setShowCart(true)}>
                     <AiOutlineShopping className="text-2xl" />
                     {totalQuantities > 0 && (
-                      <span className="absolute -top-1 -right-2 bg-red-500 text-white rounded-full text-xs h-4 w-4 flex items-center justify-center font-sans font-medium">
+                      <span className="absolute -top-1 -right-2 bg-red-500 text-white rounded-full text-xs h-4 w-4 flex items-center justify-center">
                         {totalQuantities}
                       </span>
                     )}
@@ -154,17 +120,15 @@ export default function Navbar() {
               </div>
 
               {/* Mobile Shopping Cart */}
-              <div className="flex sm:hidden items-center space-x-4 absolute right-0 inset-y-0">
-                <div className="relative">
-                  <button type="button" className="cart-icon flex items-center" onClick={() => setShowCart(true)}>
-                    <AiOutlineShopping className="text-2xl" />
-                    {totalQuantities > 0 && (
-                      <span className="absolute -top-1 -right-2 bg-red-500 text-white rounded-full text-xs h-4 w-4 flex items-center justify-center font-sans font-medium">
-                        {totalQuantities}
-                      </span>
-                    )}
-                  </button>
-                </div>
+              <div className="flex sm:hidden items-center absolute right-0 inset-y-0 space-x-4">
+                <button type="button" className="cart-icon flex items-center" onClick={() => setShowCart(true)}>
+                  <AiOutlineShopping className="text-2xl" />
+                  {totalQuantities > 0 && (
+                    <span className="absolute -top-1 -right-2 bg-red-500 text-white rounded-full text-xs h-4 w-4 flex items-center justify-center">
+                      {totalQuantities}
+                    </span>
+                  )}
+                </button>
               </div>
 
               {showCart && <Cart />}
@@ -194,4 +158,6 @@ export default function Navbar() {
       )}
     </Disclosure>
   );
-}
+};
+
+export default Navbar;

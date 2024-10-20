@@ -18,10 +18,21 @@ module.exports = {
         '-1': '-1',
       },
       fontFamily: {
-        Headline: ['roc-grotesk-wide', ...defaultTheme.fontFamily.sans],
+        'headline': ['roc-grotesk-wide', ...defaultTheme.fontFamily.sans],
+      },
+      colors: {
+        'primary': '#your-primary-color',
+        'secondary': '#your-secondary-color',
+      },
+      spacing: {
+        '128': '32rem',
+        '144': '36rem',
       },
     },
   },
-  plugins: [    require('@tailwindcss/aspect-ratio'),
-],
+  plugins: [
+    require('@tailwindcss/aspect-ratio'),
+    require('@tailwindcss/forms'),
+    require('@tailwindcss/typography'),
+  ],
 };

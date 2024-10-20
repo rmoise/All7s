@@ -7,45 +7,45 @@ import MusicAndVideo from '../components/Music/MusicAndVideo';
 import Newsletter from '../components/common/Newsletter';
 import HeroBanner from '../components/home/HeroBanner';
 import SEO from '../components/common/SEO';
+import Script from 'next/script';
 
-const Home = ({ contentBlocks, metaTitle, metaDescription, siteSettings, navbarData }) => {
-  const pageTitle =
-    metaTitle
-      ? `${metaTitle} - ${siteSettings?.title || ''}`.trim()
-      : siteSettings?.seo?.metaTitle
-      ? `${siteSettings.seo.metaTitle} - ${siteSettings?.title || ''}`.trim()
-      : siteSettings?.title || 'Default Site Title';
+const Home = ({ contentBlocks, metaTitle, metaDescription, siteSettings }) => {
+  const pageTitle = metaTitle?.trim()
+    ? `${metaTitle} - ${siteSettings?.title || ''}`
+    : `${siteSettings?.seo?.metaTitle?.trim() || 'Default Site Title'} - ${siteSettings?.title || ''}`;
 
   return (
     <>
       <SEO
         title={pageTitle}
-        description={
-          metaDescription ||
-          siteSettings?.seo?.metaDescription ||
-          'Explore the All 7z Brand. West Coast Music, Lifestyle, Merch'
-        }
-        faviconUrl={siteSettings?.favicon?.asset?.url}
+        description={metaDescription || siteSettings?.seo?.metaDescription || 'Explore the All 7z Brand. West Coast Music, Lifestyle, Merch'}
+        faviconUrl={siteSettings?.favicon?.asset?.url || '/favicon.ico'}
         openGraphImageUrl={siteSettings?.seo?.openGraphImage?.asset?.url}
         siteName={siteSettings?.title}
       />
 
       {contentBlocks.map((block, index) => {
+        const key = block._key || index;
         switch (block._type) {
           case 'splash':
-            return <Splash key={block._key || index} {...block} />;
+            return <Splash key={key} {...block} />;
           case 'about':
-            return <About key={block._key || index} aboutData={block} />;
+            return <About key={key} aboutData={block} />;
           case 'musicAndVideo':
-            return <MusicAndVideo key={block._key || index} videoPreLink={block} />;
+            return <MusicAndVideo key={key} videoPreLink={block} />;
           case 'newsletter':
-            return <Newsletter key={block._key || index} newsletter={block} />;
+            return <Newsletter key={key} newsletter={block} />;
           case 'heroBanner':
-            return <HeroBanner key={block._key || index} heroBanner={block} />;
+            return <HeroBanner key={key} heroBanner={block} />;
           default:
             return null;
         }
       })}
+
+      <Script
+        src="https://www.youtube.com/iframe_api"
+        strategy="lazyOnload"
+      />
     </>
   );
 };
@@ -53,98 +53,124 @@ const Home = ({ contentBlocks, metaTitle, metaDescription, siteSettings, navbarD
 export default Home;
 
 export const getServerSideProps = async () => {
-  const homePageQuery = `*[_type == "homePage"][0]{
-    title,
-    metaTitle,
-    metaDescription,
-    contentBlocks[] {
-      ...,
-      _type == 'musicAndVideo' => {
-        lookTitle,
-        listenTitle,
-        vidLink,
-        heroLink,
-        backgroundVideo {
-          backgroundVideoUrl,
-          backgroundVideoFile {
-            asset-> {
-              _ref,
-              url
-            }
-          }
-        },
-        musicLink[]-> {
-          title,
-          description,
-          artist,
-          embedUrl,
-          customImage {
-            asset-> {
-              url
-            }
-          },
-          songs[] {
-            trackTitle,
-            "url": file.asset->url,
-            duration  // <-- Include this to fetch the song duration
-          }
-        }
-      }
-    }
-  }`;
-
-  const siteSettingsQuery = `*[_type == "siteSettings"][0]{
-    title,
-    favicon {
-      asset-> {
-        url,
-        _updatedAt
-      }
-    },
-    seo {
+  const queries = {
+    homePageQuery: `*[_type == "home"][0]{
+      title,
       metaTitle,
       metaDescription,
-      openGraphImage {
-        asset-> {
-          url
+      _updatedAt,
+      contentBlocks[] {
+        ...,
+        _type == 'musicAndVideo' => {
+          lookTitle,
+          listenTitle,
+          vidLink,
+          heroLink,
+          _updatedAt,
+          backgroundVideo {
+            backgroundVideoUrl,
+            backgroundVideoFile {
+              asset-> {
+                _ref,
+                url
+              }
+            }
+          },
+          musicLink[]-> {
+            title,
+            description,
+            artist,
+            embedUrl,
+            _updatedAt,
+            customImage {
+              asset-> {
+                url
+              }
+            },
+            songs[] {
+              trackTitle,
+              "url": file.asset->url,
+              duration
+            }
+          }
         }
       }
-    }
-  }`;
-
-  const navbarQuery = `*[_type == "navbar"][0]{
-    logo,
-    navigationLinks,
-    backgroundColor,
-    isTransparent
-  }`;
-
-  const homePage = await client.fetch(homePageQuery);
-  const siteSettings = await client.fetch(siteSettingsQuery);
-  const navbarData = await client.fetch(navbarQuery);
-
-  // Extracting the LOOK and LISTEN titles to be added to navigationLinks
-  let updatedNavbarData = { ...navbarData };
-  updatedNavbarData.navigationLinks = [...(navbarData.navigationLinks || [])];
-
-  const musicAndVideoSection = homePage?.contentBlocks?.find(block => block._type === 'musicAndVideo');
-  if (musicAndVideoSection) {
-    if (musicAndVideoSection.lookTitle) {
-      updatedNavbarData.navigationLinks.push({ name: musicAndVideoSection.lookTitle, href: '/#LOOK' });
-    }
-    if (musicAndVideoSection.listenTitle) {
-      updatedNavbarData.navigationLinks.push({ name: musicAndVideoSection.listenTitle, href: '/#LISTEN' });
-    }
-  }
-
-  return {
-    props: {
-      contentBlocks: homePage?.contentBlocks || [],
-      metaTitle: homePage?.metaTitle || null,
-      metaDescription: homePage?.metaDescription || null,
-      siteSettings: siteSettings || null,
-      navbarData: updatedNavbarData || null,
-    },
+    }`,
+    siteSettingsQuery: `*[_type == "settings"][0]{
+      title,
+      favicon {
+        asset-> {
+          url,
+          _updatedAt
+        }
+      },
+      seo {
+        metaTitle,
+        metaDescription,
+        openGraphImage {
+          asset-> {
+            url
+          }
+        }
+      },
+      navbar {
+        logo,
+        navigationLinks,
+        backgroundColor,
+        isTransparent
+      },
+      footer {
+        copyrightText,
+        footerLinks,
+        socialLinks,
+        fontColor,
+        alignment
+      }
+    }`,
   };
-};
 
+  try {
+    const [homePage, siteSettings] = await Promise.all([
+      client.fetch(queries.homePageQuery),
+      client.fetch(queries.siteSettingsQuery),
+    ]);
+
+    // Extract and update navigation links with LOOK and LISTEN titles
+    const updatedNavbarData = {
+      ...siteSettings.navbar,
+      navigationLinks: [
+        ...(siteSettings.navbar.navigationLinks || []),
+        ...(homePage.contentBlocks
+          ?.find(block => block._type === 'musicAndVideo') || {}
+        ).lookTitle ? [{ name: homePage.contentBlocks.find(block => block._type === 'musicAndVideo').lookTitle, href: '/#LOOK' }] : [],
+        ...(homePage.contentBlocks
+          ?.find(block => block._type === 'musicAndVideo') || {}
+        ).listenTitle ? [{ name: homePage.contentBlocks.find(block => block._type === 'musicAndVideo').listenTitle, href: '/#LISTEN' }] : []
+      ],
+    };
+
+    return {
+      props: {
+        contentBlocks: homePage?.contentBlocks || [],
+        metaTitle: homePage?.metaTitle || null,
+        metaDescription: homePage?.metaDescription || null,
+        siteSettings: {
+          ...siteSettings,
+          navbar: updatedNavbarData,
+        } || null,
+        footerData: siteSettings?.footer || null,
+      },
+    };
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    return {
+      props: {
+        contentBlocks: [],
+        metaTitle: null,
+        metaDescription: null,
+        siteSettings: null,
+        footerData: null,
+      },
+    };
+  }
+};

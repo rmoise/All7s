@@ -10,105 +10,77 @@ export const NavbarProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Initialize the Sanity client
+  const client = createClient({
+    projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID,
+    dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || 'production',
+    apiVersion: '2022-10-29',
+    useCdn: false,
+  });
+
   // Define a function to fetch the navbar data
   const fetchNavbarData = async () => {
-    console.log('Starting fetchNavbarData...');
-
-    const client = createClient({
-      projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID,
-      dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || 'production',
-      apiVersion: '2022-10-29',
-      useCdn: false,
-    });
+    setLoading(true);
 
     try {
-      setLoading(true);
-      console.log('Fetching data from Sanity...');
-
-      const navbarQuery = `*[_type == "navbar"][0]{
-        logo,
-        navigationLinks[]{
-          name,
-          href
-        },
-        backgroundColor,
-        isTransparent
-      }`;
-
-      const musicAndVideoQuery = `*[_type == "homePage"][0]{
-        contentBlocks[]{
-          lookTitle,
-          listenTitle
-        }
-      }`;
-
-      console.log('navbarQuery:', navbarQuery);
-      console.log('musicAndVideoQuery:', musicAndVideoQuery);
-
-      const [fetchedNavbarData, musicAndVideoData] = await Promise.all([
-        client.fetch(navbarQuery),
-        client.fetch(musicAndVideoQuery),
+      const [settings, homePage] = await Promise.all([
+        client.fetch(`*[_type == "settings"][0]{
+          navbar{
+            logo,
+            navigationLinks[]{name, href},
+            backgroundColor,
+            isTransparent
+          }
+        }`),
+        client.fetch(`*[_type == "home"][0]{
+          contentBlocks[]{
+            _type == 'musicAndVideo' => {
+              lookTitle,
+              listenTitle
+            }
+          }
+        }`)
       ]);
 
-      console.log('Fetched navbar data:', fetchedNavbarData);
-      console.log('Fetched music and video data:', musicAndVideoData);
-
-      // Log the structure of contentBlocks
-      console.log('contentBlocks:', musicAndVideoData?.contentBlocks);
-
-      let updatedNavbarData = { ...fetchedNavbarData };
-      updatedNavbarData.navigationLinks = [
-        ...(fetchedNavbarData.navigationLinks || []),
-      ];
-
-      // Find the first block that contains lookTitle and listenTitle
-      const musicAndVideoSection = musicAndVideoData?.contentBlocks?.find(
+      const fetchedNavbarData = settings.navbar;
+      const musicAndVideoSection = homePage?.contentBlocks?.find(
         (block) => block.lookTitle && block.listenTitle
       );
 
-      console.log('Music and Video Section:', musicAndVideoSection);
+      const updatedNavbarData = {
+        ...fetchedNavbarData,
+        navigationLinks: fetchedNavbarData.navigationLinks || [],
+      };
 
       if (musicAndVideoSection) {
-        const lookTitle = musicAndVideoSection.lookTitle;
-        const listenTitle = musicAndVideoSection.listenTitle;
+        const { lookTitle, listenTitle } = musicAndVideoSection;
 
-        console.log('Look Title:', lookTitle);
-        console.log('Listen Title:', listenTitle);
-
-        // Force update the LOOK link
+        // Update the LOOK link if found
         const lookIndex = updatedNavbarData.navigationLinks.findIndex(
           (link) => link.href === '/#LOOK'
         );
         if (lookIndex > -1) {
-          updatedNavbarData.navigationLinks[lookIndex].name =
-            lookTitle || 'LOOK';
+          updatedNavbarData.navigationLinks[lookIndex].name = lookTitle || 'LOOK';
         }
 
-        // Force update the LISTEN link
+        // Update the LISTEN link if found
         const listenIndex = updatedNavbarData.navigationLinks.findIndex(
           (link) => link.href === '/#LISTEN'
         );
         if (listenIndex > -1) {
-          updatedNavbarData.navigationLinks[listenIndex].name =
-            listenTitle || 'LISTEN';
+          updatedNavbarData.navigationLinks[listenIndex].name = listenTitle || 'LISTEN';
         }
-
-        console.log('Updated Navbar Data:', updatedNavbarData);
       }
 
       setNavbarData(updatedNavbarData);
-      console.log('Navbar data updated successfully');
     } catch (error) {
-      console.error('Error fetching navbar data:', error);
       setError(error);
     } finally {
       setLoading(false);
-      console.log('Finished fetching navbar data');
     }
   };
 
   useEffect(() => {
-    console.log('useEffect triggered');
     fetchNavbarData();
   }, []);
 
@@ -122,6 +94,4 @@ export const NavbarProvider = ({ children }) => {
 };
 
 // Custom hook for consuming the navbar context
-export const useNavbar = () => {
-  return useContext(NavbarContext);
-};
+export const useNavbar = () => useContext(NavbarContext);
