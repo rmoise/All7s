@@ -36,7 +36,7 @@
 # Add this section for redirects
 [[redirects]]
   from = "/api/*"
-  to = "/.netlify/functions/:splat"
+  to = "/.netlify/functions/nextjs-server-side-renderer"
   status = 200
 
 # New section for functions configuration
@@ -49,3 +49,6 @@
 
 [functions.spotify-metadata]
   included_files = ["lib/spotify.js"]
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
