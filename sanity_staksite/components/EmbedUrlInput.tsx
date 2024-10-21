@@ -1,74 +1,67 @@
-import React, { useState, useCallback } from 'react';
-import { TextInput } from '@sanity/ui';
-import { StringInputProps, set, unset } from 'sanity';
+import React, { useCallback } from 'react';
+import { StringInputProps, PatchEvent, set, unset } from 'sanity';
 
-// Create a custom type that combines StringInputProps and the expected component props
-type EmbedUrlInputProps = StringInputProps & {
-  schemaType: { name: string; title?: string; description?: string };
-  onSetFieldValue: (field: string, value: string | null) => void;
-};
-
-interface SpotifyMetadata {
-  title: string;
-  artist: string;
+interface EmbedUrlInputProps extends StringInputProps {
+  onSetFieldValue?: (field: string, value: string | null) => void;
 }
 
-const EmbedUrlInput = (props: EmbedUrlInputProps) => {
-  const [error, setError] = useState<string | null>(null);
-
+const EmbedUrlInput: React.FC<EmbedUrlInputProps> = (props) => {
   const handleChange = useCallback(
     async (event: React.ChangeEvent<HTMLInputElement>) => {
-      const value = event.target.value;
-      console.log('Input value:', value); // Log the input value
+      const value = event.target.value.trim();
+      console.log('Input value:', value);
 
       if (value === '') {
-        props.onChange(unset());
-        setError(null);
+        props.onChange(PatchEvent.from(unset()));
         return;
       }
 
-      props.onChange(set(value));
+      // Extract the Spotify album URL from the iframe src attribute
+      const srcMatch = value.match(/src="([^"]+)"/);
+      if (!srcMatch) {
+        console.error('Invalid iframe format');
+        return;
+      }
+      const spotifyUrl = srcMatch[1]; // Extract the URL directly
+      console.log('Extracted Spotify URL:', spotifyUrl);
 
-      if (value) {
-        const encodedUrl = encodeURIComponent(value);
-        const apiUrl = `${process.env.SANITY_STUDIO_NETLIFY_FUNCTION_URL}/spotify-metadata?url=${encodedUrl}`;
-        console.log('Fetching from:', apiUrl); // Log the full API URL
+      // Determine the correct function URL based on the environment
+      const isProduction = window.location.hostname === 'all7z.com';
+      const functionUrl = isProduction
+        ? 'https://all7z.com/api/spotify-metadata'
+        : 'https://staging--all7z.netlify.app/api/spotify-metadata';
+
+      console.log('Function URL:', functionUrl);
+
+      try {
+        const response = await fetch(`${functionUrl}?url=${encodeURIComponent(spotifyUrl)}`);
+        console.log('Fetch response status:', response.status);
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const rawText = await response.text();
+        console.log('Raw response:', rawText);
+
+        let data;
         try {
-          const response = await fetch(apiUrl, {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          });
+          data = JSON.parse(rawText);
+        } catch (parseError) {
+          console.error('Error parsing JSON:', parseError);
+          throw new Error('Invalid JSON response');
+        }
 
-          console.log('Response status:', response.status);
-          console.log('Response headers:', response.headers);
+        console.log('Metadata:', data);
 
-          const text = await response.text();
-          console.log('Raw response:', text);
-
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}, body: ${text}`);
-          }
-
-          let data: SpotifyMetadata;
-          try {
-            data = JSON.parse(text);
-          } catch (parseError) {
-            console.error('Error parsing JSON:', text);
-            throw new Error('Invalid JSON response');
-          }
-
-          // Update Spotify fields
+        props.onChange(PatchEvent.from(set(value)));
+        if (props.onSetFieldValue) {
           props.onSetFieldValue('spotifyTitle', data.title);
           props.onSetFieldValue('spotifyArtist', data.artist);
-
-          console.log('Metadata:', data);
-          setError(null); // Clear any previous errors
-        } catch (err) {
-          console.error('Error fetching metadata:', err);
-          setError(`Failed to fetch metadata: ${err instanceof Error ? err.message : 'Unknown error'}. Please check the URL and try again.`);
         }
+      } catch (err) {
+        console.error('Error fetching metadata:', err);
+        // Handle error (e.g., show an error message to the user)
       }
     },
     [props]
@@ -76,11 +69,12 @@ const EmbedUrlInput = (props: EmbedUrlInputProps) => {
 
   return (
     <div>
-      <TextInput
+      <input
+        type="text"
         value={props.value || ''}
         onChange={handleChange}
+        placeholder="Enter Spotify embed URL"
       />
-      {error && <div style={{ color: 'red' }}>{error}</div>}
     </div>
   );
 };

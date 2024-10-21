@@ -1,126 +1,80 @@
 const axios = require('axios');
-const { getSpotifyAccessToken } = require('../../lib/spotify');
 
-exports.handler = async (event) => {
-  const allowedOrigins = [
-    'http://localhost:3333', // Sanity Studio local development
-    'https://all7z.sanity.studio', // Your deployed Sanity Studio URL
-    'https://staging--all7z.netlify.app',
-    'https://all7z.netlify.app',
-  ];
+async function getSpotifyAccessToken() {
+  try {
+    const response = await axios.post('https://accounts.spotify.com/api/token',
+      'grant_type=client_credentials',
+      {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          Authorization: `Basic ${Buffer.from(`${process.env.SPOTIFY_CLIENT_ID}:${process.env.SPOTIFY_CLIENT_SECRET}`).toString('base64')}`,
+        },
+      }
+    );
 
-  const origin = event.headers.origin;
-  const headers = {
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  };
-
-  if (allowedOrigins.includes(origin)) {
-    headers['Access-Control-Allow-Origin'] = origin;
+    return response.data.access_token;
+  } catch (error) {
+    throw new Error(`Failed to authenticate with Spotify: ${error.response?.data || error.message}`);
   }
+}
 
-  if (event.httpMethod === 'OPTIONS') {
+exports.handler = async (event, context) => {
+  console.log('Function invoked with event:', event);
+
+  if (event.httpMethod !== 'GET') {
     return {
-      statusCode: 204,
-      headers,
-      body: '',
+      statusCode: 405,
+      body: JSON.stringify({ error: `Method ${event.httpMethod} Not Allowed` }),
     };
   }
-
-  console.log('Function started');
-  console.log('Event:', JSON.stringify(event, null, 2));
-  console.log('Query Parameters:', JSON.stringify(event.queryStringParameters, null, 2));
-  console.log('Body:', event.body);
-
-  let url;
-  if (event.queryStringParameters && event.queryStringParameters.url) {
-    try {
-      url = decodeURIComponent(event.queryStringParameters.url);
-      console.log('Decoded URL:', url);
-    } catch (error) {
-      console.error('Error decoding URL:', error);
-      return {
-        statusCode: 400,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ error: 'Invalid URL encoding' })
-      };
-    }
-  } else if (event.body) {
-    try {
-      const body = JSON.parse(event.body);
-      url = body.url;
-      console.log('URL from body:', url);
-    } catch (error) {
-      console.error('Error parsing body:', error);
-    }
-  }
-
-  if (!url || typeof url !== 'string') {
-    console.log('No valid URL provided');
-    return {
-      statusCode: 400,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ error: 'Missing or invalid URL parameter' })
-    };
-  }
-
-  // Extract Spotify URL from iframe if present
-  const spotifyUrlMatch = url.match(/https:\/\/open\.spotify\.com\/embed\/album\/([a-zA-Z0-9]+)/);
-  if (spotifyUrlMatch) {
-    url = `https://open.spotify.com/album/${spotifyUrlMatch[1]}`;
-  }
-
-  console.log('Extracted Spotify URL:', url);
 
   try {
-    console.log('Attempting to extract album ID');
-    const albumId = url.match(/album\/([a-zA-Z0-9]+)/)?.[1];
-    if (!albumId) {
-      console.log('Invalid Spotify URL');
-      return {
-        statusCode: 400,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ error: 'Invalid Spotify URL' })
-      };
+    const { url } = event.queryStringParameters;
+    console.log('Received URL:', url);
+
+    if (!url) {
+      throw new Error('No URL provided');
     }
 
-    console.log('Album ID:', albumId);
-    console.log('Fetching Spotify access token');
-    const accessToken = await getSpotifyAccessToken();
-    console.log('Access token obtained');
+    // Extract Spotify ID from the URL
+    const match = url.match(/\/embed\/album\/([a-zA-Z0-9]+)/);
+    if (!match) {
+      throw new Error('Invalid Spotify embed URL');
+    }
 
-    console.log('Fetching album data from Spotify API');
-    const response = await axios.get(`https://api.spotify.com/v1/albums/${albumId}`, {
-      headers: { Authorization: `Bearer ${accessToken}` },
+    const spotifyId = match[1];
+    console.log('Extracted Spotify ID:', spotifyId);
+
+    // Get Spotify access token
+    const accessToken = await getSpotifyAccessToken();
+    console.log('Access token obtained:', accessToken);
+
+    // Make request to Spotify API
+    const response = await axios.get(`https://api.spotify.com/v1/albums/${spotifyId}`, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`
+      }
     });
 
-    const albumData = response.data;
-    console.log('Album data:', JSON.stringify(albumData, null, 2));
-    console.log('Successfully fetched album data');
+    console.log('Spotify API response:', response.data);
+
+    // Extract relevant information
+    const { name: title, artists, images } = response.data;
+    const artist = artists.map(a => a.name).join(', ');
+    const imageUrl = images[0].url;
+
+    const result = { title, artist, imageUrl };
+    console.log('Returning result:', result);
 
     return {
       statusCode: 200,
-      headers: {
-        ...headers,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        title: albumData.name,
-        artist: albumData.artists[0]?.name,
-        imageUrl: albumData.images[0]?.url,
-        embedUrl: `https://open.spotify.com/embed/album/${albumId}`,
-        releaseType: albumData.album_type,
-      })
+      body: JSON.stringify(result)
     };
   } catch (error) {
-    console.error('Error in Netlify function:', error);
+    console.error('Error in spotify-metadata function:', error);
     return {
       statusCode: 500,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*' // Add CORS header
-      },
-      body: JSON.stringify({ error: 'Internal server error', details: error.message, stack: error.stack })
+      body: JSON.stringify({ error: error.message })
     };
   }
 };
