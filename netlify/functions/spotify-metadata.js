@@ -30,7 +30,7 @@ exports.handler = async (event, context) => {
     return {
       statusCode: 405,
       headers: {
-        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Origin': '*', // Updated CORS
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ error: `Method ${event.httpMethod} Not Allowed` }),
@@ -89,7 +89,7 @@ exports.handler = async (event, context) => {
     return {
       statusCode: 200,
       headers: {
-        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Origin': '*', // Updated CORS
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(result),
@@ -99,7 +99,7 @@ exports.handler = async (event, context) => {
     return {
       statusCode: 500,
       headers: {
-        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Origin': '*', // Updated CORS
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ error: error.message }),
