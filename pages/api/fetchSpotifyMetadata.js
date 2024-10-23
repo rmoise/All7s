@@ -30,7 +30,7 @@ exports.handler = async (event, context) => {
     return {
       statusCode: 405,
       headers: {
-        'Access-Control-Allow-Origin': 'https://all7z.sanity.studio', // Updated CORS
+        'Access-Control-Allow-Origin': '*', // Allow all origins for testing
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ error: `Method ${event.httpMethod} Not Allowed` }),
@@ -96,7 +96,7 @@ exports.handler = async (event, context) => {
     return {
       statusCode: 200,
       headers: {
-        'Access-Control-Allow-Origin': 'https://all7z.sanity.studio', // Updated CORS
+        'Access-Control-Allow-Origin': '*', // Allow all origins for testing
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(result),
@@ -106,7 +106,7 @@ exports.handler = async (event, context) => {
     return {
       statusCode: 500,
       headers: {
-        'Access-Control-Allow-Origin': 'https://all7z.sanity.studio', // Updated CORS
+        'Access-Control-Allow-Origin': '*', // Allow all origins for testing
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ error: error.message }),
