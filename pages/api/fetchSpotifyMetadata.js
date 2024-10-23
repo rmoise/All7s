@@ -24,6 +24,21 @@ async function getSpotifyAccessToken() {
 }
 
 exports.handler = async (event, context) => {
+  const headers = {
+    'Access-Control-Allow-Origin': 'https://all7z.sanity.studio',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  };
+
+  // Handle preflight requests
+  if (event.httpMethod === 'OPTIONS') {
+    return {
+      statusCode: 200,
+      headers,
+      body: '',
+    };
+  }
+
   console.log('Function invoked with event:', event);
 
   if (event.httpMethod !== 'GET') {
@@ -95,10 +110,7 @@ exports.handler = async (event, context) => {
 
     return {
       statusCode: 200,
-      headers: {
-        'Access-Control-Allow-Origin': '*', // Allow all origins for testing
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify(result),
     };
   } catch (error) {
