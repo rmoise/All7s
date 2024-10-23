@@ -45,7 +45,7 @@ const ReleaseInfoInput = (props: ObjectInputProps<EmbeddedAlbumValue>) => {
     const functionUrl =
       hostname === 'localhost'
         ? 'http://localhost:8888/api/spotify-metadata'
-        : 'https://all7z.com/api/spotify-metadata'
+        : 'https://all7z.com/.netlify/functions/spotify-metadata'
 
     async function fetchMetadata() {
       try {

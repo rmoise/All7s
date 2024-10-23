@@ -1,5 +1,3 @@
-// netlify/functions/spotify-metadata.js
-
 const axios = require('axios');
 
 async function getSpotifyAccessToken() {
@@ -32,7 +30,7 @@ exports.handler = async (event, context) => {
     return {
       statusCode: 405,
       headers: {
-        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Origin': 'https://all7z.sanity.studio', // Updated CORS
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ error: `Method ${event.httpMethod} Not Allowed` }),
@@ -59,7 +57,6 @@ exports.handler = async (event, context) => {
     console.log('Parsed path:', path);
 
     // Extract Spotify ID from the path using regex
-    // Spotify album IDs are 22 characters long
     const embedMatch = path.match(/\/embed\/album\/([a-zA-Z0-9]{22})/);
     const directMatch = path.match(/\/album\/([a-zA-Z0-9]{22})/);
     let spotifyId;
@@ -91,7 +88,7 @@ exports.handler = async (event, context) => {
     const { name: title, artists, images, album_type } = response.data;
     const artist = artists.map((a) => a.name).join(', ');
     const imageUrl = images[0]?.url || '';
-    const releaseType = album_type; // 'album', 'single', or 'compilation'
+    const releaseType = album_type;
 
     const result = { title, artist, imageUrl, releaseType };
     console.log('Returning result:', result);
@@ -99,7 +96,7 @@ exports.handler = async (event, context) => {
     return {
       statusCode: 200,
       headers: {
-        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Origin': 'https://all7z.sanity.studio', // Updated CORS
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(result),
@@ -109,7 +106,7 @@ exports.handler = async (event, context) => {
     return {
       statusCode: 500,
       headers: {
-        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Origin': 'https://all7z.sanity.studio', // Updated CORS
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ error: error.message }),
