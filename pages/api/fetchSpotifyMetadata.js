@@ -1,4 +1,5 @@
 const axios = require('axios');
+const fetch = require('node-fetch');
 
 async function getSpotifyAccessToken() {
   try {
@@ -14,7 +15,6 @@ async function getSpotifyAccessToken() {
         },
       }
     );
-
     return response.data.access_token;
   } catch (error) {
     throw new Error(
@@ -23,91 +23,79 @@ async function getSpotifyAccessToken() {
   }
 }
 
-exports.handler = async (event, context) => {
-  console.log('Function invoked with event:', event);
+async function fetchAlbumData(albumId, accessToken) {
+  const albumResponse = await fetch(`https://api.spotify.com/v1/albums/${albumId}`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
 
-  if (event.httpMethod !== 'GET') {
-    return {
-      statusCode: 405,
-      headers: {
-        'Access-Control-Allow-Origin': 'https://all7z.sanity.studio', // Updated CORS
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ error: `Method ${event.httpMethod} Not Allowed` }),
-    };
+  if (!albumResponse.ok) {
+    const albumError = await albumResponse.text();
+    throw new Error(`Failed to fetch album data: ${albumResponse.status} ${albumResponse.statusText} - ${albumError}`);
+  }
+
+  const albumData = await albumResponse.json();
+
+  // Find the largest image
+  const largestImage = albumData.images.reduce((largest, image) => {
+    return (image.width > largest.width) ? image : largest;
+  }, albumData.images[0]);
+
+  return {
+    title: albumData.name,
+    artist: albumData.artists[0]?.name,
+    imageUrl: largestImage ? largestImage.url : '/images/placeholder.png',
+    embedUrl: `https://open.spotify.com/embed/album/${albumId}`,
+    releaseType: albumData.album_type,
+  };
+}
+
+async function handleRequest(body) {
+  const { urls } = body;
+
+  const accessToken = await getSpotifyAccessToken();
+
+  // If urls is not provided, expect a single URL
+  if (urls) {
+    // Batch request
+    return Promise.all(urls.map(url => {
+      const spotifyUrlMatch = url.match(/https:\/\/open\.spotify\.com\/(?:embed\/)?album\/([a-zA-Z0-9]+)/);
+      if (!spotifyUrlMatch) return Promise.resolve(null);
+      const albumId = spotifyUrlMatch[1];
+      return fetchAlbumData(albumId, accessToken);
+    }));
+  } else {
+    // Single request
+    const spotifyUrlMatch = body.url.match(/https:\/\/open\.spotify\.com\/(?:embed\/)?album\/([a-zA-Z0-9]+)/);
+    if (!spotifyUrlMatch) throw new Error('Invalid Spotify URL');
+    const albumId = spotifyUrlMatch[1];
+    return fetchAlbumData(albumId, accessToken);
+  }
+}
+
+// Netlify function handler
+exports.handler = async (event, context) => {
+  if (event.httpMethod !== 'POST' && event.httpMethod !== 'GET') {
+    return { statusCode: 405, body: 'Method Not Allowed' };
   }
 
   try {
-    const { url } = event.queryStringParameters;
-    console.log('Received URL:', url);
-
-    if (!url) {
-      throw new Error('No URL provided');
-    }
-
-    // Parse the URL to extract the pathname
-    let parsedUrl;
-    try {
-      parsedUrl = new URL(url);
-    } catch (e) {
-      throw new Error('Invalid URL format');
-    }
-
-    const path = parsedUrl.pathname; // e.g., '/embed/album/7kJvKnKiwtJyp88tsancYY'
-    console.log('Parsed path:', path);
-
-    // Extract Spotify ID from the path using regex
-    const embedMatch = path.match(/\/embed\/album\/([a-zA-Z0-9]{22})/);
-    const directMatch = path.match(/\/album\/([a-zA-Z0-9]{22})/);
-    let spotifyId;
-
-    if (embedMatch) {
-      spotifyId = embedMatch[1];
-      console.log('Extracted Spotify ID from embed URL:', spotifyId);
-    } else if (directMatch) {
-      spotifyId = directMatch[1];
-      console.log('Extracted Spotify ID from direct URL:', spotifyId);
-    } else {
-      throw new Error('Invalid Spotify URL format');
-    }
-
-    // Get Spotify access token
-    const accessToken = await getSpotifyAccessToken();
-    console.log('Access token obtained:', accessToken);
-
-    // Make request to Spotify API
-    const response = await axios.get(`https://api.spotify.com/v1/albums/${spotifyId}`, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
-
-    console.log('Spotify API response:', response.data);
-
-    // Extract relevant information
-    const { name: title, artists, images, album_type } = response.data;
-    const artist = artists.map((a) => a.name).join(', ');
-    const imageUrl = images[0]?.url || '';
-    const releaseType = album_type;
-
-    const result = { title, artist, imageUrl, releaseType };
-    console.log('Returning result:', result);
-
+    const body = JSON.parse(event.body);
+    const results = await handleRequest(body);
     return {
       statusCode: 200,
       headers: {
-        'Access-Control-Allow-Origin': 'https://all7z.sanity.studio', // Updated CORS
-        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*', // Updated CORS
       },
-      body: JSON.stringify(result),
+      body: JSON.stringify(results),
     };
   } catch (error) {
-    console.error('Error in spotify-metadata function:', error);
+    console.error('Error fetching Spotify metadata:', error);
     return {
       statusCode: 500,
       headers: {
-        'Access-Control-Allow-Origin': 'https://all7z.sanity.studio', // Updated CORS
-        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*', // Updated CORS
       },
       body: JSON.stringify({ error: error.message }),
     };
