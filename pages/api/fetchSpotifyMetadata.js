@@ -24,28 +24,13 @@ async function getSpotifyAccessToken() {
 }
 
 exports.handler = async (event, context) => {
-  const headers = {
-    'Access-Control-Allow-Origin': 'https://all7z.sanity.studio',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  };
-
-  // Handle preflight requests
-  if (event.httpMethod === 'OPTIONS') {
-    return {
-      statusCode: 200,
-      headers,
-      body: '',
-    };
-  }
-
   console.log('Function invoked with event:', event);
 
   if (event.httpMethod !== 'GET') {
     return {
       statusCode: 405,
       headers: {
-        'Access-Control-Allow-Origin': '*', // Allow all origins for testing
+        'Access-Control-Allow-Origin': 'https://all7z.sanity.studio', // Updated CORS
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ error: `Method ${event.httpMethod} Not Allowed` }),
@@ -110,7 +95,10 @@ exports.handler = async (event, context) => {
 
     return {
       statusCode: 200,
-      headers,
+      headers: {
+        'Access-Control-Allow-Origin': 'https://all7z.sanity.studio', // Updated CORS
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify(result),
     };
   } catch (error) {
@@ -118,7 +106,7 @@ exports.handler = async (event, context) => {
     return {
       statusCode: 500,
       headers: {
-        'Access-Control-Allow-Origin': '*', // Allow all origins for testing
+        'Access-Control-Allow-Origin': 'https://all7z.sanity.studio', // Updated CORS
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ error: error.message }),
