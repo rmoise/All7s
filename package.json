@@ -22,9 +22,11 @@
     "@headlessui/react": "^2.1.9",
     "@heroicons/react": "^2.0.11",
     "@jridgewell/gen-mapping": "^0.3.5",
+    "@netlify/plugin-nextjs": "^5.8.0",
     "@portabletext/react": "^3.1.0",
     "@sanity/client": "^6.22.1",
     "@sanity/image-url": "^1.0.1",
+    "@sanity/ui": "^2.8.9",
     "@stripe/stripe-js": "^4.7.0",
     "@tailwindcss/aspect-ratio": "^0.4.2",
     "@tailwindcss/forms": "^0.5.9",
@@ -60,8 +62,7 @@
     "react-lazyload": "^3.2.1",
     "react-youtube": "^10.0.0",
     "rimraf": "^6.0.1",
-    "stripe": "^17.1.0",
-    "@netlify/plugin-nextjs": "^5.8.0"
+    "stripe": "^17.1.0"
   },
   "devDependencies": {
     "@babel/eslint-parser": "^7.25.7",

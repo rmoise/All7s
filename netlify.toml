@@ -37,10 +37,10 @@
 
 # Add this section for redirects
 [[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/:splat"
+  from = "/api/spotify-metadata"
+  to = "/.netlify/functions/spotify-metadata"
   status = 200
-  force = true
+
 
 # New section for functions configuration
 [functions]

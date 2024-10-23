@@ -1,94 +1,118 @@
-import Cors from 'cors'
+// netlify/functions/spotify-metadata.js
 
-// Initializing the cors middleware
-const cors = Cors({
-  methods: ['GET', 'HEAD'],
-  origin: true, // Allow all origins
-  credentials: true, // Allow credentials
-})
+const axios = require('axios');
 
-// Helper method to wait for a middleware to execute before continuing
-// And to throw an error when an error happens in a middleware
-function runMiddleware(req, res, fn) {
-  return new Promise((resolve, reject) => {
-    fn(req, res, (result) => {
-      if (result instanceof Error) {
-        return reject(result)
+async function getSpotifyAccessToken() {
+  try {
+    const response = await axios.post(
+      'https://accounts.spotify.com/api/token',
+      'grant_type=client_credentials',
+      {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          Authorization: `Basic ${Buffer.from(
+            `${process.env.SPOTIFY_CLIENT_ID}:${process.env.SPOTIFY_CLIENT_SECRET}`
+          ).toString('base64')}`,
+        },
       }
-      return resolve(result)
-    })
-  })
+    );
+
+    return response.data.access_token;
+  } catch (error) {
+    throw new Error(
+      `Failed to authenticate with Spotify: ${error.response?.data || error.message}`
+    );
+  }
 }
 
-export default async function handler(req, res) {
-  // Run the middleware
-  await runMiddleware(req, res, cors)
+exports.handler = async (event, context) => {
+  console.log('Function invoked with event:', event);
 
-  console.log('API route called with URL:', req.query.url);
-
-  res.setHeader('Content-Type', 'application/json');
-
-  const { url } = req.query;
-
-  if (!url) {
-    return res.status(400).json({ error: 'Missing URL parameter' });
+  if (event.httpMethod !== 'GET') {
+    return {
+      statusCode: 405,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ error: `Method ${event.httpMethod} Not Allowed` }),
+    };
   }
 
   try {
-    const spotifyUrlMatch = url.match(/https:\/\/open\.spotify\.com\/(?:embed\/)?album\/([a-zA-Z0-9]+)/);
-    if (!spotifyUrlMatch) {
-      return res.status(400).json({ error: 'Invalid Spotify URL' });
-    }
-    const albumId = spotifyUrlMatch[1];
+    const { url } = event.queryStringParameters;
+    console.log('Received URL:', url);
 
-    console.log('Extracted album ID:', albumId);
+    if (!url) {
+      throw new Error('No URL provided');
+    }
+
+    // Parse the URL to extract the pathname
+    let parsedUrl;
+    try {
+      parsedUrl = new URL(url);
+    } catch (e) {
+      throw new Error('Invalid URL format');
+    }
+
+    const path = parsedUrl.pathname; // e.g., '/embed/album/7kJvKnKiwtJyp88tsancYY'
+    console.log('Parsed path:', path);
+
+    // Extract Spotify ID from the path using regex
+    // Spotify album IDs are 22 characters long
+    const embedMatch = path.match(/\/embed\/album\/([a-zA-Z0-9]{22})/);
+    const directMatch = path.match(/\/album\/([a-zA-Z0-9]{22})/);
+    let spotifyId;
+
+    if (embedMatch) {
+      spotifyId = embedMatch[1];
+      console.log('Extracted Spotify ID from embed URL:', spotifyId);
+    } else if (directMatch) {
+      spotifyId = directMatch[1];
+      console.log('Extracted Spotify ID from direct URL:', spotifyId);
+    } else {
+      throw new Error('Invalid Spotify URL format');
+    }
 
     // Get Spotify access token
-    const authResponse = await fetch('https://accounts.spotify.com/api/token', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        Authorization: `Basic ${Buffer.from(`${process.env.SPOTIFY_CLIENT_ID}:${process.env.SPOTIFY_CLIENT_SECRET}`).toString('base64')}`,
-      },
-      body: 'grant_type=client_credentials',
-    });
+    const accessToken = await getSpotifyAccessToken();
+    console.log('Access token obtained:', accessToken);
 
-    if (!authResponse.ok) {
-      const authError = await authResponse.text();
-      console.error('Spotify auth error:', authError);
-      return res.status(500).json({ error: `Failed to authenticate with Spotify: ${authError}` });
-    }
-
-    const { access_token: accessToken } = await authResponse.json();
-
-    // Fetch album data from Spotify API
-    const albumResponse = await fetch(`https://api.spotify.com/v1/albums/${albumId}`, {
+    // Make request to Spotify API
+    const response = await axios.get(`https://api.spotify.com/v1/albums/${spotifyId}`, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
     });
 
-    if (!albumResponse.ok) {
-      const albumError = await albumResponse.text();
-      console.error('Spotify album fetch error:', albumError);
-      return res.status(500).json({ error: `Failed to fetch album data: ${albumResponse.status} ${albumResponse.statusText}` });
-    }
+    console.log('Spotify API response:', response.data);
 
-    const albumData = await albumResponse.json();
+    // Extract relevant information
+    const { name: title, artists, images, album_type } = response.data;
+    const artist = artists.map((a) => a.name).join(', ');
+    const imageUrl = images[0]?.url || '';
+    const releaseType = album_type; // 'album', 'single', or 'compilation'
 
-    const responseData = {
-      title: albumData.name,
-      artist: albumData.artists[0]?.name,
-      imageUrl: albumData.images[0]?.url,
-      embedUrl: `https://open.spotify.com/embed/album/${albumId}`,
-      releaseType: albumData.album_type,
+    const result = { title, artist, imageUrl, releaseType };
+    console.log('Returning result:', result);
+
+    return {
+      statusCode: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(result),
     };
-
-    console.log('Sending response:', JSON.stringify(responseData));
-    return res.status(200).json(responseData);
-
   } catch (error) {
-    console.error('Error in API route:', error);
-    return res.status(500).json({ error: error.message });
+    console.error('Error in spotify-metadata function:', error);
+    return {
+      statusCode: 500,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ error: error.message }),
+    };
   }
-}
+};

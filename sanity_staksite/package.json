@@ -22,12 +22,21 @@
     "@heroicons/react": "^2.1.5",
     "@portabletext/react": "^3.1.0",
     "@sanity/asset-utils": "^2.0.6",
+    "@sanity/block-tools": "^3.61.0",
     "@sanity/cli": "^3.61.0",
     "@sanity/client": "^6.22.2",
     "@sanity/color-input": "^4.0.1",
+    "@sanity/export": "^3.41.0",
     "@sanity/icons": "^3.4.0",
     "@sanity/image-url": "^1.0.2",
+    "@sanity/import": "^3.37.8",
+    "@sanity/insert-menu": "^1.0.9",
+    "@sanity/migrate": "^3.61.0",
+    "@sanity/mutator": "^3.61.0",
+    "@sanity/portable-text-editor": "^3.48.1",
+    "@sanity/schema": "^3.61.0",
     "@sanity/ui": "^2.8.9",
+    "@sanity/util": "^3.61.0",
     "@sanity/vision": "^3.61.0",
     "lodash": "^4.17.21",
     "pluralize-esm": "^9.0.5",
@@ -42,7 +51,9 @@
     "styled-components": "^6.1.13"
   },
   "devDependencies": {
- "@sanity/eslint-config-studio": "^3.0.1",
+    "@sanity/eslint-config-studio": "^3.0.1",
+    "@types/event-source-polyfill": "^1.0.5",
+    "@types/node": "^22.7.7",
     "@types/react": "^18.3.11",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
@@ -62,5 +73,8 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/rmoise/All7s.git"
+  },
+  "resolutions": {
+    "@sanity/util": "3.61.0"
   }
 }
