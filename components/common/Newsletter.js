@@ -1,7 +1,6 @@
 import React from 'react';
 
 export default function Newsletter({ newsletter }) {
-  console.log("Newsletter data:", newsletter); // Debugging line
 
   return (
     <section className="relative w-full z-10 overflow-hidden py-8" id="newsletter">

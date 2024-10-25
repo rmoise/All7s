@@ -1,11 +1,13 @@
+// components/FlipCard.js
+
 import React, { forwardRef, useRef, useState, useEffect, useCallback, useMemo, useLayoutEffect } from 'react';
 import clsx from 'clsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlay, faPause } from '@fortawesome/free-solid-svg-icons';
+import { faPlay, faPause, faSyncAlt } from '@fortawesome/free-solid-svg-icons';
 import anime from 'animejs';
 import { useAudio } from '../context/AudioContext.jsx';
 import SpotifyEmbed from './SpotifyEmbed';
-import { debounce } from 'lodash'; // Add this import
+import { debounce } from 'lodash';
 import Image from 'next/image';
 
 const FlipCard = forwardRef(({ album, isFlipped, toggleFlip }, ref) => {
@@ -23,79 +25,96 @@ const FlipCard = forwardRef(({ album, isFlipped, toggleFlip }, ref) => {
 
   const [currentTrackIndexLocal, setCurrentTrackIndexLocal] = useState(null);
   const [songDurations, setSongDurations] = useState({});
-  const [isMobile, setIsMobile] = useState(
-    typeof window !== 'undefined' ? window.innerWidth <= 768 : false
-  );
+  const [isMobile, setIsMobile] = useState(false);
 
+  // Handle window resize to set isMobile
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const isThisTrackPlaying = useMemo(() =>
-    isPlaying &&
-    currentAlbumId === album.albumId &&
-    currentTrackIndex === currentTrackIndexLocal,
-  [isPlaying, currentAlbumId, album.albumId, currentTrackIndex, currentTrackIndexLocal]);
+  // Determine if the current track is playing or paused
+  const isThisTrackPlaying = useMemo(
+    () =>
+      isPlaying &&
+      currentAlbumId === album.albumId &&
+      currentTrackIndex === currentTrackIndexLocal,
+    [isPlaying, currentAlbumId, album.albumId, currentTrackIndex, currentTrackIndexLocal]
+  );
 
-  const isThisTrackPaused = useMemo(() =>
-    !isPlaying &&
-    currentAlbumId === album.albumId &&
-    currentTrackIndex === currentTrackIndexLocal,
-  [isPlaying, currentAlbumId, album.albumId, currentTrackIndex, currentTrackIndexLocal]);
+  const isThisTrackPaused = useMemo(
+    () =>
+      !isPlaying &&
+      currentAlbumId === album.albumId &&
+      currentTrackIndex === currentTrackIndexLocal,
+    [isPlaying, currentAlbumId, album.albumId, currentTrackIndex, currentTrackIndexLocal]
+  );
 
-  const handlePlayPauseRef = useRef(null);
-  const handleTrackClickRef = useRef(null);
-
-  const handleTrackClick = useCallback((e, idx) => {
-    if (e && e.stopPropagation) {
-      e.stopPropagation();
-    }
-    if (album.songs && idx >= 0 && idx < album.songs.length) {
-      setCurrentTrackIndexLocal(idx);
-      const selectedTrack = album.songs[idx];
-      if (selectedTrack && selectedTrack.url) {
-        playTrack(selectedTrack.url, album.albumId, idx);
-      } else {
-        console.warn('Selected track is invalid or missing URL.');
+  // Handle clicking on a track to play
+  const handleTrackClick = useCallback(
+    (e, idx) => {
+      if (e && e.stopPropagation) {
+        e.stopPropagation();
       }
-    } else {
-      console.warn('Invalid track index.');
-    }
-  }, [album.songs, playTrack, album.albumId]);
-
-  handleTrackClickRef.current = handleTrackClick;
-
-  const handlePlayPause = useCallback((e) => {
-    if (e && e.stopPropagation) {
-      e.stopPropagation();
-    }
-    if (currentTrackIndexLocal === null) {
-      if (album.songs && album.songs.length > 0) {
-        handleTrackClickRef.current(null, 0);
+      if (album.songs && idx >= 0 && idx < album.songs.length) {
+        setCurrentTrackIndexLocal(idx);
+        const selectedTrack = album.songs[idx];
+        if (selectedTrack && selectedTrack.url) {
+          playTrack(selectedTrack.url, album.albumId, idx);
+        } else {
+          console.warn('Selected track is invalid or missing URL.');
+        }
       } else {
-        console.warn('No tracks available.');
+        console.warn('Invalid track index.');
       }
-      return;
-    }
+    },
+    [album.songs, playTrack, album.albumId]
+  );
 
-    if (isThisTrackPlaying) {
-      pauseTrack();
-    } else if (isThisTrackPaused) {
-      currentHowl.play();
-    } else {
-      const currentSong = album.songs && album.songs[currentTrackIndexLocal];
-      if (currentSong && currentSong.url) {
-        playTrack(currentSong.url, album.albumId, currentTrackIndexLocal);
+  // Handle play/pause button click
+  const handlePlayPause = useCallback(
+    (e) => {
+      if (e && e.stopPropagation) {
+        e.stopPropagation();
+      }
+      if (currentTrackIndexLocal === null) {
+        if (album.songs && album.songs.length > 0) {
+          handleTrackClick(e, 0);
+        } else {
+          console.warn('No tracks available.');
+        }
+        return;
+      }
+
+      if (isThisTrackPlaying) {
+        pauseTrack();
+      } else if (isThisTrackPaused) {
+        currentHowl.play();
       } else {
-        console.warn('Invalid track or missing URL.');
+        const currentSong = album.songs && album.songs[currentTrackIndexLocal];
+        if (currentSong && currentSong.url) {
+          playTrack(currentSong.url, album.albumId, currentTrackIndexLocal);
+        } else {
+          console.warn('Invalid track or missing URL.');
+        }
       }
-    }
-  }, [currentTrackIndexLocal, album.songs, isThisTrackPlaying, isThisTrackPaused, pauseTrack, currentHowl, playTrack, album.albumId]);
+    },
+    [
+      currentTrackIndexLocal,
+      album.songs,
+      isThisTrackPlaying,
+      isThisTrackPaused,
+      pauseTrack,
+      currentHowl,
+      playTrack,
+      album.albumId,
+      handleTrackClick,
+    ]
+  );
 
-  handlePlayPauseRef.current = handlePlayPause;
-
+  // Set song durations when album changes
   useEffect(() => {
     if (album.songs && album.songs.length > 0) {
       const durations = {};
@@ -108,26 +127,33 @@ const FlipCard = forwardRef(({ album, isFlipped, toggleFlip }, ref) => {
     }
   }, [album]);
 
+  // Debounced seek function
   const debouncedHandleSeek = useMemo(
-    () => debounce((seekTime) => {
-      if (
-        (isThisTrackPlaying || isThisTrackPaused) &&
-        currentTrackIndexLocal !== null &&
-        songDurations[currentTrackIndexLocal] > 0
-      ) {
-        seekTo(seekTime);
-      }
-    }, 300),
+    () =>
+      debounce((seekTime) => {
+        if (
+          (isThisTrackPlaying || isThisTrackPaused) &&
+          currentTrackIndexLocal !== null &&
+          songDurations[currentTrackIndexLocal] > 0
+        ) {
+          seekTo(seekTime);
+        }
+      }, 300),
     [isThisTrackPlaying, isThisTrackPaused, currentTrackIndexLocal, songDurations, seekTo]
   );
 
-  const handleSeek = useCallback((e) => {
-    e.stopPropagation();
-    const seekPercent = e.target.value;
-    const seekTime = (seekPercent / 100) * songDurations[currentTrackIndexLocal];
-    debouncedHandleSeek(seekTime);
-  }, [currentTrackIndexLocal, songDurations, debouncedHandleSeek]);
+  // Handle seek input change
+  const handleSeek = useCallback(
+    (e) => {
+      e.stopPropagation();
+      const seekPercent = e.target.value;
+      const seekTime = (seekPercent / 100) * songDurations[currentTrackIndexLocal];
+      debouncedHandleSeek(seekTime);
+    },
+    [currentTrackIndexLocal, songDurations, debouncedHandleSeek]
+  );
 
+  // Format time in mm:ss
   const formatTime = (time) => {
     if (time === null || isNaN(time)) return '00:00';
     const minutes = Math.floor(time / 60);
@@ -135,6 +161,7 @@ const FlipCard = forwardRef(({ album, isFlipped, toggleFlip }, ref) => {
     return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
   };
 
+  // Animate the image scaling on flip
   useLayoutEffect(() => {
     if (!isMobile) {
       anime({
@@ -148,6 +175,7 @@ const FlipCard = forwardRef(({ album, isFlipped, toggleFlip }, ref) => {
     }
   }, [isFlipped, isMobile]);
 
+  // Sync current track index with global audio state
   useEffect(() => {
     if (isPlaying && currentAlbumId === album.albumId) {
       const currentSrc = currentHowl?._src?.[0] ? currentHowl._src[0].toLowerCase() : '';
@@ -160,6 +188,7 @@ const FlipCard = forwardRef(({ album, isFlipped, toggleFlip }, ref) => {
     }
   }, [currentHowl, isPlaying, album, currentTrackIndexLocal]);
 
+  // Render the list of tracks
   const renderTrackList = useMemo(() => {
     if (!album.songs || album.songs.length === 0) {
       return <div className="mt-4 text-center text-gray-500">No tracks available</div>;
@@ -173,26 +202,30 @@ const FlipCard = forwardRef(({ album, isFlipped, toggleFlip }, ref) => {
             className={clsx(
               'flex justify-between items-center cursor-pointer hover:bg-gray-300 rounded-md',
               {
-                'bg-gray-400': currentTrackIndexLocal === idx && (isThisTrackPlaying || isThisTrackPaused)
+                'bg-gray-400': currentTrackIndexLocal === idx && (isThisTrackPlaying || isThisTrackPaused),
               }
             )}
-            onClick={(e) => handleTrackClickRef.current(e, idx)}
+            onClick={(e) => handleTrackClick(e, idx)}
             style={{ padding: '10px', borderRadius: '5px' }}
           >
-            <p className="text-black">
-              {song.trackTitle || `Track ${idx + 1}`}
-            </p>
+            <p className="text-black">{song.trackTitle || `Track ${idx + 1}`}</p>
             <span className="text-sm text-gray-500">
-              {songDurations[idx] && !isNaN(songDurations[idx])
-                ? formatTime(songDurations[idx])
-                : 'Unknown'}
+              {songDurations[idx] && !isNaN(songDurations[idx]) ? formatTime(songDurations[idx]) : 'Unknown'}
             </span>
           </div>
         ))}
       </div>
     );
-  }, [album.songs, currentTrackIndexLocal, isThisTrackPlaying, isThisTrackPaused, songDurations, handleTrackClickRef]);
+  }, [
+    album.songs,
+    currentTrackIndexLocal,
+    isThisTrackPlaying,
+    isThisTrackPaused,
+    songDurations,
+    handleTrackClick,
+  ]);
 
+  // Handle mouse enter for non-mobile and not flipped
   const handleMouseEnter = useCallback(() => {
     if (!isMobile && !isFlipped) {
       anime({
@@ -206,6 +239,7 @@ const FlipCard = forwardRef(({ album, isFlipped, toggleFlip }, ref) => {
     }
   }, [isMobile, isFlipped]);
 
+  // Handle mouse leave for non-mobile and not flipped
   const handleMouseLeave = useCallback(() => {
     if (!isMobile && !isFlipped) {
       anime({
@@ -219,75 +253,84 @@ const FlipCard = forwardRef(({ album, isFlipped, toggleFlip }, ref) => {
     }
   }, [isMobile, isFlipped]);
 
+  // Prevent propagation when clicking on content
   const handleContentClick = (e) => {
     e.stopPropagation();
   };
 
+  // Define the handleFlip function
+  const handleFlip = useCallback(() => {
+    toggleFlip(album.albumId);
+  }, [toggleFlip, album.albumId]);
+
+  // Add console log to verify embedUrl and imageUrl
+  useEffect(() => {
+  }, [album.albumId, album.embedUrl, album.imageUrl]);
+
   return (
     <div ref={ref} className="relative w-full mb-8 px-4 sm:px-0" data-album-id={album.albumId}>
       <h2 className="text-2xl sm:text-3xl font-bold text-center text-white mb-4">
-        {album.title || album.description}
+        {album.title || 'Untitled Album'}
       </h2>
 
-      <div className="relative max-w-lg mx-auto"> {/* Changed from max-w-md to max-w-lg */}
-        <div
-          className={`w-full ${
-            isMobile ? 'mobile-container' : 'flip-container'
-          } ${isFlipped ? (isMobile ? 'mobile-expanded' : 'flipped') : ''}`}
-        >
+      <div className="relative max-w-lg mx-auto">
+        <div className={`w-full ${isMobile ? 'mobile-container' : 'flip-container'} ${isFlipped ? (isMobile ? 'mobile-expanded' : 'flipped') : ''}`}>
           {/* Front of the card */}
           <div
-            className={`${
-              isMobile ? 'mobile-front' : 'flip-front absolute inset-0'
-            } bg-black/0 rounded-lg ${isMobile ? '' : 'backface-hidden'}`}
-            onClick={() => toggleFlip(album.albumId)}
+            className={`${isMobile ? 'mobile-front' : 'flip-front absolute inset-0'} bg-black/0 rounded-lg ${isMobile ? '' : 'backface-hidden'}`}
+            onClick={handleFlip} // handleFlip is now defined
           >
-            <div
-              className="w-full cursor-pointer"
-              onMouseEnter={handleMouseEnter}
-              onMouseLeave={handleMouseLeave}
-            >
+            <div className="w-full cursor-pointer" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
               <div className="w-full h-0 pb-[100%] relative">
                 <Image
                   ref={imgRef}
-                  src={album.imageUrl}
-                  alt={album.title || album.description}
+                  src={album.customImage?.asset?.url || album.imageUrl || '/images/placeholder.png'}
+                  alt={album.title || 'Album Image'}
                   fill
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                   quality={100}
-                  style={{ objectFit: "cover" }}
+                  style={{ objectFit: 'cover' }}
                   className="rounded-lg"
                   priority
                 />
               </div>
             </div>
+            {/* Optional Flip Icon for Non-Embedded Albums */}
+            {album.albumSource !== 'embedded' && (
+              <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2">
+                <FontAwesomeIcon icon={faSyncAlt} className="text-white opacity-50" />
+              </div>
+            )}
           </div>
 
           {/* Back of the card */}
           <div
-            className={`${
-              isMobile ? 'mobile-back' : 'flip-back absolute inset-0'
-            } rounded-lg ${isMobile ? '' : 'backface-hidden overflow-hidden'}`}
+            className={`${isMobile ? 'mobile-back' : 'flip-back absolute inset-0'} rounded-lg ${isMobile ? '' : 'backface-hidden overflow-hidden'}`}
+            onClick={handleFlip}
           >
             <div className="w-full h-full" onClick={handleContentClick}>
               {album.songs && album.songs.length > 0 ? (
                 <div className="custom-player md:h-[500px] bg-white w-full p-4 rounded-lg" onClick={(e) => e.stopPropagation()}>
+                  {/* Player UI */}
                   <div className="flex items-center space-x-4 mb-4">
-                    <img
-                      src={album.imageUrl}
+                    <Image
+                      src={album.imageUrl || '/images/placeholder.png'} // Ensure album.imageUrl is used
                       alt={album.title}
-                      className="w-16 h-16 rounded-lg object-cover"
+                      width={64}
+                      height={64}
+                      className="rounded-lg object-cover"
+                      priority
                     />
                     <div>
                       <p className="text-xl font-semibold text-black">{album.title}</p>
-                      <p className="text-sm text-gray-500">{album.artist || 'Unknown'}</p>
+                      <p className="text-sm text-gray-500">{album.artist || 'Unknown Artist'}</p>
                     </div>
                   </div>
 
                   <div className="flex justify-center items-center mt-4">
                     <button
                       className="text-black bg-gray-300 hover:bg-gray-400 rounded-full p-4"
-                      onClick={(e) => handlePlayPauseRef.current(e)}
+                      onClick={(e) => handlePlayPause(e)}
                       aria-label={isThisTrackPlaying ? 'Pause Track' : 'Play Track'}
                       style={{
                         backgroundColor: isThisTrackPlaying ? '#ff4d4d' : '#4CAF50',
@@ -343,9 +386,7 @@ const FlipCard = forwardRef(({ album, isFlipped, toggleFlip }, ref) => {
                 </div>
               ) : (
                 <div className="spotify-embed">
-                  {album.parsedEmbedUrl && (
-                    <SpotifyEmbed embedUrl={album.parsedEmbedUrl} title={album.title} />
-                  )}
+                  {album.embedUrl && <SpotifyEmbed embedUrl={album.embedUrl} title={album.title} />}
                 </div>
               )}
             </div>
@@ -384,7 +425,7 @@ const FlipCard = forwardRef(({ album, isFlipped, toggleFlip }, ref) => {
         @media (max-width: 768px) {
           .mobile-container {
             transition: max-height 0.6s ease-in-out;
-            max-height: 500px; /* Adjust based on your content */
+            max-height: 500px;
             overflow: hidden;
           }
 
@@ -400,7 +441,7 @@ const FlipCard = forwardRef(({ album, isFlipped, toggleFlip }, ref) => {
           }
 
           .mobile-expanded {
-            max-height: 1000px; /* Adjust based on your content */
+            max-height: 1000px;
           }
 
           .mobile-expanded .mobile-front {
@@ -427,7 +468,7 @@ const FlipCard = forwardRef(({ album, isFlipped, toggleFlip }, ref) => {
         @media (min-width: 769px) {
           .flip-container {
             width: 100%;
-            padding-bottom: 100%; /* This creates a square aspect ratio */
+            padding-bottom: 100%; /* Square aspect ratio */
           }
 
           .flip-front,
@@ -438,6 +479,40 @@ const FlipCard = forwardRef(({ album, isFlipped, toggleFlip }, ref) => {
             right: 0;
             bottom: 0;
           }
+        }
+
+        /* Ensure the iframe container occupies the full available space */
+        .spotify-embed-container {
+          width: 100%;
+          height: 352px;
+          position: relative;
+        }
+
+        .spotify-loading {
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background-color: rgba(255, 255, 255, 0.8);
+          z-index: 10;
+          border-radius: 12px;
+        }
+
+        .spotify-iframe {
+          width: 100%;
+          height: 100%;
+          border: none;
+          border-radius: 12px;
+          opacity: 0;
+          transition: opacity 0.3s ease-in;
+        }
+
+        .spotify-iframe.loaded {
+          opacity: 1;
         }
       `}</style>
     </div>

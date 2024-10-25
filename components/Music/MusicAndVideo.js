@@ -1,132 +1,18 @@
+// components/Music/MusicAndVideo.js
+
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { urlFor } from '../../lib/client';
 import { useNavbar } from '../../context/NavbarContext';
 import { AudioProvider } from '../../context/AudioContext';
 import FlipCard from '../FlipCard';
 import YouTubeEmbed from '../media/YouTubeEmbed';
-import { Howl } from 'howler';
 import SpotifyEmbed from '../SpotifyEmbed';
-import debounce from 'lodash/debounce'; // Import debounce from lodash
+import debounce from 'lodash/debounce';
 import { YouTubeAPIProvider } from '../media/YouTubeAPIProvider';
 import Image from 'next/image';
 import LazyLoad from 'react-lazyload';
-
-const extractYouTubeID = (url) => {
-  if (!url) return null;
-  try {
-    const urlObj = new URL(url);
-    let videoId;
-    if (urlObj.hostname === 'youtu.be') {
-      videoId = urlObj.pathname.slice(1);
-    } else if (urlObj.hostname.includes('youtube.com')) {
-      videoId = urlObj.searchParams.get('v');
-    }
-    return videoId || null;
-  } catch (error) {
-    console.error('Error extracting YouTube ID:', error);
-    return null;
-  }
-};
-
-const extractSpotifyEmbedUrlFromIframe = (iframe) => {
-  if (!iframe) return null;
-  try {
-    const srcRegex = /src="([^"]+)"/i;
-    const match = iframe.match(srcRegex);
-    return match ? match[1] : null;
-  } catch (error) {
-    console.error('Error extracting Spotify embed URL:', error);
-    return null;
-  }
-};
-
-const getSpotifyMetadata = async (url) => {
-  const cacheKey = `spotify-metadata-${url}`;
-  const cachedData = localStorage.getItem(cacheKey);
-
-  if (cachedData) {
-    return JSON.parse(cachedData);
-  }
-
-  try {
-    const response = await fetch(`/.netlify/functions/spotify-metadata?url=${encodeURIComponent(url)}`);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch Spotify metadata: ${response.status} ${response.statusText}`);
-    }
-    const data = await response.json();
-    const result = {
-      title: data.title || 'Unknown Title',
-      imageUrl: data.imageUrl,
-      embedUrl: data.embedUrl,
-    };
-    localStorage.setItem(cacheKey, JSON.stringify(result));
-    return result;
-  } catch (error) {
-    console.error('Error fetching Spotify metadata:', error);
-    return null;
-  }
-};
-
-const getYouTubeEmbedUrl = (url) => {
-  const videoId = extractYouTubeID(url);
-  return videoId ? `https://www.youtube-nocookie.com/embed/${videoId}` : null;
-};
-
-const CACHE_EXPIRATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
-
-function getCachedData(key) {
-  const cachedData = localStorage.getItem(key);
-  if (cachedData) {
-    const { data, timestamp } = JSON.parse(cachedData);
-    if (Date.now() - timestamp < CACHE_EXPIRATION) {
-      return data;
-    }
-  }
-  return null;
-}
-
-function setCachedData(key, data) {
-  const cacheObject = {
-    data,
-    timestamp: Date.now()
-  };
-  localStorage.setItem(key, JSON.stringify(cacheObject));
-}
-
-const fetchSpotifyMetadata = async (spotifyUrls) => {
-  const cachedMetadata = getCachedData('spotifyMetadata');
-  if (cachedMetadata) {
-    return cachedMetadata;
-  }
-
-  // ... existing fetch logic ...
-
-  setCachedData('spotifyMetadata', spotifyMetadata);
-  return spotifyMetadata;
-};
-
-const shimmer = (w, h) => `
-<svg width="${w}" height="${h}" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-  <defs>
-    <linearGradient id="g">
-      <stop stop-color="#333" offset="20%" />
-      <stop stop-color="#222" offset="50%" />
-      <stop stop-color="#333" offset="70%" />
-    </linearGradient>
-  </defs>
-  <rect width="${w}" height="${h}" fill="#333" />
-  <rect id="r" width="${w}" height="${h}" fill="url(#g)" />
-  <animate xlink:href="#r" attributeName="x" from="-${w}" to="${w}" dur="1s" repeatCount="indefinite"  />
-</svg>`;
-
-const toBase64 = (str) =>
-  typeof window === 'undefined'
-    ? Buffer.from(str).toString('base64')
-    : window.btoa(str);
+import { extractYouTubeID } from '../../utils/extractYouTubeID'; // Import the utility here
 
 export default function MusicAndVideo({ videoPreLink }) {
-  console.log('MusicAndVideo rendering, videoPreLink:', videoPreLink);
-
   const [albums, setAlbums] = useState([]);
   const [flippedAlbums, setFlippedAlbums] = useState(new Set());
   const { setNavbarData } = useNavbar();
@@ -135,7 +21,7 @@ export default function MusicAndVideo({ videoPreLink }) {
   const memoizedVideoPreLink = useMemo(() => videoPreLink, [videoPreLink]);
 
   const heroLink = useMemo(() => memoizedVideoPreLink?.heroLink || '', [memoizedVideoPreLink]);
-  const heroVideoID = useMemo(() => extractYouTubeID(heroLink), [heroLink]);
+  const heroVideoID = useMemo(() => extractYouTubeID(heroLink), [heroLink]); // Use the utility here
   const lookTitle = useMemo(() => memoizedVideoPreLink?.lookTitle || 'LOOK', [memoizedVideoPreLink]);
   const listenTitle = useMemo(() => memoizedVideoPreLink?.listenTitle || 'LISTEN', [memoizedVideoPreLink]);
   const backgroundVideoFileUrl = useMemo(() => memoizedVideoPreLink?.backgroundVideo?.backgroundVideoFile?.asset?.url, [memoizedVideoPreLink]);
@@ -143,8 +29,6 @@ export default function MusicAndVideo({ videoPreLink }) {
 
   const lookId = videoPreLink?.lookTitle?.replace(/\s+/g, '-') || 'LOOK';
   const listenId = videoPreLink?.listenTitle?.replace(/\s+/g, '-') || 'LISTEN';
-
-  console.log('Generated IDs:', { lookId, listenId });
 
   const listenRef = useRef(null);
 
@@ -168,82 +52,47 @@ export default function MusicAndVideo({ videoPreLink }) {
         };
       });
     }
-  }, [lookTitle, listenTitle, setNavbarData]);
+  }, [lookTitle, listenTitle, setNavbarData, lookId, listenId]);
 
   const fetchAlbumData = useCallback(async () => {
     if (memoizedVideoPreLink?.musicLink) {
-      console.log('Music links:', memoizedVideoPreLink.musicLink);
-
-      const spotifyUrls = memoizedVideoPreLink.musicLink
-        .filter(album => album?.embedUrl?.includes('spotify.com'))
-        .map(album => album.embedUrl)
-        .filter(Boolean);
-
-      console.log('Spotify URLs:', spotifyUrls);
-
-      let spotifyMetadata = {};
-      if (spotifyUrls.length > 0) {
-        try {
-          const isNetlify = process.env.NEXT_PUBLIC_NETLIFY === 'true';
-          const functionUrl = isNetlify
-            ? '/.netlify/functions/fetchBatchSpotifyMetadata'
-            : '/api/fetchBatchSpotifyMetadata';
-
-          console.log('Fetching Spotify metadata from:', functionUrl);
-
-          const response = await fetch(functionUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ urls: spotifyUrls }),
-          });
-          if (response.ok) {
-            const data = await response.json();
-            console.log('Received Spotify metadata:', data);
-            spotifyMetadata = data.reduce((acc, item, index) => {
-              acc[spotifyUrls[index]] = item;
-              return acc;
-            }, {});
-          } else {
-            console.error('Failed to fetch Spotify metadata:', response.status, response.statusText);
-          }
-        } catch (error) {
-          console.error('Error fetching batch Spotify metadata:', error);
-        }
-      }
-
-      console.log('Processed Spotify metadata:', spotifyMetadata);
-
-      const albumData = memoizedVideoPreLink.musicLink.map((album, index) => {
-        if (album?.embedUrl?.includes('spotify.com') && spotifyMetadata[album.embedUrl]) {
-          const spotifyData = spotifyMetadata[album.embedUrl];
+      const processedAlbums = memoizedVideoPreLink.musicLink.map((album, index) => {
+        if (album.albumSource === 'embedded' && album.embeddedAlbum) {
           return {
-            ...album,
-            parsedEmbedUrl: spotifyData.embedUrl,
-            imageUrl: album.customImage ? urlFor(album.customImage).url() : spotifyData.imageUrl,
-            title: album.title || spotifyData.title,
+            albumSource: 'embedded',
+            albumId: album._id || `embedded-${index}`,
+            embedUrl: album.embeddedAlbum?.embedUrl,
+            title: album.embeddedAlbum?.title || 'Untitled Release',
+            artist: album.embeddedAlbum?.artist || 'Unknown Artist',
+            imageUrl: album.embeddedAlbum?.imageUrl || '/images/placeholder.png',
+            platform: album.embeddedAlbum?.platform || 'spotify',
+            releaseType: album.embeddedAlbum?.releaseType || 'album',
+            customImage: album.embeddedAlbum?.customImage,
             index,
-            albumId: album._id || `album-${index}`,
           };
-        } else {
+        } else if (album.albumSource === 'custom' && album.customAlbum) {
           return {
-            ...album,
-            parsedEmbedUrl: null,
-            imageUrl: album.customImage ? urlFor(album.customImage).url() : '/images/placeholder.png',
-            songs: album?.songs || [],
-            title: album.title || 'Untitled Album',
+            albumSource: 'custom',
+            albumId: album._id || `custom-${index}`,
+            title: album.customAlbum?.title || 'Untitled Release',
+            artist: album.customAlbum?.artist || 'Unknown Artist',
+            imageUrl: album.customAlbum?.customImage?.asset?.url || '/images/placeholder.png',
+            songs: album.customAlbum?.songs || [],
+            releaseType: album.customAlbum?.releaseType || 'album',
+            customImage: album.customAlbum?.customImage,
             index,
-            albumId: album._id || `album-${index}`,
           };
         }
-      });
+        return null;
+      }).filter(Boolean);
 
-      console.log('Processed album data:', albumData);
-
-      const filteredData = albumData.filter((album) => album !== null);
-      setAlbums(filteredData);
-      setCachedData('albums', filteredData);
+      setAlbums(processedAlbums);
     }
   }, [memoizedVideoPreLink]);
+
+  useEffect(() => {
+    fetchAlbumData();
+  }, [fetchAlbumData]);
 
   const debouncedFetchAlbumData = useMemo(
     () => debounce(fetchAlbumData, 300),
@@ -271,7 +120,6 @@ export default function MusicAndVideo({ videoPreLink }) {
         newFlipped.delete(albumId);
       } else {
         if (isMobile) {
-          // On mobile, close other cards when opening a new one
           newFlipped.clear();
         }
         newFlipped.add(albumId);
@@ -293,13 +141,11 @@ export default function MusicAndVideo({ videoPreLink }) {
       );
 
       if (clickedOutside) {
-        // Check if the click was on another album card
         const clickedOnAnotherCard = albums.some(album =>
           event.target.closest(`[data-album-id="${album.albumId}"]`)
         );
 
         if (!clickedOnAnotherCard) {
-          // If not clicked on another card, close all open cards
           setFlippedAlbums(new Set());
         }
       }
@@ -312,24 +158,10 @@ export default function MusicAndVideo({ videoPreLink }) {
     };
   }, [albums]);
 
-  useEffect(() => {
-    console.log('Listen element:', listenRef.current);
-  }, []);
-
-  useEffect(() => {
-    console.log('MusicAndVideo props:', JSON.stringify(videoPreLink, null, 2));
-  }, [videoPreLink]);
-
-  console.log('Rendered titles:', {
-    lookTitle: videoPreLink?.lookTitle || 'LOOK',
-    listenTitle: videoPreLink?.listenTitle || 'LISTEN'
-  });
-
   return (
     <AudioProvider>
       <YouTubeAPIProvider>
         <div style={{ minHeight: '200vh', backgroundColor: 'black', position: 'relative' }}>
-          {/* Background Video */}
           {backgroundVideoUrl && (
             <div className="sticky top-0 w-full h-[40vh] sm:h-screen z-30">
               <video
@@ -348,7 +180,6 @@ export default function MusicAndVideo({ videoPreLink }) {
 
           <div className="relative z-50">
             <div className="parallax-container flex flex-col items-center justify-center w-full h-full z-50">
-              {/* LOOK Section */}
               <div className="flex flex-col items-center justify-center mb-16 sm:mb-24 w-full px-4 sm:px-12">
                 <div className="mb-8 sm:mb-16 rounded-lg w-full text-center">
                   <p
@@ -370,12 +201,11 @@ export default function MusicAndVideo({ videoPreLink }) {
                 )}
               </div>
 
-              {/* Additional YouTube Videos */}
               <div className="w-full grid-container px-4 sm:px-12 mt-16 sm:mt-24 sm:grid sm:grid-cols-2 sm:gap-x-8 sm:gap-y-16 z-50">
                 {memoizedVideoPreLink?.vidLink?.map((link, i) => {
-                  const videoId = extractYouTubeID(link);
+                  const videoId = extractYouTubeID(link); // Use the utility here
                   return videoId ? (
-                    <div key={i} className="w-full sm:max-w-4xl mb-16 sm:mb-24">
+                    <div key={`vid-${i}`} data-key={`vid-${i}`} className="w-full sm:max-w-4xl mb-16 sm:mb-24">
                       <YouTubeEmbed
                         embedId={videoId}
                         title={`YouTube video ${i + 1}`}
@@ -387,12 +217,7 @@ export default function MusicAndVideo({ videoPreLink }) {
                 })}
               </div>
 
-              {/* LISTEN Section */}
-              <div
-                ref={listenRef}
-                id={listenId}
-                className="w-full flex mt-8 sm:mt-12 gap-y-8 sm:gap-y-12 flex-col items-center z-50 px-4"
-              >
+              <div ref={listenRef} id={listenId} className="w-full flex mt-8 sm:mt-12 gap-y-8 sm:gap-y-12 flex-col items-center z-50 px-4">
                 <div className="mt-16 mb-8 sm:mb-12 rounded-lg flex items-center justify-center w-full sm:w-1/2">
                   <p className="text-5xl sm:text-7xl font-Headline text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-pink-600 to-purple-600 font-bold">
                     {videoPreLink?.listenTitle || 'LISTEN'}

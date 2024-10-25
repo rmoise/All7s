@@ -1,3 +1,5 @@
+// components/SpotifyEmbed.js
+
 import React, { useState, useEffect } from 'react';
 import { useInView } from 'react-intersection-observer';
 
@@ -19,7 +21,7 @@ const SpotifyEmbed = ({ embedUrl, title }) => {
   }, [inView]);
 
   return (
-    <div ref={ref} className="spotify-embed-container">
+    <div ref={ref} className="spotify-embed-container" style={{ zIndex: 10000 }}> {/* Increase z-index here */}
       {!isLoaded && (
         <div className="spotify-loading">
           <p className="text-lg font-semibold">Loading Spotify player...</p>
@@ -36,6 +38,7 @@ const SpotifyEmbed = ({ embedUrl, title }) => {
           allowFullScreen
           title={`Spotify album ${title}`}
           onLoad={() => setIsLoaded(true)}
+          style={{ zIndex: 10000 }} // Ensure the iframe has the same high z-index
         />
       )}
     </div>

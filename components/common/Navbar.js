@@ -57,34 +57,20 @@ const Navbar = () => {
   // Smooth scrolling effect
   const handleSmoothScroll = useCallback((e, href) => {
     e.preventDefault();
-    console.log('Clicked link:', href);
-
     if (href.startsWith('/#')) {
       const targetId = href.substring(2);
-      console.log('Target ID:', targetId);
-
-      // Log all elements with IDs
-      console.log('All elements with IDs:',
-        Array.from(document.querySelectorAll('[id]')).map(el => ({ id: el.id, element: el }))
-      );
-
       const targetElement = document.getElementById(targetId);
 
       if (targetElement) {
-        console.log('Target element found:', targetElement);
         targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
         window.history.pushState(null, '', href);
       } else {
-        console.log('Target element not found');
-        // Fallback: try case-insensitive search
-        const lowercaseTargetId = targetId.toLowerCase();
-        const fallbackElement = Array.from(document.querySelectorAll('[id]')).find(el => el.id.toLowerCase() === lowercaseTargetId);
+        const fallbackElement = Array.from(document.querySelectorAll('[id]')).find(
+          el => el.id.toLowerCase() === targetId.toLowerCase()
+        );
         if (fallbackElement) {
-          console.log('Fallback element found:', fallbackElement);
           fallbackElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
           window.history.pushState(null, '', href);
-        } else {
-          console.log('No matching element found, even with case-insensitive search');
         }
       }
     } else {
@@ -102,8 +88,8 @@ const Navbar = () => {
 
   const renderNavLinks = (isMobile = false) => {
     return navbarData.navigationLinks?.map((item, index) => {
+      const key = generateKey(item, index); // Extract key
       const linkProps = {
-        key: generateKey(item, index),
         href: item.href,
         className: classNames(
           item.name === 'BUY' ? 'text-green-400' : 'text-white',
@@ -117,6 +103,7 @@ const Navbar = () => {
       if (isMobile) {
         return (
           <Disclosure.Button
+            key={key} // Apply key directly here
             as="a"
             {...linkProps}
             className={classNames(
@@ -129,7 +116,7 @@ const Navbar = () => {
         );
       }
 
-      return <Link {...linkProps}>{linkContent}</Link>;
+      return <Link key={key} {...linkProps}>{linkContent}</Link>; // Apply key directly here
     });
   };
 

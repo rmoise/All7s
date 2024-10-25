@@ -13,7 +13,6 @@ const YouTubeEmbed = ({ embedId, title, className, size }) => {
 
   const forceHighestQuality = (player) => {
     const qualities = player.getAvailableQualityLevels();
-    console.log('Available qualities:', qualities);
 
     // Try to set quality to 1080p, then fall back to the highest available
     if (qualities.includes('hd1080')) {
@@ -42,13 +41,11 @@ const YouTubeEmbed = ({ embedId, title, className, size }) => {
         },
         events: {
           onReady: (event) => {
-            console.log('Player is ready');
             event.target.setSize(event.target.getIframe().parentNode.offsetWidth, event.target.getIframe().parentNode.offsetHeight);
             forceHighestQuality(event.target);
             setIsPlayerReady(true);
           },
           onStateChange: (event) => {
-            console.log('Player state changed:', event.data);
             if (event.data === window.YT.PlayerState.BUFFERING ||
                 event.data === window.YT.PlayerState.PLAYING) {
               forceHighestQuality(event.target);

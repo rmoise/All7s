@@ -1,3 +1,5 @@
+// schemas/musicAndVideo.js
+
 import { defineType } from 'sanity';
 
 export default defineType({
@@ -48,6 +50,8 @@ export default defineType({
       type: 'array',
       of: [{ type: 'url' }],
       description: 'Additional video links',
+      validation: (Rule) => Rule.required().min(1).error('At least one video link is required'),
+
     },
     {
       name: 'backgroundVideo',

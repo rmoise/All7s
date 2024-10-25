@@ -2,6 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
+
 html,
 body {
   margin: 0;
@@ -56,6 +57,8 @@ a {
   width: 100%;
   padding-bottom: 152%;
   overflow: hidden;
+    z-index: 10000!important; /* Adjust to ensure visibility */
+
 }
 
 .spotify-loading {
@@ -81,6 +84,8 @@ a {
   border: 0;
   opacity: 0;
   transition: opacity 0.3s ease;
+    z-index: 10000!important; /* Adjust to ensure visibility */
+
 }
 
 .spotify-iframe.loaded {

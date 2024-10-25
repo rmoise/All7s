@@ -57,7 +57,6 @@ export const NavbarProvider = ({ children }) => {
         const lookId = lookTitle?.replace(/\s+/g, '-') || 'LOOK';
         const listenId = listenTitle?.replace(/\s+/g, '-') || 'LISTEN';
 
-        console.log('NavbarContext - Generated IDs:', { lookId, listenId });
 
         // Update the LOOK link
         const lookIndex = updatedNavbarData.navigationLinks.findIndex(
@@ -75,7 +74,6 @@ export const NavbarProvider = ({ children }) => {
           updatedNavbarData.navigationLinks[listenIndex] = { name: listenTitle || 'LISTEN', href: `/#${listenId}` };
         }
 
-        console.log('Updated navigation links:', updatedNavbarData.navigationLinks);
       }
 
       setNavbarData(updatedNavbarData);

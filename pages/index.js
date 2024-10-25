@@ -16,23 +16,25 @@ const Home = ({ contentBlocks, metaTitle, metaDescription, siteSettings }) => {
 
   return (
     <>
-      <SEO
-        title={pageTitle}
-        description={metaDescription || siteSettings?.seo?.metaDescription || 'Explore the All 7z Brand. West Coast Music, Lifestyle, Merch'}
-        faviconUrl={siteSettings?.favicon?.asset?.url || '/favicon.ico'}
-        openGraphImageUrl={siteSettings?.seo?.openGraphImage?.asset?.url}
-        siteName={siteSettings?.title}
-      />
+      {siteSettings ? (
+        <SEO
+          title={pageTitle}
+          description={metaDescription || siteSettings?.seo?.metaDescription || 'Explore the All 7z Brand. West Coast Music, Lifestyle, Merch'}
+          faviconUrl={siteSettings?.favicon?.asset?.url || '/favicon.ico'}
+          openGraphImageUrl={siteSettings?.seo?.openGraphImage?.asset?.url}
+          siteName={siteSettings?.title}
+        />
+      ) : null}
 
       {contentBlocks.map((block, index) => {
-        const key = block._key || index;
+        const key = block._key || `${block._type}-${index}`;
         switch (block._type) {
           case 'splash':
             return <Splash key={key} {...block} />;
           case 'about':
             return <About key={key} aboutData={block} />;
           case 'musicAndVideo':
-            return <MusicAndVideo key={block._key} videoPreLink={block} />;
+            return <MusicAndVideo key={key} videoPreLink={block} />;
           case 'newsletter':
             return <Newsletter key={key} newsletter={block} />;
           case 'heroBanner':
@@ -44,7 +46,7 @@ const Home = ({ contentBlocks, metaTitle, metaDescription, siteSettings }) => {
 
       <Script
         src="https://www.youtube.com/iframe_api"
-        strategy="lazyOnload"
+        strategy="beforeInteractive" // Ensures it loads before rendering other components
       />
     </>
   );
@@ -52,7 +54,8 @@ const Home = ({ contentBlocks, metaTitle, metaDescription, siteSettings }) => {
 
 export default Home;
 
-export const getServerSideProps = async () => {
+// pages/index.js (getStaticProps)
+export const getStaticProps = async () => {
   const queries = {
     homePageQuery: `*[_type == "home"][0]{
       title,
@@ -71,26 +74,40 @@ export const getServerSideProps = async () => {
             backgroundVideoUrl,
             backgroundVideoFile {
               asset-> {
-                _ref,
                 url
               }
             }
           },
-          musicLink[]-> {
-            title,
-            description,
-            artist,
-            embedUrl,
-            _updatedAt,
-            customImage {
-              asset-> {
-                url
+          musicLink[]-> { // Use '->' to dereference
+            _id,
+            albumSource,
+            embeddedAlbum {
+              embedUrl,
+              title,
+              artist,
+              platform,
+              releaseType,
+              imageUrl,
+              customImage {
+                asset-> {
+                  url
+                }
               }
             },
-            songs[] {
-              trackTitle,
-              "url": file.asset->url,
-              duration
+            customAlbum {
+              title,
+              artist,
+              releaseType,
+              customImage {
+                asset-> {
+                  url
+                }
+              },
+              songs[] {
+                trackTitle,
+                "url": file.asset->url,
+                duration
+              }
             }
           }
         }
@@ -143,6 +160,7 @@ export const getServerSideProps = async () => {
         siteSettings: siteSettings || null,
         footerData: siteSettings?.footer || null,
       },
+      revalidate: 10, // Revalidate every 10 seconds to update static content
     };
   } catch (error) {
     console.error("Error fetching data:", error);

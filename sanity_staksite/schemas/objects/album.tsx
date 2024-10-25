@@ -1,5 +1,9 @@
-import {defineType, defineField, defineArrayMember} from 'sanity'
+// sanity/schemas/album.js
+
+import React from 'react' // Ensure React is imported
+import {defineType, defineField} from 'sanity'
 import ReleaseInfoInput from '../../components/ReleaseInfoInput'
+import {urlFor} from '../../utils/imageUrlBuilder' // Adjust the path as needed
 
 export default defineType({
   name: 'album',
@@ -29,30 +33,24 @@ export default defineType({
           name: 'embedUrl',
           title: 'Embed URL',
           type: 'string',
-          description: 'Enter Spotify or SoundCloud iframe embed URL',
+          description: 'Enter Spotify or SoundCloud URL',
           validation: (Rule) =>
             Rule.required().custom((url) => {
               if (!url) {
                 return 'URL is required'
               }
+              const sanitizedUrl = url.includes('iframe')
+                ? (url.match(/src="([^"]+)"/)?.[1] ?? '')
+                : url
 
-              console.log('Validating URL:', url)
-
-              const iframeMatch = url.match(/src="([^"]+)"/) // Check if it's an iframe tag
-              const sanitizedUrl = iframeMatch ? iframeMatch[1] : url // Extract src URL if iframe
-
-              console.log('Sanitized URL:', sanitizedUrl)
-
-              // Updated pattern to match both regular and embed Spotify URLs
               const pattern =
-                /^(https?:\/\/)?(www\.)?(open\.)?spotify\.com\/(embed\/)?(album|track|playlist)\/.+$/
+                /^(https?:\/\/)?(www\.)?(open\.)?(spotify|soundcloud)\.com\/(embed\/)?(album|track|playlist|sets)\/.+$/
 
               if (pattern.test(sanitizedUrl)) {
-                return true // Validation success if it matches Spotify/SoundCloud
+                return true
               }
 
-              console.log('Invalid URL:', sanitizedUrl) // Log the invalid URL
-              return 'Please enter a valid Spotify or SoundCloud URL' // Validation error
+              return 'Please enter a valid Spotify or SoundCloud URL'
             }),
         }),
         defineField({
@@ -60,28 +58,30 @@ export default defineType({
           title: 'Release Title',
           type: 'string',
           readOnly: true,
-          hidden: false, // Hide the field
         }),
         defineField({
           name: 'artist',
           title: 'Artist',
           type: 'string',
           readOnly: true,
-          hidden: false, // Hide the field
         }),
         defineField({
           name: 'platform',
           title: 'Platform',
           type: 'string',
           readOnly: true,
-          hidden: false, // Hide the field
         }),
         defineField({
           name: 'releaseType',
           title: 'Release Type',
           type: 'string',
           readOnly: true,
-          hidden: false, // Hide the field
+        }),
+        defineField({
+          name: 'imageUrl',
+          title: 'Album Image URL',
+          type: 'url',
+          validation: (Rule) => Rule.uri({scheme: ['http', 'https']}),
         }),
         defineField({
           name: 'customImage',
@@ -91,7 +91,7 @@ export default defineType({
             hotspot: true,
           },
           description:
-            'Optional: This image is fetched from Spotify or SoundCloud automatically, but you can override it by uploading your own.',
+            'Optional: Image is fetched from Spotify or SoundCloud automatically, but you can override it by uploading your own.',
         }),
       ],
       components: {
@@ -129,7 +129,13 @@ export default defineType({
               {title: 'Compilation', value: 'compilation'},
             ],
           },
-          validation: (Rule) => Rule.required(),
+          validation: (Rule) =>
+            Rule.custom((releaseType, context) => {
+              if (context?.document?.albumSource === 'custom' && !releaseType) {
+                return 'Release Type is required for custom albums'
+              }
+              return true
+            }),
         }),
         defineField({
           name: 'customImage',
@@ -145,7 +151,7 @@ export default defineType({
           title: 'Songs',
           type: 'array',
           of: [
-            defineArrayMember({
+            {
               type: 'object',
               name: 'song',
               title: 'Song',
@@ -165,8 +171,14 @@ export default defineType({
                   },
                   description: 'Upload the audio file for this track (if available).',
                 }),
+                defineField({
+                  name: 'duration',
+                  title: 'Duration',
+                  type: 'number',
+                  description: 'Track duration in seconds.',
+                }),
               ],
-            }),
+            },
           ],
           description: 'Add individual tracks for this release. You can reorder them by dragging.',
         }),
@@ -179,7 +191,7 @@ export default defineType({
       albumSource: 'albumSource',
       embeddedTitle: 'embeddedAlbum.title',
       embeddedArtist: 'embeddedAlbum.artist',
-      embeddedImage: 'embeddedAlbum.customImage',
+      embeddedImageUrl: 'embeddedAlbum.imageUrl',
       customTitle: 'customAlbum.title',
       customArtist: 'customAlbum.artist',
       customImage: 'customAlbum.customImage',
@@ -189,7 +201,7 @@ export default defineType({
         albumSource,
         embeddedTitle,
         embeddedArtist,
-        embeddedImage,
+        embeddedImageUrl,
         customTitle,
         customArtist,
         customImage,
@@ -197,12 +209,29 @@ export default defineType({
 
       const isEmbedded = albumSource === 'embedded'
 
+      let imageUrl
+      if (isEmbedded) {
+        imageUrl = embeddedImageUrl ?? '/images/placeholder.png'
+      } else if (customImage) {
+        imageUrl = urlFor(customImage).width(200).url()
+      } else {
+        imageUrl = '/images/placeholder.png'
+      }
+
       return {
         title: isEmbedded ? embeddedTitle || 'Untitled Release' : customTitle || 'Untitled Release',
         subtitle: isEmbedded
           ? embeddedArtist || 'Unknown Artist'
           : customArtist || 'Unknown Artist',
-        media: isEmbedded ? embeddedImage : customImage,
+        media: (
+          <img
+            src={imageUrl}
+            alt={
+              isEmbedded ? embeddedTitle || 'Untitled Release' : customTitle || 'Untitled Release'
+            }
+            style={{width: '100%', height: 'auto', borderRadius: '4px'}}
+          />
+        ),
       }
     },
   },
