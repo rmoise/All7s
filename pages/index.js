@@ -1,7 +1,7 @@
 // pages/index.js
 import React from 'react';
 import PropTypes from 'prop-types';
-import { client } from '@lib/client'; // Your existing Sanity client
+import { client } from '@lib/client'; // Correct import path
 import SEO from '../components/common/SEO';
 import Splash from '../components/home/Splash';
 import About from '../components/home/About';

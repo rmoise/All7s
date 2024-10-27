@@ -11,8 +11,8 @@
     NEXT_PUBLIC_ENVIRONMENT = "production"
     NEXT_PUBLIC_SANITY_DATASET = "production"
     NEXT_PUBLIC_SANITY_PROJECT_ID = "1gxdk71x"
-    SANITY_TOKEN = "env(SANITY_TOKEN)"
     NEXT_PUBLIC_NETLIFY = "true"
+    # Removed SANITY_TOKEN
 
 # Staging-specific settings
 [context.staging]
@@ -22,8 +22,8 @@
     NEXT_PUBLIC_ENVIRONMENT = "staging"
     NEXT_PUBLIC_SANITY_DATASET = "staging"
     NEXT_PUBLIC_SANITY_PROJECT_ID = "1gxdk71x"
-    SANITY_TOKEN = "env(NEXT_STAGING_SANITY_TOKEN)"
     NEXT_PUBLIC_NETLIFY = "true"
+    # Removed SANITY_TOKEN
 
 # Deploy previews (pull request builds)
 [context.deploy-preview]
@@ -35,14 +35,14 @@
   command = "npm run build"
   publish = ".next"
 
-# Add this section for redirects
+# Redirects
 [[redirects]]
   from = "/api/spotify-metadata"
   to = "/.netlify/functions/spotify-metadata"
   status = 200
   force = true
 
-# New section for functions configuration
+# Functions configuration
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
