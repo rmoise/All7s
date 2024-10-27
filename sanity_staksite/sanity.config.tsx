@@ -1,5 +1,3 @@
-// sanity.config.tsx
-
 import {defineConfig} from 'sanity'
 import {deskTool} from 'sanity/desk'
 import {visionTool} from '@sanity/vision'
@@ -10,28 +8,23 @@ import deskStructure from './deskStructure'
 import {CustomStudioLayout} from './CustomStudioLayout'
 import schemaTypes from './schemas/schema'
 
+const isBrowser = typeof window !== 'undefined'
+
 const getDefaultDataset = (): string => {
-  if (typeof window !== 'undefined') {
-    return localStorage.getItem('sanityDataset') || 'staging'
-  }
-  return process.env.SANITY_STUDIO_DATASET || 'staging'
+  return isBrowser
+    ? localStorage.getItem('sanityDataset') || 'staging'
+    : process.env.SANITY_STUDIO_DATASET || 'staging'
 }
 
 const getNetlifyUrl = (): string => {
-  if (process.env.SANITY_STUDIO_NETLIFY_URL) {
-    return process.env.SANITY_STUDIO_NETLIFY_URL
+  if (process.env.SANITY_STUDIO_NETLIFY_URL) return process.env.SANITY_STUDIO_NETLIFY_URL
+  if (!isBrowser) return 'https://all7z.com' // Default to production for server-side
+  const hostMap: Record<string, string> = {
+    'localhost': 'http://localhost:8888',
+    'staging--all7z.netlify.app': 'https://staging--all7z.netlify.app',
+    'all7z.com': 'https://all7z.com',
   }
-  const hostname = typeof window !== 'undefined' ? window.location.hostname : ''
-  if (hostname === 'localhost') {
-    return 'http://localhost:8888'
-  } else if (hostname === 'staging--all7z.netlify.app') {
-    return 'https://staging--all7z.netlify.app'
-  } else if (hostname === 'all7z.com') {
-    return 'https://all7z.com'
-  } else {
-    // Default to production URL
-    return 'https://all7z.com'
-  }
+  return hostMap[window.location.hostname] || 'https://all7z.com'
 }
 
 const devOnlyPlugins = [visionTool()]
@@ -42,9 +35,7 @@ export default defineConfig({
   projectId: process.env.SANITY_STUDIO_PROJECT_ID || '1gxdk71x',
   dataset: getDefaultDataset(),
   plugins: [
-    deskTool({
-      structure: deskStructure,
-    }),
+    deskTool({ structure: deskStructure }),
     colorInput(),
     imageHotspotArrayPlugin(),
     media(),
@@ -57,32 +48,18 @@ export default defineConfig({
     actions: (prev) => [...prev], // Removed FetchMetadataAction from actions
   },
   form: {
-    file: {
-      assetSources: (previousAssetSources) => previousAssetSources,
-    },
+    file: { assetSources: (previousAssetSources) => previousAssetSources },
     image: {
       assetSources: (previousAssetSources) =>
         previousAssetSources.filter(
           (assetSource) =>
-            assetSource.name === 'media-library' || assetSource.name === 'sanity-default',
+            assetSource.name === 'media-library' || assetSource.name === 'sanity-default'
         ),
     },
   },
   studio: {
     components: {
       layout: CustomStudioLayout,
-    },
-  },
-  api: {
-    projectId: process.env.SANITY_STUDIO_PROJECT_ID || '1gxdk71x',
-    dataset: getDefaultDataset(),
-    cors: {
-      allowOrigins: [
-        'http://localhost:3333',
-        'http://localhost:8888',
-        'https://staging--all7z.netlify.app',
-        'https://all7z.com',
-      ],
     },
   },
   env: {

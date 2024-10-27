@@ -83,9 +83,15 @@ export default defineType({
     },
   ],
   preview: {
-    prepare() {
+    select: {
+      title: 'copyrightText',
+    },
+    prepare(selection) {
+      const { title } = selection;
       return {
-        title: 'Footer Section',
+        title: title || 'Footer Section',
+        subtitle: 'Footer settings and links',
+        media: null, // Optionally, you could add an icon here
       };
     },
   },
