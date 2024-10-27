@@ -3,7 +3,7 @@ const nextConfig = {
   reactStrictMode: true,
 
   env: {
-    NEXT_PUBLIC_SANITY_PROJECT_ID: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || 'default-project-id',
+    NEXT_PUBLIC_SANITY_PROJECT_ID: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || '1gxdk71x',
     NEXT_PUBLIC_SANITY_DATASET: process.env.NEXT_PUBLIC_ENVIRONMENT === 'staging'
       ? process.env.NEXT_STAGING_SANITY_DATASET || 'staging'
       : process.env.NEXT_PUBLIC_SANITY_DATASET || 'production',
