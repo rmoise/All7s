@@ -1,16 +1,7 @@
 // hooks/useSiteSettings.js
 import { useState, useEffect } from 'react';
-import { createClient } from '@sanity/client';
+import { client } from '../lib/client'; // Ensure you're using the centralized client
 
-// Create a Sanity client instance
-const client = createClient({
-  projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID,
-  dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || 'production',
-  apiVersion: '2022-10-29',
-  useCdn: process.env.NODE_ENV === 'production', // Use CDN for production to increase speed
-});
-
-// The query to fetch site settings
 const siteSettingsQuery = `*[_type == "siteSettings"][0]{
   title,
   favicon{
@@ -36,9 +27,11 @@ const useSiteSettings = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    console.log("Fetching site settings...");
     client
       .fetch(siteSettingsQuery)
       .then((data) => {
+        console.log("Fetched site settings data:", data);
         setSettings(data);
         setLoading(false);
       })

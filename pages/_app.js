@@ -97,6 +97,7 @@ MyApp.getInitialProps = async () => {
 
   try {
     const siteSettings = await client.fetch(query);
+    console.log("Fetched siteSettings:", siteSettings); // Add this line
     return { siteSettings };
   } catch (error) {
     console.error("Error fetching site settings:", error);
