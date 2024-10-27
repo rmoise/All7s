@@ -1,9 +1,25 @@
-import Contact from "../components/Contact";
+import ContactComponent from "../components/Contact";
 import CustomP5Canvas from "../components/media/CustomP5Canvas";
 import { client } from '../lib/client';
 import SEO from '../components/common/SEO';
+import { useEffect, useState } from 'react';
 
 const ContactPage = ({ contactData }) => {
+  const [dataLoaded, setDataLoaded] = useState(false);
+
+  useEffect(() => {
+    // Check if contactData is loaded and log it
+    console.log("Fetched contactData:", contactData);
+    if (contactData && Object.keys(contactData).length) {
+      setDataLoaded(true);
+    }
+  }, [contactData]);
+
+  // Display loading text only if data is not loaded
+  if (!dataLoaded) {
+    return <p>Loading site settings...</p>;
+  }
+
   const {
     title,
     description,
@@ -15,7 +31,7 @@ const ContactPage = ({ contactData }) => {
     map,
     favicon,
     seo,
-    info, // Add `info` if available in `contactData`
+    info,
   } = contactData;
 
   const pageTitle = seo?.metaTitle
@@ -32,8 +48,8 @@ const ContactPage = ({ contactData }) => {
         siteName={title || 'Contact Page'}
       />
 
-      <Contact
-        info={info || []} // Ensure `info` is passed to avoid errors
+      <ContactComponent
+        info={info || []}
         title={title}
         description={description}
         address={address}
@@ -52,12 +68,26 @@ const ContactPage = ({ contactData }) => {
 export default ContactPage;
 
 export const getServerSideProps = async () => {
-  const query = "*[_type == 'contactPage'][0]";
-  const contactData = await client.fetch(query);
+  console.log("Running getServerSideProps...");
 
-  return {
-    props: {
-      contactData: contactData || {},
-    },
-  };
+  try {
+    const query = "*[_type == 'contactPage'][0]{title}";
+    const contactData = await client.fetch(query);
+
+    console.log("Fetched data:", contactData); // Log the fetched data for verification
+
+    return {
+      props: {
+        contactData: contactData || {}, // Pass fetched data as props
+      },
+    };
+  } catch (error) {
+    console.error("Error fetching data from Sanity:", error.message); // Log any error encountered
+    return {
+      props: {
+        contactData: {}, // Return empty if an error occurs
+      },
+    };
+  }
 };
+

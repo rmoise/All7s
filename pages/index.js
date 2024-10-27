@@ -12,86 +12,45 @@ import SEO from '../components/common/SEO';
 import Script from 'next/script';
 
 const Home = ({ contentBlocks, metaTitle, metaDescription, siteSettings }) => {
-  console.log('Home Component Content Blocks:', contentBlocks);
+  console.log("Received siteSettings in Home component:", siteSettings); // Debugging log for siteSettings
 
-  // Construct the page title based on metaTitle and siteSettings
   const pageTitle = metaTitle?.trim()
     ? `${metaTitle} - ${siteSettings?.title || ''}`
     : `${siteSettings?.seo?.metaTitle?.trim() || 'Default Site Title'} - ${siteSettings?.title || ''}`;
 
   return (
     <>
-      {/* SEO Component for managing meta tags */}
       {siteSettings && (
         <SEO
           title={pageTitle}
-          description={
-            metaDescription ||
-            siteSettings?.seo?.metaDescription ||
-            'Explore the All 7z Brand. West Coast Music, Lifestyle, Merch'
-          }
+          description={metaDescription || siteSettings?.seo?.metaDescription || 'Explore the All 7z Brand. West Coast Music, Lifestyle, Merch'}
           faviconUrl={siteSettings?.favicon?.asset?.url || '/favicon.ico'}
           openGraphImageUrl={siteSettings?.seo?.openGraphImage?.asset?.url}
           siteName={siteSettings?.title}
         />
       )}
-
-      {/* Render each content block based on its type */}
       {contentBlocks.map((block, index) => {
         const key = block._key || `${block._type}-${index}`;
-
         switch (block._type) {
           case 'splash':
             return <Splash key={key} {...block} />;
-
           case 'about':
             return <About key={key} aboutData={block} />;
-
           case 'musicBlock':
-            return (
-              <MusicBlock
-                key={key}
-                listenTitle={block.listenTitle}
-                albums={Array.isArray(block.albums) ? block.albums : []} // Ensure albums is an array
-              />
-            );
-
+            return <MusicBlock key={key} listenTitle={block.listenTitle} albums={block.albums || []} />;
           case 'videoBlock':
-            return (
-              <VideoBlock
-                key={key}
-                lookTitle={block.lookTitle}
-                heroVideoLink={block.heroVideoLink}
-                additionalVideos={block.additionalVideos || []} // Ensure additionalVideos is an array
-              />
-            );
-
+            return <VideoBlock key={key} lookTitle={block.lookTitle} heroVideoLink={block.heroVideoLink} additionalVideos={block.additionalVideos || []} />;
           case 'backgroundVideoBlock':
-            return (
-              <BackgroundVideoBlock
-                key={key}
-                backgroundVideoUrl={block.backgroundVideoUrl}
-                backgroundVideoFile={block.backgroundVideoFile}
-                posterImage={block.posterImage}
-              />
-            );
-
+            return <BackgroundVideoBlock key={key} backgroundVideoUrl={block.backgroundVideoUrl} backgroundVideoFile={block.backgroundVideoFile} posterImage={block.posterImage} />;
           case 'newsletter':
             return <Newsletter key={key} newsletter={block} />;
-
           case 'heroBanner':
             return <HeroBanner key={key} heroBanner={block} />;
-
           default:
             return null;
         }
       })}
-
-      {/* Load YouTube IFrame API */}
-      <Script
-        src="https://www.youtube.com/iframe_api"
-        strategy="beforeInteractive" // Ensures it loads before rendering other components
-      />
+      <Script src="https://www.youtube.com/iframe_api" strategy="beforeInteractive" />
     </>
   );
 };
@@ -105,132 +64,95 @@ Home.propTypes = {
 
 export default Home;
 
-// pages/index.js (getStaticProps)
-
-// pages/index.js (getStaticProps)
 
 export const getStaticProps = async () => {
-  const queries = {
-    homePageQuery: `*[_type == "home"][0]{
-      title,
-      metaTitle,
-      metaDescription,
-      openGraphImage,
-      contentBlocks[] {
-        ...,
-        _type == 'musicBlock' => {
-          listenTitle,
-          albums[]-> {
-            _id,
-            albumSource,
-            embeddedAlbum {
-              embedUrl,
-              title,
-              artist,
-              platform,
-              releaseType,
-              imageUrl,
-              customImage {
-                asset-> {
-                  url
-                }
-              }
-            },
-            customAlbum {
-              title,
-              artist,
-              releaseType,
-              customImage {
-                asset-> {
-                  url
-                }
-              },
-              songs[] {
-                trackTitle,
-                "url": file.asset->url,
-                duration
-              }
-            }
-          }
-        },
-        _type == 'videoBlock' => {
-          lookTitle,
-          heroVideoLink,
-          additionalVideos,
-        },
-        _type == 'backgroundVideoBlock' => {
-          backgroundVideoUrl,
-          backgroundVideoFile {
-            asset-> {
-              url
+  const homePageQuery = `*[_type == "home"][0]{
+    title,
+    metaTitle,
+    metaDescription,
+    openGraphImage,
+    contentBlocks[] {
+      ...,
+      _type == 'musicBlock' => {
+        listenTitle,
+        albums[]-> {
+          _id,
+          albumSource,
+          embeddedAlbum {
+            embedUrl,
+            title,
+            artist,
+            platform,
+            releaseType,
+            imageUrl,
+            customImage {
+              asset-> { url }
             }
           },
-          posterImage {
-            asset-> {
-              url
+          customAlbum {
+            title,
+            artist,
+            releaseType,
+            customImage {
+              asset-> { url }
+            },
+            songs[] {
+              trackTitle,
+              "url": file.asset->url,
+              duration
             }
           }
-        },
-      }
-    }`,
-    siteSettingsQuery: `*[_type == "settings"][0]{
-      title,
-      favicon {
-        asset-> {
-          url,
-          _updatedAt
         }
       },
-      seo {
-        metaTitle,
-        metaDescription,
-        openGraphImage {
-          asset-> {
-            url
-          }
-        }
+      _type == 'videoBlock' => {
+        lookTitle,
+        heroVideoLink,
+        additionalVideos
       },
-      navbar {
-        logo,
-        navigationLinks,
-        backgroundColor,
-        isTransparent
-      },
-      footer {
-        copyrightText,
-        footerLinks,
-        socialLinks,
-        fontColor,
-        alignment
+      _type == 'backgroundVideoBlock' => {
+        backgroundVideoUrl,
+        backgroundVideoFile { asset-> { url } },
+        posterImage { asset-> { url } }
       }
-    }`,
-  };
+    }
+  }`;
+
+  const siteSettingsQuery = `*[_type == "settings"][0]{
+    title,
+    favicon { asset-> { url, _updatedAt } },
+    seo { metaTitle, metaDescription, openGraphImage { asset-> { url } } },
+    navbar { logo, navigationLinks, backgroundColor, isTransparent },
+    footer { copyrightText, footerLinks, socialLinks, fontColor, alignment }
+  }`;
 
   try {
     const [homePage, siteSettings] = await Promise.all([
-      client.fetch(queries.homePageQuery),
-      client.fetch(queries.siteSettingsQuery),
+      client.fetch(homePageQuery),
+      client.fetch(siteSettingsQuery),
     ]);
+
+    console.log("Fetched homePage:", homePage);  // Debug fetched homePage
+    console.log("Fetched siteSettings:", siteSettings || "siteSettings document not found");
 
     return {
       props: {
         contentBlocks: homePage?.contentBlocks || [],
         metaTitle: homePage?.metaTitle || null,
         metaDescription: homePage?.metaDescription || null,
-        siteSettings: siteSettings || null,
+        siteSettings: siteSettings || { title: 'Default Site', seo: { metaTitle: 'Default Title', metaDescription: 'Default description' } }, // Safe fallback
       },
       revalidate: 10,
     };
   } catch (error) {
-    console.error("Error fetching data:", error);
+    console.error("Error fetching data:", error.message);
+
     return {
       props: {
         contentBlocks: [],
         metaTitle: null,
         metaDescription: null,
-        siteSettings: null,
+        siteSettings: { title: 'Default Site', seo: { metaTitle: 'Default Title', metaDescription: 'Default description' } },
       },
     };
   }
 };
-

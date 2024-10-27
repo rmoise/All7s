@@ -1,24 +1,26 @@
-import { Fragment, useState } from 'react'
-import { Popover, Transition } from '@headlessui/react'
-import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
-import { ArrowTopRightOnSquareIcon } from '@heroicons/react/20/solid'
-import Sketch from '../media/Sketch'
-
+// Inside Contact.js
+import { Fragment, useState } from 'react';
+import { Popover, Transition } from '@headlessui/react';
+import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
+import { ArrowTopRightOnSquareIcon } from '@heroicons/react/20/solid';
+import Sketch from '../media/Sketch';
 
 const navigation = [
   { name: 'Work', href: '#' },
   { name: 'Services', href: '#' },
   { name: 'About', href: '#' },
   { name: 'Blog', href: '#' },
-]
+];
 
-export default function Contact({ info }) {
-  const [first, setFirst] = useState('')
-  const [last, setLast] = useState('')
-  const [email, setEmail] = useState('')
-  const [city, setCity] = useState('')
-  const [state, setState] = useState('')
-  const [comment, setComment] = useState('')
+function Contact({ info }) {
+  console.log("Contact Component Loaded");
+
+  const [first, setFirst] = useState('');
+  const [last, setLast] = useState('');
+  const [email, setEmail] = useState('');
+  const [city, setCity] = useState('');
+  const [state, setState] = useState('');
+  const [comment, setComment] = useState('');
 
   return (
     <div className="bg-white">
@@ -177,5 +179,7 @@ export default function Contact({ info }) {
         </div>
       </main>
     </div>
-  )
+  );
 }
+
+export default Contact;
