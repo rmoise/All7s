@@ -11,6 +11,7 @@ import { YouTubeAPIProvider } from '../components/media/YouTubeAPIProvider';
 import { config } from '@fortawesome/fontawesome-svg-core';
 import '@fortawesome/fontawesome-svg-core/styles.css';
 config.autoAddCss = false;
+import { client } from '../lib/client';
 
 function MyApp({ Component, pageProps, siteSettings }) {
   useEffect(() => {
@@ -52,13 +53,6 @@ function MyApp({ Component, pageProps, siteSettings }) {
 }
 
 MyApp.getInitialProps = async () => {
-  const client = require('@sanity/client').createClient({
-    projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID,
-    dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || 'production',
-    apiVersion: '2022-10-29',
-    useCdn: false,
-  });
-
   const query = `*[_type == "settings"][0]{
     title,
     favicon{
@@ -111,4 +105,3 @@ MyApp.getInitialProps = async () => {
 };
 
 export default MyApp;
-                                                                                                                        
