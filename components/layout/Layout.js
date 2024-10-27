@@ -18,16 +18,24 @@ const Layout = ({ children, siteSettings }) => {
     return () => window.removeEventListener('resize', updateVH);
   }, []);
 
+  if (!siteSettings) {
+    // Optionally, you can show a loading or error state here
+    return <div>Error loading site settings.</div>;
+  }
+
   return (
     <>
       <Head>
-        <title>{siteSettings?.title || 'ALL7Z'}</title>
+        <title>{siteSettings.title || 'ALL7Z'}</title>
+        <meta name="description" content={siteSettings.seo?.metaDescription || 'Default description.'} />
+        <link rel="icon" href={siteSettings.favicon?.asset?.url || '/favicon.ico'} />
+        {/* Add other SEO tags as needed */}
       </Head>
 
       <div className="flex flex-col min-h-screen bg-black text-white">
         {/* Header */}
         <header className="w-full">
-          <Navbar navbarData={siteSettings?.navbar} />
+          <Navbar navbarData={siteSettings.navbar} />
         </header>
 
         {/* Main Content */}
@@ -37,7 +45,7 @@ const Layout = ({ children, siteSettings }) => {
 
         {/* Footer */}
         <footer className="w-full mt-auto">
-          <Footer footerData={siteSettings?.footer} />
+          <Footer footerData={siteSettings.footer} />
         </footer>
       </div>
     </>
