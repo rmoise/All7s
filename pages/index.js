@@ -64,8 +64,9 @@ Home.propTypes = {
 
 export default Home;
 
+// Switch to `getServerSideProps` for testing
 
-export const getStaticProps = async () => {
+export const getServerSideProps = async () => {
   const homePageQuery = `*[_type == "home"][0]{
     title,
     metaTitle,
@@ -141,7 +142,6 @@ export const getStaticProps = async () => {
         metaDescription: homePage?.metaDescription || null,
         siteSettings: siteSettings || { title: 'Default Site', seo: { metaTitle: 'Default Title', metaDescription: 'Default description' } }, // Safe fallback
       },
-      revalidate: 10,
     };
   } catch (error) {
     console.error("Error fetching data:", error.message);
