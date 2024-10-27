@@ -10,14 +10,13 @@ const YouTubeEmbed = ({ embedId, title, className = '' }) => {
     triggerOnce: true,
   });
 
-  // Detect if the device is mobile
-  const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+  // Check if running in the browser before accessing navigator
+  const isMobile = typeof window !== 'undefined' && /Mobi|Android/i.test(navigator.userAgent);
 
   const setHighResolution = (player) => {
     const qualities = player.getAvailableQualityLevels();
     const savedQuality = localStorage.getItem('ytHighQuality') || 'hd1080';
 
-    // Set the preferred quality based on saved settings or available quality
     if (qualities.includes(savedQuality)) {
       player.setPlaybackQuality(savedQuality);
     } else if (qualities.includes('hd720')) {
@@ -28,7 +27,9 @@ const YouTubeEmbed = ({ embedId, title, className = '' }) => {
   };
 
   const saveQualityPreference = () => {
-    localStorage.setItem('ytHighQuality', 'hd1080');
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('ytHighQuality', 'hd1080');
+    }
   };
 
   useEffect(() => {
@@ -45,11 +46,10 @@ const YouTubeEmbed = ({ embedId, title, className = '' }) => {
         },
         events: {
           onReady: (event) => {
-            saveQualityPreference(); // Save the preference
+            saveQualityPreference();
             setHighResolution(event.target);
           },
           onStateChange: (event) => {
-            // Reapply high quality during play or buffering, including for mobile
             if (event.data === window.YT.PlayerState.BUFFERING || event.data === window.YT.PlayerState.PLAYING) {
               setHighResolution(event.target);
             }

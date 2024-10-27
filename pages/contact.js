@@ -1,7 +1,7 @@
 import Contact from "../components/Contact";
 import CustomP5Canvas from "../components/media/CustomP5Canvas";
 import { client } from '../lib/client';
-import SEO from '../components/common/SEO'; // Import your reusable SEO component
+import SEO from '../components/common/SEO';
 
 const ContactPage = ({ contactData }) => {
   const {
@@ -15,16 +15,15 @@ const ContactPage = ({ contactData }) => {
     map,
     favicon,
     seo,
+    info, // Add `info` if available in `contactData`
   } = contactData;
 
-  // Combined SEO title for better branding consistency
   const pageTitle = seo?.metaTitle
     ? `${seo.metaTitle} - ${title || 'Contact Page'}`
     : title || 'Contact Us';
 
   return (
     <div>
-      {/* SEO Component */}
       <SEO
         title={pageTitle}
         description={seo?.metaDescription || description || "Get in touch with us."}
@@ -33,8 +32,8 @@ const ContactPage = ({ contactData }) => {
         siteName={title || 'Contact Page'}
       />
 
-      {/* Contact Component */}
       <Contact
+        info={info || []} // Ensure `info` is passed to avoid errors
         title={title}
         description={description}
         address={address}
@@ -45,7 +44,6 @@ const ContactPage = ({ contactData }) => {
         map={map}
       />
 
-      {/* Custom Canvas Component */}
       <CustomP5Canvas />
     </div>
   );
