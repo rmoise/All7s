@@ -2,7 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-
 html,
 body {
   margin: 0;
@@ -52,13 +51,41 @@ a {
   @apply text-center;
 }
 
+/* Override on mobile */
+@media (max-width: 768px) {
+  .youtube-iframe,
+  .spotify-iframe {
+    z-index: auto !important;
+    position: relative !important;
+    pointer-events: auto !important;
+  }
+
+  /* Set Spotify iframe to 600px for mobile */
+  .spotify-iframe {
+    height: 600px;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Try using specific selector targeting */
+  [style*="z-index: 9999"][style*="position: fixed"] {
+    position: static !important;
+    z-index: auto !important;
+    pointer-events: auto !important;
+  }
+}
+
+main.flex-grow.w-full.relative.z-20 > div[style*="position:fixed"] {
+  position: static !important;
+  z-index: auto !important;
+  pointer-events: auto !important;
+}
+
 .spotify-embed-container {
   position: relative;
   width: 100%;
-  padding-bottom: 152%;
+  padding-bottom: 8%;
   overflow: hidden;
-    z-index: 10000!important; /* Adjust to ensure visibility */
-
 }
 
 .spotify-loading {
@@ -80,18 +107,16 @@ a {
   top: 0;
   left: 0;
   width: 100%;
-  height: 100%;
+  overflow-y: auto;
   border: 0;
-  opacity: 0;
   transition: opacity 0.3s ease;
-    z-index: 10000!important; /* Adjust to ensure visibility */
-
 }
 
 .spotify-iframe.loaded {
   opacity: 1;
 }
 
+/* Height setting for larger screens */
 @media (min-width: 768px) {
   .spotify-embed-container {
     padding-bottom: 0;

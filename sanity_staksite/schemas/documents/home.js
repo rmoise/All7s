@@ -1,3 +1,5 @@
+// schemas/home.js
+
 import { defineType } from 'sanity';
 
 export default defineType({
@@ -9,27 +11,31 @@ export default defineType({
       name: 'title',
       type: 'string',
       title: 'Page Title',
+      validation: Rule => Rule.required(),
     },
     {
       name: 'metaTitle',
       type: 'string',
       title: 'Meta Title',
-      description: 'SEO title for the Home Page.',
+      description: 'SEO title for the Home Page',
+      validation: Rule => Rule.required(),
     },
     {
       name: 'metaDescription',
       type: 'text',
       title: 'Meta Description',
-      description: 'SEO meta description for the Home Page.',
+      description: 'SEO meta description for the Home Page',
+      validation: Rule => Rule.required(),
     },
     {
       name: 'openGraphImage',
       title: 'Open Graph Image',
       type: 'image',
-      description: 'Image for social sharing on the Home Page.',
+      description: 'Image for social sharing on the Home Page',
       options: {
         hotspot: true,
       },
+      validation: Rule => Rule.required(),
     },
     {
       name: 'contentBlocks',
@@ -38,49 +44,41 @@ export default defineType({
       of: [
         {
           type: 'about',
-          preview: {
-            prepare() {
-              return {
-                title: 'About Section',
-              };
-            },
-          },
+          title: 'About Section',
         },
         {
           type: 'heroBanner',
-          preview: {
-            prepare() {
-              return {
-                title: 'Hero Banner Section',
-              };
-            },
-          },
+          title: 'Hero Banner Section',
         },
         {
-          type: 'musicAndVideo',
-          preview: {
-            prepare() {
-              return {
-                title: 'Music and Video Section',
-              };
-            },
-          },
+          type: 'musicBlock',
+          title: 'Music Section',
+        },
+        {
+          type: 'videoBlock',
+          title: 'Video Section',
+        },
+        {
+          type: 'backgroundVideoBlock',
+          title: 'Background Video Section',
         },
         {
           type: 'newsletter',
-          preview: {
-            select: {
-              title: 'heading',
-            },
-            prepare(selection) {
-              const { title } = selection;
-              return {
-                title: title || 'Newsletter Section',
-              };
-            },
-          },
+          title: 'Newsletter Section',
         },
+        // Add other block types as needed
       ],
+      validation: Rule => Rule.required().min(1),
     },
   ],
+  preview: {
+    select: {
+      title: 'title',
+    },
+    prepare(selection) {
+      return {
+        title: selection.title || 'Home Page',
+      };
+    },
+  },
 });

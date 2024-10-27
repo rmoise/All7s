@@ -14,7 +14,10 @@ export const YouTubeAPIProvider = ({ children }) => {
       const firstScriptTag = document.getElementsByTagName('script')[0];
       firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
-      window.onYouTubeIframeAPIReady = () => setApiReady(true);
+      window.onYouTubeIframeAPIReady = () => {
+        console.log("YouTube API is ready.");
+        setApiReady(true);
+      };
     } else {
       setApiReady(true);
     }
@@ -26,4 +29,3 @@ export const YouTubeAPIProvider = ({ children }) => {
     </YouTubeAPIContext.Provider>
   );
 };
-

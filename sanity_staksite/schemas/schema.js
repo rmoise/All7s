@@ -18,11 +18,17 @@ import newsletter from './objects/newsletter';
 import navbar from './documents/navbar';
 import siteSettings from './documents/settings';
 import contactPage from './documents/contactPage';
-import musicAndVideo from './objects/musicAndVideo';
 import album from './objects/album';
 import colorTheme from './documents/colorTheme';
 import page from './documents/page';
 import collection from './documents/collection';
+import additionalVideo from './objects/additionalVideo'; // Add this line
+
+
+// New block schemas
+import musicBlock from './objects/musicBlock';
+import videoBlock from './objects/videoBlock';
+import backgroundVideoBlock from './objects/backgroundVideoBlock';
 
 export default [
   blockContent,
@@ -44,9 +50,13 @@ export default [
   navbar,
   siteSettings,
   contactPage,
-  musicAndVideo,
   album,
   colorTheme,
   page,
   collection,
+  musicBlock,           // New MusicBlock schema
+  videoBlock,           // New VideoBlock schema
+  backgroundVideoBlock, // New BackgroundVideoBlock schema
+    additionalVideo,      // Make sure to include this line
+
 ];

@@ -1,26 +1,22 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { createClient } from '@sanity/client';
+import React, { createContext, useContext, useState, useEffect } from 'react'
+import { createClient } from '@sanity/client'
 
-// Create the context
-const NavbarContext = createContext();
+const NavbarContext = createContext()
 
-// Navbar Provider
 export const NavbarProvider = ({ children }) => {
-  const [navbarData, setNavbarData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [navbarData, setNavbarData] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
-  // Initialize the Sanity client
   const client = createClient({
     projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID,
     dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || 'production',
     apiVersion: '2022-10-29',
     useCdn: false,
-  });
+  })
 
-  // Define a function to fetch the navbar data
   const fetchNavbarData = async () => {
-    setLoading(true);
+    setLoading(true)
 
     try {
       const [settings, homePage] = await Promise.all([
@@ -34,59 +30,99 @@ export const NavbarProvider = ({ children }) => {
         }`),
         client.fetch(`*[_type == "home"][0]{
           contentBlocks[]{
-            _type == 'musicAndVideo' => {
+            ...,
+            _type == 'musicBlock' => {
+              listenTitle,
+              albums[]-> {
+                _id,
+                albumSource,
+                embeddedAlbum {
+                  embedUrl,
+                  title,
+                  artist,
+                  platform,
+                  releaseType,
+                  imageUrl,
+                  customImage {
+                    asset-> {
+                      url
+                    }
+                  }
+                },
+                customAlbum {
+                  title,
+                  artist,
+                  releaseType,
+                  customImage {
+                    asset-> {
+                      url
+                    }
+                  },
+                  songs[] {
+                    trackTitle,
+                    "url": file.asset->url,
+                    duration
+                  }
+                }
+              }
+            },
+            _type == 'videoBlock' => {
               lookTitle,
-              listenTitle
-            }
+              heroVideoLink,
+              additionalVideos,
+            },
           }
-        }`)
-      ]);
+        }`),
+      ])
 
-      const fetchedNavbarData = settings.navbar;
-      const musicAndVideoSection = homePage?.contentBlocks?.find(
-        (block) => block.lookTitle && block.listenTitle
-      );
+      const fetchedNavbarData = settings.navbar
+      const contentBlocks = homePage?.contentBlocks || []
+
+      const musicBlock = contentBlocks.find(
+        (block) => block._type === 'musicBlock'
+      )
+      const listenTitle = musicBlock?.listenTitle || 'LISTEN'
+
+      const videoBlock = contentBlocks.find(
+        (block) => block._type === 'videoBlock'
+      )
+      const lookTitle = videoBlock?.lookTitle || 'LOOK'
+
+      // Generate IDs while preserving original case
+      const listenId = listenTitle.replace(/\s+/g, '-')
+      const lookId = lookTitle.replace(/\s+/g, '-')
+
+      const updatedNavigationLinks = fetchedNavbarData.navigationLinks.map(
+        (link) => {
+          const linkHref = link.href.trim().toLowerCase()
+
+          if (linkHref === '/#listen') {
+            return { name: listenTitle, href: `/#${listenId}` }
+          }
+          if (linkHref === '/#look') {
+            return { name: lookTitle, href: `/#${lookId}` }
+          }
+          return link
+        }
+      )
 
       const updatedNavbarData = {
         ...fetchedNavbarData,
-        navigationLinks: fetchedNavbarData.navigationLinks || [],
-      };
-
-      if (musicAndVideoSection) {
-        const { lookTitle, listenTitle } = musicAndVideoSection;
-        const lookId = lookTitle?.replace(/\s+/g, '-') || 'LOOK';
-        const listenId = listenTitle?.replace(/\s+/g, '-') || 'LISTEN';
-
-
-        // Update the LOOK link
-        const lookIndex = updatedNavbarData.navigationLinks.findIndex(
-          (link) => link.href.toLowerCase() === '/#look'
-        );
-        if (lookIndex > -1) {
-          updatedNavbarData.navigationLinks[lookIndex] = { name: lookTitle || 'LOOK', href: `/#${lookId}` };
-        }
-
-        // Update the LISTEN link
-        const listenIndex = updatedNavbarData.navigationLinks.findIndex(
-          (link) => link.href.toLowerCase() === '/#listen'
-        );
-        if (listenIndex > -1) {
-          updatedNavbarData.navigationLinks[listenIndex] = { name: listenTitle || 'LISTEN', href: `/#${listenId}` };
-        }
-
+        navigationLinks: updatedNavigationLinks,
       }
 
-      setNavbarData(updatedNavbarData);
+      setNavbarData(updatedNavbarData)
     } catch (error) {
-      setError(error);
+      console.error('Error fetching navbar data:', error)
+      setError(error)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   useEffect(() => {
-    fetchNavbarData();
-  }, []);
+    fetchNavbarData()
+  }, [])
 
   return (
     <NavbarContext.Provider
@@ -94,8 +130,7 @@ export const NavbarProvider = ({ children }) => {
     >
       {children}
     </NavbarContext.Provider>
-  );
-};
+  )
+}
 
-// Custom hook for consuming the navbar context
-export const useNavbar = () => useContext(NavbarContext);
+export const useNavbar = () => useContext(NavbarContext)

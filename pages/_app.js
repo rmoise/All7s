@@ -1,18 +1,26 @@
 // pages/_app.js
-import React from 'react';
+import React, { useEffect } from 'react';
 import '../styles/globals.css';
 import Layout from '../components/layout/Layout';
 import { StateContext } from '../context/StateContext';
 import { Toaster } from 'react-hot-toast';
 import SEO from '../components/common/SEO';
-import { NavbarProvider } from '../context/NavbarContext.jsx';
-
-// Font Awesome setup
+import { NavbarProvider } from '../context/NavbarContext';
+import { AudioProvider } from '../context/AudioContext';
+import { YouTubeAPIProvider } from '../components/media/YouTubeAPIProvider';
 import { config } from '@fortawesome/fontawesome-svg-core';
-import '@fortawesome/fontawesome-svg-core/styles.css'; // Import the CSS
-config.autoAddCss = false; // Prevent Font Awesome from adding the CSS automatically
+import '@fortawesome/fontawesome-svg-core/styles.css';
+config.autoAddCss = false;
 
 function MyApp({ Component, pageProps, siteSettings }) {
+  useEffect(() => {
+    // Target and remove the fixed high-z-index element if it exists
+    const fixedHighZIndexElement = document.querySelector('div[style*="z-index: 9999"]');
+    if (fixedHighZIndexElement) {
+      fixedHighZIndexElement.remove();
+    }
+  }, []);
+
   if (!siteSettings) {
     return <div>Loading site settings...</div>;
   }
@@ -29,10 +37,14 @@ function MyApp({ Component, pageProps, siteSettings }) {
 
       <StateContext>
         <NavbarProvider>
-          <Layout siteSettings={siteSettings}>
-            <Toaster />
-            <Component {...pageProps} />
-          </Layout>
+          <AudioProvider>
+            <YouTubeAPIProvider>
+              <Layout siteSettings={siteSettings}>
+                <Toaster />
+                <Component {...pageProps} />
+              </Layout>
+            </YouTubeAPIProvider>
+          </AudioProvider>
         </NavbarProvider>
       </StateContext>
     </>
@@ -99,3 +111,4 @@ MyApp.getInitialProps = async () => {
 };
 
 export default MyApp;
+                                                                                                                        
