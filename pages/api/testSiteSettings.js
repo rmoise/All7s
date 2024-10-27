@@ -32,9 +32,12 @@ export default async function handler(req, res) {
 
   try {
     const data = await client.fetch(query);
+    if (!data) {
+      throw new Error("No data returned from Sanity");
+    }
     res.status(200).json(data);
   } catch (error) {
-    console.error("Error fetching site settings:", error.message);
+    console.error("Error fetching site settings:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 }
