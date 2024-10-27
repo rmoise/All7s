@@ -12,7 +12,7 @@ import { config } from '@fortawesome/fontawesome-svg-core';
 import '@fortawesome/fontawesome-svg-core/styles.css';
 config.autoAddCss = false;
 
-function MyApp({ Component, pageProps, siteSettings }) {
+function MyApp({ Component, pageProps }) {
   useEffect(() => {
     // Target and remove the fixed high-z-index element if it exists
     const fixedHighZIndexElement = document.querySelector('div[style*="z-index: 9999"]');
@@ -20,6 +20,8 @@ function MyApp({ Component, pageProps, siteSettings }) {
       fixedHighZIndexElement.remove();
     }
   }, []);
+
+  const { siteSettings } = pageProps;
 
   if (!siteSettings) {
     return <div>Loading site settings...</div>;
@@ -50,64 +52,5 @@ function MyApp({ Component, pageProps, siteSettings }) {
     </>
   );
 }
-
-MyApp.getInitialProps = async () => {
-  const client = require('@sanity/client').createClient({
-    projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID,
-    dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || 'production',
-    apiVersion: '2022-10-29',
-    useCdn: false,
-  });
-
-  const query = `*[_type == "settings"][0]{
-    title,
-    favicon{
-      asset->{
-        url,
-        _updatedAt
-      }
-    },
-    seo{
-      metaTitle,
-      metaDescription,
-      openGraphImage{
-        asset->{
-          url
-        }
-      }
-    },
-    navbar{
-      logo,
-      navigationLinks[]{
-        name,
-        href
-      },
-      backgroundColor,
-      isTransparent
-    },
-    footer{
-      copyrightText,
-      footerLinks[]{
-        text,
-        url
-      },
-      socialLinks[]{
-        platform,
-        url,
-        iconUrl
-      },
-      fontColor,
-      alignment
-    }
-  }`;
-
-  try {
-    const siteSettings = await client.fetch(query);
-    return { siteSettings };
-  } catch (error) {
-    console.error("Error fetching site settings:", error);
-    return { siteSettings: null };
-  }
-};
 
 export default MyApp;

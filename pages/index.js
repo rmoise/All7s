@@ -1,6 +1,8 @@
+// pages/index.js
 import React from 'react';
 import PropTypes from 'prop-types';
-import { client } from '../lib/client';
+import { client } from '@lib/client'; // Your existing Sanity client
+import SEO from '../components/common/SEO';
 import Splash from '../components/home/Splash';
 import About from '../components/home/About';
 import MusicBlock from '../components/blocks/MusicBlock';
@@ -8,7 +10,6 @@ import VideoBlock from '../components/blocks/VideoBlock';
 import BackgroundVideoBlock from '../components/blocks/BackgroundVideoBlock';
 import Newsletter from '../components/common/Newsletter';
 import HeroBanner from '../components/home/HeroBanner';
-import SEO from '../components/common/SEO';
 import Script from 'next/script';
 
 const Home = ({ contentBlocks, metaTitle, metaDescription, siteSettings }) => {
@@ -27,6 +28,7 @@ const Home = ({ contentBlocks, metaTitle, metaDescription, siteSettings }) => {
           faviconUrl={siteSettings?.favicon?.asset?.url || '/favicon.ico'}
           openGraphImageUrl={siteSettings?.seo?.openGraphImage?.asset?.url}
           siteName={siteSettings?.title}
+          canonicalUrl="https://yourdomain.com" // Optional: Set your canonical URL
         />
       )}
       {contentBlocks.map((block, index) => {
@@ -61,10 +63,6 @@ Home.propTypes = {
   metaDescription: PropTypes.string,
   siteSettings: PropTypes.object,
 };
-
-export default Home;
-
-// Switch to `getServerSideProps` for testing
 
 export const getServerSideProps = async () => {
   const homePageQuery = `*[_type == "home"][0]{
@@ -118,18 +116,31 @@ export const getServerSideProps = async () => {
     }
   }`;
 
-  const siteSettingsQuery = `*[_type == "settings"][0]{
+  const settingsQuery = `*[_type == "settings"][0]{
     title,
     favicon { asset-> { url, _updatedAt } },
     seo { metaTitle, metaDescription, openGraphImage { asset-> { url } } },
     navbar { logo, navigationLinks, backgroundColor, isTransparent },
-    footer { copyrightText, footerLinks, socialLinks, fontColor, alignment }
+    footer {
+      copyrightText,
+      footerLinks[]{
+        text,
+        url
+      },
+      socialLinks[]{
+        platform,
+        url,
+        iconUrl
+      },
+      fontColor,
+      alignment
+    }
   }`;
 
   try {
     const [homePage, siteSettings] = await Promise.all([
       client.fetch(homePageQuery),
-      client.fetch(siteSettingsQuery),
+      client.fetch(settingsQuery),
     ]);
 
     console.log("Fetched homePage:", homePage);  // Debug fetched homePage
@@ -156,3 +167,5 @@ export const getServerSideProps = async () => {
     };
   }
 };
+
+export default Home;
