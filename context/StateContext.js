@@ -18,7 +18,15 @@ export const StateContext = ({ children }) => {
     }
   }, []);
 
-  // ... rest of your code remains the same ...
+  // Increment quantity function
+  const incQty = () => {
+    setQty((prevQty) => prevQty + 1);
+  };
+
+  // Decrement quantity function with a minimum limit of 1
+  const decQty = () => {
+    setQty((prevQty) => (prevQty > 1 ? prevQty - 1 : 1));
+  };
 
   return (
     <Context.Provider
@@ -29,18 +37,13 @@ export const StateContext = ({ children }) => {
         totalPrice,
         totalQuantities,
         qty,
-        incQty,
-        decQty,
-        onAdd,
-        toggleCartItemQuantity,
-        onRemove,
-        setCartItems,
-        setTotalPrice,
-        setTotalQuantities,
+        incQty, // Provide the function here
+        decQty, // Provide the function here
         cartCheck,
         setCartCheck,
         mobile,
         setMobile,
+        // Include other functions and states as needed
       }}
     >
       {children}
