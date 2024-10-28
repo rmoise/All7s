@@ -1,8 +1,5 @@
-// components/blocks/MusicBlock.js
-
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import FlipCard from '@components/Music/FlipCard';
-import LazyLoad from 'react-lazyload';
 import PropTypes from 'prop-types';
 import Grid from '@components/common/Grid/Grid';
 
@@ -48,26 +45,31 @@ const MusicBlock = ({ listenTitle, albums = [] }) => {
     return () => document.removeEventListener('click', handleOutsideClick);
   }, [flippedAlbums, handleOutsideClick]);
 
-  // Generate a safe ID from listenTitle without lowercasing
-  const listenId = listenTitle
-    ? listenTitle.replace(/\s+/g, '-')
-    : 'LISTEN';
+  const listenId = listenTitle ? listenTitle.replace(/\s+/g, '-') : 'LISTEN';
 
   return (
     <section
-      id={listenId} // Add this line with exact case
+      id={listenId}
       className="w-full px-4 md:px-8 lg:px-32 relative z-10"
     >
       <div className="flex flex-col items-center space-y-8">
         <div className="mt-16 mb-8 sm:mb-12 rounded-lg flex items-center justify-center w-full sm:w-1/2">
-          <p className="text-5xl sm:text-7xl font-Headline text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-pink-600 to-purple-600 font-bold">
+          <p className="text-5xl md:text-6xl lg:text-7xl font-Headline text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-pink-600 to-purple-600 font-bold">
             {listenTitle}
           </p>
         </div>
 
-        <Grid columns={{ default: 1, sm: 2 }} gap={32} className="w-full relative z-50 pb-32 px-4 md:px-8 lg:px-32">
+        {/* Grid layout with automatic centering and responsive column count */}
+        <Grid
+          columns={{ default: 1, lg: 2 }} // Stacks to 1 column on mobile/tablet, 2 on larger screens
+          gap={32} // Standard gap for card spacing
+          className="w-full max-w-6xl mx-auto pb-32" // Auto center the grid on tablet
+        >
           {albums.map((album, index) => (
-            <LazyLoad key={album._id || index} height={300} offset={100}>
+            <div
+              key={album._id || index}
+              className="flex justify-center items-center w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl p-4 mx-auto"
+            >
               <FlipCard
                 album={{
                   albumId: album._id || `album-${index}`,
@@ -80,8 +82,10 @@ const MusicBlock = ({ listenTitle, albums = [] }) => {
                 isFlipped={flippedAlbums.has(album._id)}
                 toggleFlip={handleFlip}
                 addFlipCardRef={addFlipCardRef}
+                titleClass="text-xl md:text-2xl lg:text-3xl whitespace-nowrap truncate"
+                artistClass="text-lg md:text-xl lg:text-2xl whitespace-nowrap truncate"
               />
-            </LazyLoad>
+            </div>
           ))}
         </Grid>
       </div>

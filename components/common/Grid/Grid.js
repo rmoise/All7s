@@ -17,8 +17,8 @@ const Grid = ({ columns = 1, gap = 32, children, className = '' }) => {
     gridColsClass = `grid-cols-${columns}`;
   }
 
-  // Calculate Tailwind's gap classes based on 8pt grid (gap-32 = gap-8)
-  const gapClass = `gap-${gap / 4}`; // For gap=32, class becomes 'gap-8'
+  // Calculate Tailwind's gap classes based on the 8pt grid (gap-32 = gap-8 in Tailwind)
+  const gapClass = `gap-${gap / 4}`;
 
   return (
     <div className={clsx('grid', gridColsClass, gapClass, className)}>
@@ -39,7 +39,7 @@ Grid.propTypes = {
       '2xl': PropTypes.number,
     }),
   ]),
-  gap: PropTypes.number, // Must be multiples of 4 (gap-8 = 32px)
+  gap: PropTypes.number, // Should be a multiple of 8 (e.g., 8, 16, 24, 32)
   children: PropTypes.node.isRequired,
   className: PropTypes.string,
 };

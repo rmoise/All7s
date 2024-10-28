@@ -123,3 +123,10 @@ main.flex-grow.w-full.relative.z-20 > div[style*="position:fixed"] {
     height: 500px;
   }
 }
+.fa-rotate {
+  display: none !important;
+}
+
+.custom-gap {
+  gap: 72px; /* Custom gap size between albums */
+}

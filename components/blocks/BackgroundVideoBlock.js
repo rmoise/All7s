@@ -10,20 +10,12 @@ const BackgroundVideoBlock = ({
 }) => {
   const videoSrc = backgroundVideoFile?.asset?.url || backgroundVideoUrl;
 
-  // Debugging log
-  console.log('BackgroundVideoBlock Props:', {
-    backgroundVideoUrl,
-    backgroundVideoFile,
-    posterImage,
-  });
-
-  // Check if videoSrc is empty
   if (!videoSrc) return null;
 
   return (
-    <div className="sticky top-0 w-full h-[40vh] sm:h-screen z-0 overflow-hidden pointer-events-none">
+    <div className="sticky top-0 w-full h-[56.25vw] max-h-screen overflow-hidden bg-black z-0">
       <video
-        className="w-full h-full object-cover"
+        className="absolute top-0 left-0 w-full h-full object-cover"
         src={videoSrc}
         poster={posterImage?.asset?.url || '/images/default-poster.png'}
         muted

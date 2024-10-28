@@ -10,8 +10,8 @@ const YouTubeEmbed = ({ embedId, title, className = '' }) => {
     triggerOnce: true,
   });
 
-  // Check if running in the browser before accessing navigator
-  const isMobile = typeof window !== 'undefined' && /Mobi|Android/i.test(navigator.userAgent);
+  // Maximum resolution YouTube thumbnail as placeholder
+  const placeholderSrc = `https://img.youtube.com/vi/${embedId}/maxresdefault.jpg`;
 
   const setHighResolution = (player) => {
     const qualities = player.getAvailableQualityLevels();
@@ -68,6 +68,14 @@ const YouTubeEmbed = ({ embedId, title, className = '' }) => {
       ref={ref}
       className={`youtube-embed relative overflow-hidden ${className} aspect-w-16 aspect-h-9 w-full`}
     >
+      {/* Display the maximum resolution thumbnail as a placeholder until the player loads */}
+      {!playerRef.current && (
+        <img
+          src={placeholderSrc}
+          alt={`${title} thumbnail`}
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+      )}
       <div id={`youtube-player-${embedId}`} className="w-full h-full"></div>
     </div>
   );
