@@ -20,7 +20,7 @@ const VideoBlock = ({ lookTitle = 'Video Gallery', heroVideoLink = '', additiona
           <YouTubeEmbed
             embedId={heroVideoID}
             title="Hero YouTube video"
-            className="border-8 mb-32 border-black/50 rounded-lg"
+            className="border-8 lg:mb-32 border-black/50 rounded-lg"
           />
         )}
       </div>
