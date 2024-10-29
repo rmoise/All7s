@@ -251,12 +251,12 @@ const FlipCard = forwardRef(({ album, isFlipped, toggleFlip, addFlipCardRef }, r
   }, [toggleFlip, album.albumId]);
 
   return (
-    <div ref={cardRef} className="relative w-full mb-8 px-4 sm:px-0" data-album-id={album.albumId}>
+    <div  className="relative w-full mb-8 px-4 sm:px-0" data-album-id={album.albumId}>
       <h2 className="text-2xl sm:text-3xl font-bold text-center text-white mb-4">
         {album.title || 'Untitled Album'}
       </h2>
 
-      <div className="relative max-w-lg mx-auto">
+      <div ref={cardRef} className="relative lg:max-w-lg 2xl:max-w-4xl mx-auto">
         <div className={`w-full ${isMobile ? 'mobile-container' : 'flip-container'} ${isFlipped ? (isMobile ? 'mobile-expanded' : 'flipped') : ''}`}>
           <div
             className={`${isMobile ? 'mobile-front' : 'flip-front absolute inset-0'} bg-black/0 rounded-lg ${isMobile ? '' : 'backface-hidden'}`}
@@ -292,7 +292,7 @@ const FlipCard = forwardRef(({ album, isFlipped, toggleFlip, addFlipCardRef }, r
           >
             <div className="w-full h-full" onClick={handleContentClick}>
               {album.songs && album.songs.length > 0 ? (
-                <div className="custom-player md:h-[500px] bg-white w-full p-4 rounded-lg" onClick={(e) => e.stopPropagation()}>
+                <div className="custom-player md:h-[500px]  bg-white w-full p-4 rounded-lg" onClick={(e) => e.stopPropagation()}>
                   <div className="flex items-center space-x-4 mb-4">
                     <Image
                       src={album.imageUrl || '/images/placeholder.png'}
@@ -376,134 +376,7 @@ const FlipCard = forwardRef(({ album, isFlipped, toggleFlip, addFlipCardRef }, r
       </div>
 
       <style jsx>{`
-        .flip-container {
-          perspective: 1000px;
-          transform-style: preserve-3d;
-        }
 
-        .flip-front,
-        .flip-back {
-          backface-visibility: hidden;
-          transition: transform 0.6s;
-        }
-
-        .flip-back {
-          transform: rotateY(180deg);
-        }
-
-        .flipped .flip-front {
-          transform: rotateY(180deg);
-        }
-
-        .flipped .flip-back {
-          transform: rotateY(0deg);
-        }
-
-        .backface-hidden {
-          backface-visibility: hidden;
-        }
-
-        @media (max-width: 768px) {
-          .mobile-container {
-            transition: max-height 0.6s ease-in-out;
-            max-height: 500px;
-            overflow: hidden;
-          }
-
-          .mobile-front,
-          .mobile-back {
-            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
-          }
-
-          .mobile-back {
-            opacity: 0;
-            visibility: hidden;
-            height: 0;
-            z-index: 2; /* Ensure back is above */
-          }
-
-          .mobile-expanded {
-            max-height: 1000px;
-          }
-
-          .mobile-expanded .mobile-front {
-            opacity: 0;
-            visibility: hidden;
-            height: 0;
-            pointer-events: none; /* Prevent interaction */
-          }
-
-          .mobile-expanded .mobile-back {
-            opacity: 1;
-            visibility: visible;
-            height: auto;
-            z-index: 3; /* Higher z-index to ensure iframe is interactive */
-            pointer-events: auto; /* Allow interaction */
-          }
-
-          .custom-player {
-            background-color: white;
-          }
-
-          .spotify-embed {
-            background-color: transparent;
-          }
-
-          /* Ensure iframe is on top */
-          .spotify-embed iframe {
-            z-index: 10;
-          }
-        }
-
-        @media (min-width: 769px) {
-          .flip-container {
-            width: 100%;
-            padding-bottom: 100%; /* Square aspect ratio */
-          }
-
-          .flip-front,
-          .flip-back {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-          }
-        }
-
-        /* Ensure the iframe container occupies the full available space */
-        .spotify-embed-container {
-          width: 100%;
-          height: 352px;
-          position: relative;
-        }
-
-        .spotify-loading {
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background-color: rgba(255, 255, 255, 0.8);
-          z-index: 10;
-          border-radius: 12px;
-        }
-
-        .spotify-iframe {
-          width: 100%;
-          border: none;
-          border-radius: 12px;
-          opacity: 0;
-          transition: opacity 0.3s ease-in;
-          z-index: 5; /* Ensure iframe is above other elements */
-        }
-
-        .spotify-iframe.loaded {
-          opacity: 1;
-        }
       `}</style>
     </div>
   );

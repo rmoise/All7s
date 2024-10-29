@@ -1,33 +1,41 @@
+// components/common/Grid/Grid.js
+
 import React from 'react';
 import PropTypes from 'prop-types';
 import clsx from 'clsx';
 
-const Grid = ({ columns = 1, gap = 32, children, className = '' }) => {
-  let gridColsClass = 'grid-cols-1'; // Default
-
-  if (typeof columns === 'object') {
-    // Responsive columns
-    gridColsClass = Object.entries(columns)
-      .map(([breakpoint, cols]) => {
-        return breakpoint === 'default' ? `grid-cols-${cols}` : `${breakpoint}:grid-cols-${cols}`;
-      })
-      .join(' ');
-  } else {
-    // Fixed columns
-    gridColsClass = `grid-cols-${columns}`;
+const Grid = ({ type = 'grid', columns = 1, gap = 32, children, className = '' }) => {
+  // Handle Grid column classes if type is grid
+  let gridColsClass = '';
+  if (type === 'grid') {
+    gridColsClass = typeof columns === 'object'
+      ? Object.entries(columns)
+          .map(([breakpoint, cols]) => {
+            return breakpoint === 'default' ? `grid-cols-${cols}` : `${breakpoint}:grid-cols-${cols}`;
+          })
+          .join(' ')
+      : `grid-cols-${columns}`;
   }
 
   // Calculate Tailwind's gap classes based on the 8pt grid (gap-32 = gap-8 in Tailwind)
   const gapClass = `gap-${gap / 4}`;
 
   return (
-    <div className={clsx('grid', gridColsClass, gapClass, className)}>
+    <div
+      className={clsx(
+        type === 'grid' ? 'grid' : 'flex',
+        type === 'grid' ? gridColsClass : 'flex-col', // Flex defaults to column layout; adjust as needed
+        gapClass,
+        className
+      )}
+    >
       {children}
     </div>
   );
 };
 
 Grid.propTypes = {
+  type: PropTypes.oneOf(['grid', 'flex']), // Added type prop for layout choice
   columns: PropTypes.oneOfType([
     PropTypes.number,
     PropTypes.shape({

@@ -1,4 +1,4 @@
-// components/SpotifyEmbed.js
+// Updated SpotifyEmbed.js with targeted class adjustment
 
 import React, { useState, useEffect } from 'react';
 import { useInView } from 'react-intersection-observer';
@@ -14,14 +14,24 @@ const SpotifyEmbed = ({ embedUrl, title }) => {
     if (inView) {
       const timer = setTimeout(() => {
         setIsLoaded(true);
-      }, 1000); // Delay to ensure the iframe has time to load
+      }, 1000); // Delay for iframe loading
 
       return () => clearTimeout(timer);
     }
   }, [inView]);
 
   return (
-    <div ref={ref} className="spotify-embed-container" style={{ zIndex: 10000 }}> {/* Increase z-index here */}
+    <div
+      ref={ref}
+      className="spotify-embed-container"
+      style={{
+        zIndex: 10000,
+        maxHeight: '80vh',
+        width: '100%',
+        overflowY: 'auto', // Ensure scrollability
+        position: 'relative',
+      }}
+    >
       {!isLoaded && (
         <div className="spotify-loading">
           <p className="text-lg font-semibold">Loading Spotify player...</p>
@@ -38,9 +48,15 @@ const SpotifyEmbed = ({ embedUrl, title }) => {
           allowFullScreen
           title={`Spotify album ${title}`}
           onLoad={() => setIsLoaded(true)}
-          style={{ zIndex: 10000 }} // Ensure the iframe has the same high z-index
+          style={{
+            zIndex: 10001,
+            overflow: 'auto',
+            height: '100%',
+            border: 'none',
+          }}
         />
       )}
+   
     </div>
   );
 };

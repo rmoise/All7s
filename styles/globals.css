@@ -81,46 +81,151 @@ main.flex-grow.w-full.relative.z-20 > div[style*="position:fixed"] {
   pointer-events: auto !important;
 }
 
-.spotify-embed-container {
-  position: relative;
-  width: 100%;
-  padding-bottom: 8%;
-  overflow: hidden;
-}
+.flip-container {
+          perspective: 1000px;
+          transform-style: preserve-3d;
+        }
 
-.spotify-loading {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: #121212;
-  color: #ffffff;
-  z-index: 1;
-}
+        .flip-front,
+        .flip-back {
+          backface-visibility: hidden;
+          transition: transform 0.6s;
+        }
 
-.spotify-iframe {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  overflow-y: auto;
-  border: 0;
-  transition: opacity 0.3s ease;
-}
+        .flip-back {
+          transform: rotateY(180deg);
+        }
 
-.spotify-iframe.loaded {
-  opacity: 1;
-}
+        .flipped .flip-front {
+          transform: rotateY(180deg);
+        }
+
+        .flipped .flip-back {
+          transform: rotateY(0deg);
+        }
+
+        .backface-hidden {
+          backface-visibility: hidden;
+        }
+
+        @media (max-width: 768px) {
+          .mobile-container {
+            transition: max-height 0.6s ease-in-out;
+            max-height: 500px;
+            overflow: hidden;
+          }
+
+          .mobile-front,
+          .mobile-back {
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+          }
+
+          .mobile-back {
+            opacity: 0;
+            visibility: hidden;
+            height: 0;
+            z-index: 2; /* Ensure back is above */
+          }
+
+          .mobile-expanded {
+            max-height: 1000px;
+          }
+
+          .mobile-expanded .mobile-front {
+            opacity: 0;
+            visibility: hidden;
+            height: 0;
+            pointer-events: none; /* Prevent interaction */
+          }
+
+          .mobile-expanded .mobile-back {
+            opacity: 1;
+            visibility: visible;
+            height: auto;
+            z-index: 3; /* Higher z-index to ensure iframe is interactive */
+            pointer-events: auto; /* Allow interaction */
+          }
+
+          .custom-player {
+            background-color: white;
+          }
+
+          .spotify-embed {
+            background-color: transparent;
+          }
+
+          /* Ensure iframe is on top */
+          .spotify-embed iframe {
+            z-index: 10;
+          }
+        }
+
+        @media (min-width: 769px) {
+          .flip-container {
+            width: 100%;
+            padding-bottom: 100%; /* Square aspect ratio */
+          }
+
+          .flip-front,
+          .flip-back {
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+          }
+        }
+
+        /* Ensure the iframe container occupies the full available space */
+        .spotify-embed-container {
+          width: 500px;
+          height: 600px;
+          position: relative;
+        }
+
+        .spotify-loading {
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background-color: rgba(255, 255, 255, 0.8);
+          z-index: 10;
+          border-radius: 12px;
+        }
+
+      .spotify-embed-container {
+          overflow-y: auto;
+        }
+        .flip-back {
+          position: none !important;
+          border-radius: unset !important;
+        }
+
+           .spotify-iframe {
+          width: 100%;
+          border: none;
+          transition: opacity 0.3s ease-in;
+          z-index: 5; /* Ensure iframe is above other elements */
+        }
+
+
+
 
 /* Height setting for larger screens */
 @media (min-width: 768px) {
   .spotify-embed-container {
     padding-bottom: 0;
     height: 500px;
+  }
+}
+
+@media (min-width: 2560px) {
+  .spotify-embed-container {
+    padding-bottom: 0;
+    height: 600px;
   }
 }
 .fa-rotate {
@@ -130,3 +235,5 @@ main.flex-grow.w-full.relative.z-20 > div[style*="position:fixed"] {
 .custom-gap {
   gap: 72px; /* Custom gap size between albums */
 }
+
+

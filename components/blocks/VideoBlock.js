@@ -20,8 +20,7 @@ const VideoBlock = ({ lookTitle = 'Video Gallery', heroVideoLink = '', additiona
           <YouTubeEmbed
             embedId={heroVideoID}
             title="Hero YouTube video"
-            placeholderSrc="path/to/placeholder-image.jpg" // Add a path for a low-res placeholder
-            className="border-8 border-black/50 rounded-lg"
+            className="border-8 mb-32 border-black/50 rounded-lg"
           />
         )}
       </div>
@@ -33,7 +32,6 @@ const VideoBlock = ({ lookTitle = 'Video Gallery', heroVideoLink = '', additiona
               key={`vid-${i}`}
               embedId={videoId}
               title={`YouTube video ${i + 1}`}
-              placeholderSrc="path/to/placeholder-image.jpg" // Add path for a placeholder image
               className="border-8 border-black/50 rounded-lg"
             />
           ) : null;
