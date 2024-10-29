@@ -37,8 +37,8 @@
 
 # Redirects
 [[redirects]]
-  from = "/api/spotify-metadata"
-  to = "/.netlify/functions/spotify-metadata"
+  from = "/api/music-metadata"
+  to = "/.netlify/functions/music-metadata"
   status = 200
   force = true
 
@@ -50,7 +50,7 @@
 [functions.extract-album-durations]
   included_files = ["lib/extractDurations.js"]
 
-[functions.spotify-metadata]
+[functions.music-metadata]
   included_files = ["lib/spotify.js"]
 
 [functions.fetchBatchSpotifyMetadata]
