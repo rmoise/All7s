@@ -1,6 +1,4 @@
-// components/Music/ReleaseInfoInput.tsx
-
-import React, {useEffect, useRef} from 'react'
+import React, {useEffect, useRef, useState} from 'react'
 import {ObjectInputProps, PatchEvent, set, setIfMissing} from 'sanity'
 import {Stack} from '@sanity/ui'
 import {useClient, ImageValue, ImageSchemaType} from 'sanity'
@@ -8,10 +6,9 @@ import {useClient, ImageValue, ImageSchemaType} from 'sanity'
 interface EmbeddedAlbumValue {
   embedUrl?: string
   customImage?: ImageValue
-  imageUrl?: string // Ensure imageUrl is included
 }
 
-interface SpotifyMetadata {
+interface Metadata {
   title: string
   artist: string
   imageUrl: string
@@ -19,25 +16,25 @@ interface SpotifyMetadata {
 }
 
 const ReleaseInfoInput = (props: ObjectInputProps<EmbeddedAlbumValue>) => {
-  const {value = {}, onChange, readOnly, path} = props
-  const {embedUrl, customImage, imageUrl} = value // Ensure value corresponds to embeddedAlbum
+  const {value = {}, onChange, readOnly} = props
+  const {embedUrl, customImage} = value
+  const [currentEmbedUrl, setCurrentEmbedUrl] = useState(embedUrl || '') // Ensure defined with default
   const client = useClient({apiVersion: '2023-10-21'})
-
   const isMetadataFetchedRef = useRef(false)
 
   useEffect(() => {
-    console.log('ReleaseInfoInput path:', path)
-    console.log('ReleaseInfoInput value:', value)
-    console.log('Current imageUrl:', imageUrl)
+    // Reset the embed URL state when URL changes
+    if (embedUrl !== currentEmbedUrl) {
+      setCurrentEmbedUrl(embedUrl || '') // Provide a fallback to prevent undefined
+      isMetadataFetchedRef.current = false // Reset to allow metadata fetch
+    }
 
     if (!embedUrl || isMetadataFetchedRef.current) return
 
-    // Extract only the src URL from the iframe tag
     const sanitizedUrl = embedUrl.includes('iframe')
       ? embedUrl.match(/src="([^"]+)"/)?.[1] || embedUrl
       : embedUrl
 
-    // Ensure the sanitized URL does not point to your Sanity Studio
     const isExternalUrl =
       typeof window !== 'undefined' ? !sanitizedUrl.includes(window.location.origin) : true
 
@@ -46,7 +43,11 @@ const ReleaseInfoInput = (props: ObjectInputProps<EmbeddedAlbumValue>) => {
       return
     }
 
-    const detectedPlatform = sanitizedUrl.includes('spotify.com') ? 'spotify' : ''
+    const detectedPlatform = sanitizedUrl.includes('spotify.com')
+      ? 'spotify'
+      : sanitizedUrl.includes('soundcloud.com')
+        ? 'soundcloud'
+        : ''
 
     const hostname = typeof window !== 'undefined' ? window.location.hostname : ''
     const functionUrl =
@@ -54,11 +55,11 @@ const ReleaseInfoInput = (props: ObjectInputProps<EmbeddedAlbumValue>) => {
         ? 'http://localhost:8888/.netlify/functions/spotify-metadata'
         : hostname.includes('staging')
           ? 'https://staging--all7z.netlify.app/.netlify/functions/spotify-metadata'
-          : 'https://all7z.com/.netlify/functions/spotify-metadata' // Production URL
+          : 'https://all7z.com/.netlify/functions/spotify-metadata'
 
     async function fetchMetadata() {
       try {
-        let data: SpotifyMetadata = {title: '', artist: '', imageUrl: '', releaseType: ''}
+        let data: Metadata = {title: '', artist: '', imageUrl: '', releaseType: ''}
 
         if (detectedPlatform === 'spotify') {
           const response = await fetch(`${functionUrl}?url=${encodeURIComponent(sanitizedUrl)}`, {
@@ -66,27 +67,27 @@ const ReleaseInfoInput = (props: ObjectInputProps<EmbeddedAlbumValue>) => {
           })
           if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
           data = await response.json()
-
-          console.log('Metadata fetched:', data)
-
-          // Initialize 'embeddedAlbum' if missing and set nested fields
-          onChange(
-            PatchEvent.from([
-              setIfMissing({}, []), // Initialize 'embeddedAlbum' as an empty object if missing
-              set(data.title || 'Untitled Release', ['title']),
-              set(data.artist || 'Unknown Artist', ['artist']),
-              set(detectedPlatform, ['platform']),
-              set(data.releaseType || 'album', ['releaseType']),
-              set(
-                data.imageUrl || 'https://i.scdn.co/image/ab67616d0000b27302d5ec278fcb99f5608dd107',
-                ['imageUrl'],
-              ),
-              set(sanitizedUrl || embedUrl, ['embedUrl']), // Set embedUrl to sanitizedUrl
-            ]),
-          )
-
-          console.log('Metadata patched into Sanity fields')
+        } else if (detectedPlatform === 'soundcloud') {
+          data = {
+            title: 'SoundCloud Playlist',
+            artist: 'Various Artists',
+            imageUrl: 'https://example.com/soundcloud-placeholder.png',
+            releaseType: 'playlist',
+          }
         }
+
+        onChange(
+          PatchEvent.from([
+            setIfMissing({}, []),
+            set(data.title || 'Untitled Release', ['title']),
+            set(data.artist || 'Unknown Artist', ['artist']),
+            set(detectedPlatform, ['platform']),
+            set(data.releaseType || 'album', ['releaseType']),
+            set(data.imageUrl || 'https://example.com/placeholder.png', ['imageUrl']),
+            set(sanitizedUrl || embedUrl, ['embedUrl']),
+          ]),
+        )
+
         isMetadataFetchedRef.current = true
       } catch (err) {
         console.error('Error fetching metadata:', err)
@@ -94,18 +95,17 @@ const ReleaseInfoInput = (props: ObjectInputProps<EmbeddedAlbumValue>) => {
     }
 
     fetchMetadata()
-  }, [embedUrl, onChange, client, customImage, value, path])
+  }, [embedUrl, onChange, client, customImage, value, currentEmbedUrl])
 
   return (
     <Stack space={4}>
-      {/* Custom Image Field */}
       {props.schemaType.fields.find(
         (field): field is {name: string; type: ImageSchemaType} => field.name === 'customImage',
       ) &&
         props.renderDefault({
           ...props,
           value: customImage,
-          path: ['customImage'], // Use relative path
+          path: ['customImage'],
           schemaType: props.schemaType.fields.find(
             (field): field is {name: string; type: ImageSchemaType} => field.name === 'customImage',
           )!.type,
@@ -115,14 +115,13 @@ const ReleaseInfoInput = (props: ObjectInputProps<EmbeddedAlbumValue>) => {
           readOnly: readOnly,
         })}
 
-      {/* Render the Spotify Embed using the sanitized URL */}
       {embedUrl && (
         <iframe
           style={{borderRadius: '12px'}}
           src={
-            embedUrl.includes('iframe')
-              ? embedUrl.match(/src="([^"]+)"/)?.[1] || embedUrl
-              : embedUrl
+            currentEmbedUrl.includes('iframe')
+              ? currentEmbedUrl.match(/src="([^"]+)"/)?.[1] || currentEmbedUrl
+              : currentEmbedUrl
           }
           width="100%"
           height="352"

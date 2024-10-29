@@ -1,9 +1,7 @@
-// sanity/schemas/album.js
-
-import React from 'react' // Ensure React is imported
+import React from 'react'
 import {defineType, defineField} from 'sanity'
 import ReleaseInfoInput from '../../components/ReleaseInfoInput'
-import {urlFor} from '../../utils/imageUrlBuilder' // Adjust the path as needed
+import {urlFor} from '../../utils/imageUrlBuilder'
 
 export default defineType({
   name: 'album',
@@ -33,70 +31,40 @@ export default defineType({
           name: 'embedUrl',
           title: 'Embed URL',
           type: 'string',
-          description: 'Enter Spotify or SoundCloud URL',
+          description: 'Enter Spotify or SoundCloud URL or iframe',
           validation: (Rule) =>
             Rule.required().custom((url) => {
-              if (!url) {
-                return 'URL is required'
-              }
+              if (!url) return 'URL or iframe code is required'
               const sanitizedUrl = url.includes('iframe')
                 ? (url.match(/src="([^"]+)"/)?.[1] ?? '')
                 : url
-
               const pattern =
-                /^(https?:\/\/)?(www\.)?(open\.)?(spotify|soundcloud)\.com\/(embed\/)?(album|track|playlist|sets)\/.+$/
-
-              if (pattern.test(sanitizedUrl)) {
-                return true
-              }
-
-              return 'Please enter a valid Spotify or SoundCloud URL'
+                /^(https?:\/\/)?(www\.)?(open\.)?(spotify|soundcloud|w\.soundcloud)\.com\/(embed\/)?(album|track|playlist|sets|player)\/?.+$/
+              return pattern.test(sanitizedUrl)
+                ? true
+                : 'Please enter a valid Spotify or SoundCloud URL or iframe'
             }),
         }),
-        defineField({
-          name: 'title',
-          title: 'Release Title',
-          type: 'string',
-          readOnly: true,
-        }),
-        defineField({
-          name: 'artist',
-          title: 'Artist',
-          type: 'string',
-          readOnly: true,
-        }),
-        defineField({
-          name: 'platform',
-          title: 'Platform',
-          type: 'string',
-          readOnly: true,
-        }),
-        defineField({
-          name: 'releaseType',
-          title: 'Release Type',
-          type: 'string',
-          readOnly: true,
-        }),
+        defineField({name: 'title', title: 'Release Title', type: 'string', readOnly: true}),
+        defineField({name: 'artist', title: 'Artist', type: 'string', readOnly: true}),
+        defineField({name: 'platform', title: 'Platform', type: 'string', readOnly: true}),
+        defineField({name: 'releaseType', title: 'Release Type', type: 'string', readOnly: true}),
         defineField({
           name: 'imageUrl',
           title: 'Album Image URL',
           type: 'url',
-          validation: (Rule) => Rule.uri({scheme: ['http', 'https']}),
+          validation: (Rule) =>
+            Rule.uri({scheme: ['http', 'https']}).warning('Ensure image URL is an external link.'),
         }),
         defineField({
           name: 'customImage',
           title: 'Custom Album Image',
           type: 'image',
-          options: {
-            hotspot: true,
-          },
-          description:
-            'Optional: Image is fetched from Spotify or SoundCloud automatically, but you can override it by uploading your own.',
+          options: {hotspot: true},
+          description: 'Optional: override auto-fetched image by uploading your own.',
         }),
       ],
-      components: {
-        input: ReleaseInfoInput,
-      },
+      components: {input: ReleaseInfoInput},
       hidden: ({parent}) => parent?.albumSource !== 'embedded',
     }),
     defineField({
@@ -130,20 +98,17 @@ export default defineType({
             ],
           },
           validation: (Rule) =>
-            Rule.custom((releaseType, context) => {
-              if (context?.document?.albumSource === 'custom' && !releaseType) {
-                return 'Release Type is required for custom albums'
-              }
-              return true
-            }),
+            Rule.custom((releaseType, context) =>
+              context?.document?.albumSource === 'custom' && !releaseType
+                ? 'Release Type is required for custom albums'
+                : true,
+            ),
         }),
         defineField({
           name: 'customImage',
           title: 'Custom Album Image',
           type: 'image',
-          options: {
-            hotspot: true,
-          },
+          options: {hotspot: true},
           description: 'Optional: Upload a custom image for the album.',
         }),
         defineField({
@@ -166,9 +131,7 @@ export default defineType({
                   name: 'file',
                   title: 'Audio File',
                   type: 'file',
-                  options: {
-                    accept: 'audio/*',
-                  },
+                  options: {accept: 'audio/*'},
                   description: 'Upload the audio file for this track (if available).',
                 }),
                 defineField({
@@ -208,15 +171,11 @@ export default defineType({
       } = selection
 
       const isEmbedded = albumSource === 'embedded'
-
-      let imageUrl
-      if (isEmbedded) {
-        imageUrl = embeddedImageUrl ?? '/images/placeholder.png'
-      } else if (customImage) {
-        imageUrl = urlFor(customImage).width(200).url()
-      } else {
-        imageUrl = '/images/placeholder.png'
-      }
+      const imageUrl = isEmbedded
+        ? embeddedImageUrl || 'https://example.com/placeholder.png'
+        : customImage
+          ? urlFor(customImage).width(200).url()
+          : 'https://example.com/placeholder.png'
 
       return {
         title: isEmbedded ? embeddedTitle || 'Untitled Release' : customTitle || 'Untitled Release',
@@ -226,9 +185,7 @@ export default defineType({
         media: (
           <img
             src={imageUrl}
-            alt={
-              isEmbedded ? embeddedTitle || 'Untitled Release' : customTitle || 'Untitled Release'
-            }
+            alt="Album Cover"
             style={{width: '100%', height: 'auto', borderRadius: '4px'}}
           />
         ),

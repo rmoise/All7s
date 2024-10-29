@@ -1,18 +1,16 @@
-// components/Music/FlipCard.js
+// components/FlipCard.js
 
 import React, { forwardRef, useRef, useState, useEffect, useCallback, useMemo, useLayoutEffect } from 'react';
-import PropTypes from 'prop-types';
 import clsx from 'clsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlay, faPause, faSyncAlt } from '@fortawesome/free-solid-svg-icons';
 import anime from 'animejs';
-import { useAudio } from '@context/AudioContext';
-import SpotifyEmbed from '@components/MusicEmbed.js';
+import { useAudio } from '../context/AudioContext.jsx';
+import SpotifyEmbed from './MusicEmbed.js';
 import { debounce } from 'lodash';
 import Image from 'next/image';
 
-const FlipCard = forwardRef(({ album, isFlipped, toggleFlip, addFlipCardRef }, ref) => {
-  const cardRef = useRef(null);
+const FlipCard = forwardRef(({ album, isFlipped, toggleFlip }, ref) => {
   const imgRef = useRef(null);
   const {
     currentHowl,
@@ -29,6 +27,7 @@ const FlipCard = forwardRef(({ album, isFlipped, toggleFlip, addFlipCardRef }, r
   const [songDurations, setSongDurations] = useState({});
   const [isMobile, setIsMobile] = useState(false);
 
+  // Handle window resize to set isMobile
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
     handleResize();
@@ -36,12 +35,7 @@ const FlipCard = forwardRef(({ album, isFlipped, toggleFlip, addFlipCardRef }, r
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  useEffect(() => {
-    if (cardRef.current) {
-      addFlipCardRef(album.albumId, cardRef.current);
-    }
-  }, [addFlipCardRef, album.albumId]);
-
+  // Determine if the current track is playing or paused
   const isThisTrackPlaying = useMemo(
     () =>
       isPlaying &&
@@ -58,9 +52,12 @@ const FlipCard = forwardRef(({ album, isFlipped, toggleFlip, addFlipCardRef }, r
     [isPlaying, currentAlbumId, album.albumId, currentTrackIndex, currentTrackIndexLocal]
   );
 
+  // Handle clicking on a track to play
   const handleTrackClick = useCallback(
     (e, idx) => {
-      e.stopPropagation();
+      if (e && e.stopPropagation) {
+        e.stopPropagation();
+      }
       if (album.songs && idx >= 0 && idx < album.songs.length) {
         setCurrentTrackIndexLocal(idx);
         const selectedTrack = album.songs[idx];
@@ -69,14 +66,19 @@ const FlipCard = forwardRef(({ album, isFlipped, toggleFlip, addFlipCardRef }, r
         } else {
           console.warn('Selected track is invalid or missing URL.');
         }
+      } else {
+        console.warn('Invalid track index.');
       }
     },
     [album.songs, playTrack, album.albumId]
   );
 
+  // Handle play/pause button click
   const handlePlayPause = useCallback(
     (e) => {
-      e.stopPropagation();
+      if (e && e.stopPropagation) {
+        e.stopPropagation();
+      }
       if (currentTrackIndexLocal === null) {
         if (album.songs && album.songs.length > 0) {
           handleTrackClick(e, 0);
@@ -112,6 +114,7 @@ const FlipCard = forwardRef(({ album, isFlipped, toggleFlip, addFlipCardRef }, r
     ]
   );
 
+  // Set song durations when album changes
   useEffect(() => {
     if (album.songs && album.songs.length > 0) {
       const durations = {};
@@ -124,6 +127,7 @@ const FlipCard = forwardRef(({ album, isFlipped, toggleFlip, addFlipCardRef }, r
     }
   }, [album]);
 
+  // Debounced seek function
   const debouncedHandleSeek = useMemo(
     () =>
       debounce((seekTime) => {
@@ -138,6 +142,7 @@ const FlipCard = forwardRef(({ album, isFlipped, toggleFlip, addFlipCardRef }, r
     [isThisTrackPlaying, isThisTrackPaused, currentTrackIndexLocal, songDurations, seekTo]
   );
 
+  // Handle seek input change
   const handleSeek = useCallback(
     (e) => {
       e.stopPropagation();
@@ -148,6 +153,7 @@ const FlipCard = forwardRef(({ album, isFlipped, toggleFlip, addFlipCardRef }, r
     [currentTrackIndexLocal, songDurations, debouncedHandleSeek]
   );
 
+  // Format time in mm:ss
   const formatTime = (time) => {
     if (time === null || isNaN(time)) return '00:00';
     const minutes = Math.floor(time / 60);
@@ -155,6 +161,7 @@ const FlipCard = forwardRef(({ album, isFlipped, toggleFlip, addFlipCardRef }, r
     return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
   };
 
+  // Animate the image scaling on flip
   useLayoutEffect(() => {
     if (!isMobile) {
       anime({
@@ -168,6 +175,7 @@ const FlipCard = forwardRef(({ album, isFlipped, toggleFlip, addFlipCardRef }, r
     }
   }, [isFlipped, isMobile]);
 
+  // Sync current track index with global audio state
   useEffect(() => {
     if (isPlaying && currentAlbumId === album.albumId) {
       const currentSrc = currentHowl?._src?.[0] ? currentHowl._src[0].toLowerCase() : '';
@@ -180,6 +188,7 @@ const FlipCard = forwardRef(({ album, isFlipped, toggleFlip, addFlipCardRef }, r
     }
   }, [currentHowl, isPlaying, album, currentTrackIndexLocal]);
 
+  // Render the list of tracks
   const renderTrackList = useMemo(() => {
     if (!album.songs || album.songs.length === 0) {
       return <div className="mt-4 text-center text-gray-500">No tracks available</div>;
@@ -216,6 +225,7 @@ const FlipCard = forwardRef(({ album, isFlipped, toggleFlip, addFlipCardRef }, r
     handleTrackClick,
   ]);
 
+  // Handle mouse enter for non-mobile and not flipped
   const handleMouseEnter = useCallback(() => {
     if (!isMobile && !isFlipped) {
       anime({
@@ -229,6 +239,7 @@ const FlipCard = forwardRef(({ album, isFlipped, toggleFlip, addFlipCardRef }, r
     }
   }, [isMobile, isFlipped]);
 
+  // Handle mouse leave for non-mobile and not flipped
   const handleMouseLeave = useCallback(() => {
     if (!isMobile && !isFlipped) {
       anime({
@@ -242,26 +253,32 @@ const FlipCard = forwardRef(({ album, isFlipped, toggleFlip, addFlipCardRef }, r
     }
   }, [isMobile, isFlipped]);
 
+  // Prevent propagation when clicking on content
   const handleContentClick = (e) => {
     e.stopPropagation();
   };
 
+  // Define the handleFlip function
   const handleFlip = useCallback(() => {
     toggleFlip(album.albumId);
   }, [toggleFlip, album.albumId]);
 
+  // Add console log to verify embedUrl and imageUrl
+  useEffect(() => {
+  }, [album.albumId, album.embedUrl, album.imageUrl]);
+
   return (
-    <div  className="relative w-full mb-8 px-4 sm:px-0" data-album-id={album.albumId}>
+    <div ref={ref} className="relative w-full mb-8 px-4 sm:px-0" data-album-id={album.albumId}>
       <h2 className="text-2xl sm:text-3xl font-bold text-center text-white mb-4">
         {album.title || 'Untitled Album'}
       </h2>
 
-      <div ref={cardRef} className="relative lg:max-w-lg 2xl:max-w-4xl mx-auto">
+      <div className="relative max-w-lg mx-auto">
         <div className={`w-full ${isMobile ? 'mobile-container' : 'flip-container'} ${isFlipped ? (isMobile ? 'mobile-expanded' : 'flipped') : ''}`}>
+          {/* Front of the card */}
           <div
             className={`${isMobile ? 'mobile-front' : 'flip-front absolute inset-0'} bg-black/0 rounded-lg ${isMobile ? '' : 'backface-hidden'}`}
-            onClick={handleFlip}
-            style={{ zIndex: isFlipped ? 1 : 2, pointerEvents: isFlipped ? 'none' : 'auto' }}
+            onClick={handleFlip} // handleFlip is now defined
           >
             <div className="w-full cursor-pointer" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
               <div className="w-full h-0 pb-[100%] relative">
@@ -278,6 +295,7 @@ const FlipCard = forwardRef(({ album, isFlipped, toggleFlip, addFlipCardRef }, r
                 />
               </div>
             </div>
+            {/* Optional Flip Icon for Non-Embedded Albums */}
             {album.albumSource !== 'embedded' && (
               <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2">
                 <FontAwesomeIcon icon={faSyncAlt} className="text-white opacity-50" />
@@ -285,17 +303,18 @@ const FlipCard = forwardRef(({ album, isFlipped, toggleFlip, addFlipCardRef }, r
             )}
           </div>
 
+          {/* Back of the card */}
           <div
             className={`${isMobile ? 'mobile-back' : 'flip-back absolute inset-0'} rounded-lg ${isMobile ? '' : 'backface-hidden overflow-hidden'}`}
             onClick={handleFlip}
-            style={{ zIndex: isFlipped ? 2 : 1, pointerEvents: isFlipped ? 'auto' : 'none' }}
           >
             <div className="w-full h-full" onClick={handleContentClick}>
               {album.songs && album.songs.length > 0 ? (
-                <div className="custom-player md:h-[500px]  bg-white w-full p-4 rounded-lg" onClick={(e) => e.stopPropagation()}>
+                <div className="custom-player md:h-[500px] bg-white w-full p-4 rounded-lg" onClick={(e) => e.stopPropagation()}>
+                  {/* Player UI */}
                   <div className="flex items-center space-x-4 mb-4">
                     <Image
-                      src={album.imageUrl || '/images/placeholder.png'}
+                      src={album.imageUrl || '/images/placeholder.png'} // Ensure album.imageUrl is used
                       alt={album.title}
                       width={64}
                       height={64}
@@ -376,29 +395,128 @@ const FlipCard = forwardRef(({ album, isFlipped, toggleFlip, addFlipCardRef }, r
       </div>
 
       <style jsx>{`
+        .flip-container {
+          perspective: 1000px;
+          transform-style: preserve-3d;
+        }
 
+        .flip-front,
+        .flip-back {
+          backface-visibility: hidden;
+          transition: transform 0.6s;
+        }
+
+        .flip-back {
+          transform: rotateY(180deg);
+        }
+
+        .flipped .flip-front {
+          transform: rotateY(180deg);
+        }
+
+        .flipped .flip-back {
+          transform: rotateY(0deg);
+        }
+
+        .backface-hidden {
+          backface-visibility: hidden;
+        }
+
+        @media (max-width: 768px) {
+          .mobile-container {
+            transition: max-height 0.6s ease-in-out;
+            max-height: 500px;
+            overflow: hidden;
+          }
+
+          .mobile-front,
+          .mobile-back {
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+          }
+
+          .mobile-back {
+            opacity: 0;
+            visibility: hidden;
+            height: 0;
+          }
+
+          .mobile-expanded {
+            max-height: 1000px;
+          }
+
+          .mobile-expanded .mobile-front {
+            opacity: 0;
+            visibility: hidden;
+            height: 0;
+          }
+
+          .mobile-expanded .mobile-back {
+            opacity: 1;
+            visibility: visible;
+            height: auto;
+          }
+
+          .custom-player {
+            background-color: white;
+          }
+
+          .spotify-embed {
+            background-color: transparent;
+          }
+        }
+
+        @media (min-width: 769px) {
+          .flip-container {
+            width: 100%;
+            padding-bottom: 100%; /* Square aspect ratio */
+          }
+
+          .flip-front,
+          .flip-back {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+          }
+        }
+
+        /* Ensure the iframe container occupies the full available space */
+        .spotify-embed-container {
+          width: 100%;
+          height: 352px;
+          position: relative;
+        }
+
+        .spotify-loading {
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background-color: rgba(255, 255, 255, 0.8);
+          z-index: 10;
+          border-radius: 12px;
+        }
+
+        .spotify-iframe {
+          width: 100%;
+          height: 100%;
+          border: none;
+          border-radius: 12px;
+          opacity: 0;
+          transition: opacity 0.3s ease-in;
+        }
+
+        .spotify-iframe.loaded {
+          opacity: 1;
+        }
       `}</style>
     </div>
   );
 });
-
-FlipCard.propTypes = {
-  album: PropTypes.shape({
-    albumId: PropTypes.string.isRequired,
-    embedUrl: PropTypes.string, // Made optional to prevent warnings
-    imageUrl: PropTypes.string.isRequired,
-    title: PropTypes.string.isRequired,
-    artist: PropTypes.string.isRequired,
-    customImage: PropTypes.shape({
-      asset: PropTypes.shape({
-        url: PropTypes.string,
-      }),
-    }),
-    albumSource: PropTypes.string,
-  }).isRequired,
-  isFlipped: PropTypes.bool.isRequired,
-  toggleFlip: PropTypes.func.isRequired,
-  addFlipCardRef: PropTypes.func.isRequired,
-};
 
 export default FlipCard;
