@@ -4,7 +4,7 @@ import React, {useEffect, useRef} from 'react'
 import {
   defineField,
   defineType,
-  type ImageValue,
+  type Image,
   type ObjectSchemaType,
   type Path,
   type FormPatch,
@@ -20,7 +20,7 @@ import {Stack} from '@sanity/ui'
 
 interface EmbeddedAlbumValue {
   embedCode?: string
-  customImage?: ImageValue
+  customImage?: Image
   isEmbedSupported?: boolean
 }
 
