@@ -1,9 +1,22 @@
 // ReleaseInfoInput.tsx
 
-import React, {useEffect, useRef, useState} from 'react'
-import {ObjectInputProps, PatchEvent, set, setIfMissing} from 'sanity'
+import React, {useEffect, useRef} from 'react'
+import {
+  defineField,
+  defineType,
+  type ObjectInputProps,
+  type ImageValue,
+  type ObjectSchemaType,
+  type Path,
+  type FormPatch,
+  type InputProps,
+  type ObjectField,
+  type SchemaType,
+  PatchEvent,
+  set,
+  setIfMissing,
+} from 'sanity'
 import {Stack} from '@sanity/ui'
-import {ImageValue, ImageSchemaType} from 'sanity'
 
 interface EmbeddedAlbumValue {
   embedCode?: string
@@ -20,8 +33,10 @@ interface Metadata {
   isEmbedSupported: boolean
 }
 
-const ReleaseInfoInput = (props: ObjectInputProps<EmbeddedAlbumValue>) => {
-  const {value = {}, onChange, readOnly} = props
+type Props = InputProps & ObjectInputProps<EmbeddedAlbumValue, ObjectSchemaType>
+
+const ReleaseInfoInput = React.forwardRef<HTMLDivElement, Props>((props, ref) => {
+  const {value = {}, onChange, readOnly, schemaType} = props
   const {embedCode, customImage, isEmbedSupported} = value
   const isMetadataFetchedRef = useRef(false)
 
@@ -121,23 +136,23 @@ const ReleaseInfoInput = (props: ObjectInputProps<EmbeddedAlbumValue>) => {
   }, [embedCode, onChange])
 
   return (
-    <Stack space={4}>
-      {props.schemaType.fields.find(
-        (field): field is {name: string; type: ImageSchemaType} =>
-          field.name === 'customImage' && field.type.name === 'image',
+    <Stack ref={ref} space={4}>
+      {(schemaType as ObjectSchemaType).fields?.find(
+        (field: ObjectField<SchemaType>): field is ObjectField<SchemaType> =>
+          field.name === 'customImage' && field.type.name === 'image'
       ) &&
         props.renderDefault({
           ...props,
           value: customImage,
-          path: ['customImage'],
-          schemaType: props.schemaType.fields.find(
-            (field): field is {name: string; type: ImageSchemaType} =>
-              field.name === 'customImage' && field.type.name === 'image',
-          )!.type,
-          onChange: (patchEvent) => {
-            onChange(patchEvent)
+          path: ['customImage'] as Path,
+          schemaType: ((schemaType as ObjectSchemaType).fields?.find(
+            (field: ObjectField<SchemaType>) =>
+              field.name === 'customImage' && field.type.name === 'image'
+          )?.type as ObjectSchemaType),
+          onChange: (patch: FormPatch | PatchEvent | FormPatch[]) => {
+            onChange(patch)
           },
-          readOnly: readOnly,
+          readOnly,
         })}
 
       {embedCode &&
@@ -153,6 +168,8 @@ const ReleaseInfoInput = (props: ObjectInputProps<EmbeddedAlbumValue>) => {
         ))}
     </Stack>
   )
-}
+})
+
+ReleaseInfoInput.displayName = 'ReleaseInfoInput'
 
 export default ReleaseInfoInput
