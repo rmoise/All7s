@@ -1,5 +1,6 @@
 // schemas/schema.ts
-import {SchemaTypeDefinition, defineType} from 'sanity'
+import type { SchemaTypeDefinition } from '@sanity/types'
+import { defineType } from 'sanity'
 
 // Import your schema types
 import blockContent from './objects/blockContent'

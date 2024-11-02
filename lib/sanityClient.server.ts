@@ -76,15 +76,23 @@ const testConnection = async () => {
     const result = await safeFetch('*[_type == "settings"][0]');
     console.log('✓ Sanity connection successful', result);
     return true;
-  } catch (error) {
-    console.error('× Sanity connection failed:', {
-      error: error.message,
-      projectId,
-      dataset,
-      hasToken: !!token,
-      tokenLength: token?.length,
-    });
-    return false;
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error('× Sanity connection failed:', {
+        error: error.message,
+        projectId,
+        dataset,
+        hasToken: !!token,
+      });
+    } else {
+      console.error('× Sanity connection failed:', {
+        error: String(error),
+        projectId,
+        dataset,
+        hasToken: !!token,
+      });
+    }
+    throw error;
   }
 };
 

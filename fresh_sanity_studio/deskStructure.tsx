@@ -1,17 +1,14 @@
 import {HomeIcon, CogIcon, DocumentsIcon, ColorWheelIcon, ArchiveIcon} from '@sanity/icons'
 import {FaMusic} from 'react-icons/fa'
 import {MdPerson, MdArticle} from 'react-icons/md'
-import type {StructureBuilder} from 'sanity/desk'
-import { Iframe } from 'sanity-plugin-iframe-pane'
-import { iframeOptions } from './sanity.config'
+import type { StructureBuilder } from 'sanity/desk'
 
-type DeskStructureResolver = (S: StructureBuilder) => ReturnType<StructureBuilder['list']>
-
-const deskStructure: DeskStructureResolver = (S) =>
+// Structure definition
+export const structure = (S: StructureBuilder) =>
   S.list()
     .title('Content')
     .items([
-      // Home
+      // Home singleton
       S.listItem()
         .title('Home')
         .id('home-singleton')
@@ -20,13 +17,6 @@ const deskStructure: DeskStructureResolver = (S) =>
           S.document()
             .schemaType('home')
             .documentId('singleton-home')
-            .views([
-              S.view.form(),
-              S.view
-                .component(Iframe)
-                .options(iframeOptions)
-                .title('Preview')
-            ])
         ),
 
       // Settings
@@ -52,22 +42,7 @@ const deskStructure: DeskStructureResolver = (S) =>
         .title('Pages')
         .id('pages-with-preview')
         .icon(DocumentsIcon)
-        .child(
-          S.documentTypeList('page')
-            .title('Pages')
-            .child(documentId =>
-              S.document()
-                .documentId(documentId)
-                .schemaType('page')
-                .views([
-                  S.view.form(),
-                  S.view
-                    .component(Iframe)
-                    .options(iframeOptions)
-                    .title('Preview')
-                ])
-            )
-        ),
+        .child(S.documentTypeList('page').title('Pages')),
 
       // Collections
       S.listItem()
@@ -88,22 +63,7 @@ const deskStructure: DeskStructureResolver = (S) =>
         .title('Blog Posts')
         .id('blog-posts-with-preview')
         .icon(MdArticle)
-        .child(
-          S.documentTypeList('post')
-            .title('Blog Posts')
-            .child(documentId =>
-              S.document()
-                .documentId(documentId)
-                .schemaType('post')
-                .views([
-                  S.view.form(),
-                  S.view
-                    .component(Iframe)
-                    .options(iframeOptions)
-                    .title('Preview')
-                ])
-            )
-        ),
+        .child(S.documentTypeList('post').title('Blog Posts')),
 
       // Authors
       S.listItem()
@@ -121,4 +81,4 @@ const deskStructure: DeskStructureResolver = (S) =>
       ),
     ])
 
-export default deskStructure
+export default structure

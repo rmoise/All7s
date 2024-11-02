@@ -7,13 +7,17 @@
  * https://github.com/sanity-io/next-sanity
  */
 
-import { NextStudio } from 'next-sanity/studio'
-import config from '../../../../sanity.config'
+'use client'
 
-export const dynamic = 'force-static'
+import dynamic from 'next/dynamic'
+import config from '@/fresh_sanity_studio/sanity.config'
 
-export { metadata, viewport } from 'next-sanity/studio'
+// Dynamically import the Studio component
+const StudioComponent = dynamic(() => import('./Studio').then((mod) => mod.Studio), {
+  ssr: false,
+  loading: () => <div>Loading Studio...</div>,
+})
 
 export default function StudioPage() {
-  return <NextStudio config={config} />
+  return <StudioComponent />
 }

@@ -1,9 +1,52 @@
 // album.tsx
 
-import React from 'react'
-import {defineType, defineField} from 'sanity'
-import ReleaseInfoInput from '../../components/ReleaseInfoInput'
-import {urlFor} from '../../utils/imageUrlBuilder'
+import React from 'react';
+import { defineType, defineField } from 'sanity';
+import ReleaseInfoInput from '../../components/ReleaseInfoInput';
+import { urlFor } from '../../utils/imageUrlBuilder';
+
+// Define the same types as in ReleaseInfoInput
+interface SanityAssetReference {
+  _ref: string;
+  _type: 'reference';
+}
+
+interface SanityImageType {
+  _type: 'image';
+  asset: SanityAssetReference;
+  hotspot?: { x: number; y: number };
+  crop?: { top: number; bottom: number; left: number; right: number };
+}
+
+interface EmbeddedAlbumValue {
+  embedCode?: string;
+  customImage?: SanityImageType;
+  isEmbedSupported?: boolean;
+}
+
+interface ObjectField {
+  name: string;
+  type: { name: string };
+}
+
+interface SchemaType {
+  fields?: ObjectField[];
+}
+
+type Props = {
+  value?: EmbeddedAlbumValue;
+  onChange: (patch: any) => void;
+  readOnly?: boolean;
+  schemaType: SchemaType;
+  renderDefault: (props: any) => React.ReactElement;
+}
+
+// Define the component using the exact same Props type
+const MyComponent = (props: Props) => {
+  return <ReleaseInfoInput {...props} />;
+};
+
+MyComponent.displayName = 'MyComponent';
 
 export default defineType({
   name: 'album',
@@ -28,6 +71,9 @@ export default defineType({
       name: 'embeddedAlbum',
       title: 'Embedded Album Info',
       type: 'object',
+      components: {
+        input: MyComponent
+      },
       fields: [
         defineField({
           name: 'embedCode',
@@ -83,8 +129,7 @@ export default defineType({
           description: 'Optional: override auto-fetched image by uploading your own.',
         }),
       ],
-      components: {input: ReleaseInfoInput},
-      hidden: ({parent}) => parent?.albumSource !== 'embedded',
+      hidden: ({ parent }: { parent: { albumSource: string } }) => parent?.albumSource !== 'embedded',
     }),
     defineField({
       name: 'customAlbum',
@@ -165,7 +210,7 @@ export default defineType({
           description: 'Add individual tracks for this release. You can reorder them by dragging.',
         }),
       ],
-      hidden: ({parent}) => parent?.albumSource !== 'custom',
+      hidden: ({ parent }: { parent: { albumSource: string } }) => parent?.albumSource !== 'custom',
     }),
   ],
   preview: {

@@ -1,1 +1,0 @@
-lib/paths.esm.js

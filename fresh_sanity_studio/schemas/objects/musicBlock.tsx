@@ -1,18 +1,24 @@
 // schemas/musicBlock.tsx
-import { defineType, defineField } from 'sanity';
-import { urlFor } from '../../utils/imageUrlBuilder'
+import { defineType, defineField, defineArrayMember } from 'sanity';
+import { MdMusicNote } from 'react-icons/md';
+import React from 'react';
 
 export default defineType({
   name: 'musicBlock',
   title: 'Music Block',
   type: 'object',
+  icon: MdMusicNote,
   fields: [
     defineField({
-      name: 'listenTitle',
-      title: 'Listen Section Title',
+      name: 'title',
+      title: 'Title',
       type: 'string',
-      description: 'Title for the Listen section',
       validation: Rule => Rule.required(),
+    }),
+    defineField({
+      name: 'description',
+      title: 'Description',
+      type: 'text',
     }),
     defineField({
       name: 'albums',
@@ -21,66 +27,27 @@ export default defineType({
       of: [{
         type: 'reference',
         to: [{ type: 'album' }],
-        options: {
-          disableNew: false,
-          weak: true // This allows referencing unpublished documents
-        }
       }],
       description: 'List of music albums to display',
-      validation: Rule => Rule.required().min(1),
+      validation: Rule =>
+        Rule.required().custom((albums) => {
+          if (!albums?.length) return 'At least one album is required'
+          if (albums.length > 10) return 'Maximum of 10 albums allowed'
+          return true
+        }),
     }),
   ],
   preview: {
     select: {
-      title: 'listenTitle',
-      albumSource: 'albums.0.albumSource',
-      embeddedTitle: 'albums.0.embeddedAlbum.title',
-      embeddedArtist: 'albums.0.embeddedAlbum.artist',
-      embeddedImage: 'albums.0.embeddedAlbum.customImage',
-      embeddedImageUrl: 'albums.0.embeddedAlbum.imageUrl',
-      customTitle: 'albums.0.customAlbum.title',
-      customArtist: 'albums.0.customAlbum.artist',
-      customImage: 'albums.0.customAlbum.customImage',
+      title: 'title',
+      albums: 'albums',
     },
-    prepare(selection) {
-      const {
-        title,
-        albumSource,
-        embeddedTitle,
-        embeddedArtist,
-        embeddedImage,
-        embeddedImageUrl,
-        customTitle,
-        customArtist,
-        customImage,
-      } = selection;
-
-      const isEmbedded = albumSource === 'embedded';
-
-      // Determine display title and artist
-      const displayTitle = isEmbedded ? embeddedTitle : customTitle;
-      const displayArtist = isEmbedded ? embeddedArtist : customArtist;
-
-      // Determine image
-      const imageUrl = isEmbedded
-        ? embeddedImageUrl || 'https://example.com/placeholder.png'
-        : customImage
-          ? urlFor(customImage).width(200).url()
-          : 'https://example.com/placeholder.png';
-
+    prepare({ title, albums }: { title: string; albums: any[] }) {
       return {
         title: title || 'Music Block',
-        subtitle: displayTitle
-          ? `${displayTitle} by ${displayArtist || 'Unknown Artist'}`
-          : 'No album selected',
-        media: (
-          <img
-            src={imageUrl}
-            alt="Album Cover"
-            style={{ width: '100%', height: 'auto', borderRadius: '4px' }}
-          />
-        ),
-      };
+        subtitle: `${albums?.length || 0} albums`,
+        media: <MdMusicNote />,
+      }
     },
   },
 });

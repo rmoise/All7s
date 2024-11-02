@@ -1,47 +1,69 @@
 import React, { useEffect, useState } from 'react'
 import { Stack, Select, Text, Box, Card } from '@sanity/ui'
-import { useClient } from 'sanity'
+import { useStudio } from './StudioProvider'
 
 const DatasetSwitcher = () => {
-  const [currentDataset, setCurrentDataset] = useState(
-    localStorage.getItem('sanityDataset') || 'staging'
-  )
-  const client = useClient({apiVersion: '2021-06-07'})
+  const { dataset, setDataset, client } = useStudio()
+  const [currentDataset, setCurrentDataset] = useState<string>(() => {
+    if (typeof window === 'undefined') return 'staging'
+    return localStorage.getItem('sanityDataset') || 'staging'
+  })
+
+  const [datasets, setDatasets] = useState<string[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    const storedDataset = localStorage.getItem('sanityDataset') || 'staging'
-    setCurrentDataset(storedDataset)
-    client.config().dataset = storedDataset
+    const fetchDatasets = async () => {
+      try {
+        setIsLoading(true)
+        const response = await client.request({
+          url: '/datasets',
+          method: 'GET',
+        })
+        const datasetNames = response.map((d: any) => d.name)
+        setDatasets(datasetNames)
+      } catch (error) {
+        console.error('Failed to fetch datasets:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchDatasets()
   }, [client])
 
   const handleDatasetChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const newDataset = event.currentTarget.value
-    setCurrentDataset(newDataset)
+    const newDataset = event.target.value
     localStorage.setItem('sanityDataset', newDataset)
+    setCurrentDataset(newDataset)
+    setDataset(newDataset)
     window.location.reload()
   }
 
+  if (isLoading || !datasets.length) {
+    return (
+      <Card padding={3}>
+        <Text size={1}>Loading datasets...</Text>
+      </Card>
+    )
+  }
+
   return (
-    <Card padding={3} tone="transparent" style={{ backgroundColor: 'white' }}>
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: '12px',
-          paddingLeft: '12px'
-        }}
-      >
-        <Text weight="semibold" size={1}>Dataset:</Text>
-        <Select
-          value={currentDataset}
-          onChange={handleDatasetChange}
-          fontSize={1}
-        >
-          <option value="staging">Staging</option>
-          <option value="production">Production</option>
+    <Card padding={3}>
+      <Stack space={3}>
+        <Box>
+          <Text size={1} weight="semibold">
+            Current Dataset: {currentDataset}
+          </Text>
+        </Box>
+        <Select value={currentDataset} onChange={handleDatasetChange}>
+          {datasets.map((dataset) => (
+            <option key={dataset} value={dataset}>
+              {dataset}
+            </option>
+          ))}
         </Select>
-      </div>
+      </Stack>
     </Card>
   )
 }

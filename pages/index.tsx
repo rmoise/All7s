@@ -150,7 +150,19 @@ interface HomePage {
   contentBlocks: ContentBlock[];
 }
 
-const Home = ({ contentBlocks, metaTitle, metaDescription, siteSettings, preview }) => {
+// Define interfaces for your props
+interface HomePageProps {
+  contentBlocks: any[]; // Replace 'any' with the actual type if known
+  metaTitle: string;
+  metaDescription: string;
+  siteSettings: any; // Replace 'any' with the actual type if known
+  preview: boolean;
+}
+
+// Define the type for the block if known
+type BlockType = any; // Replace 'any' with the actual type if known
+
+const Home = ({ contentBlocks, metaTitle, metaDescription, siteSettings, preview }: HomePageProps) => {
   console.log("Received siteSettings in Home component:", siteSettings); // Debugging log for siteSettings
 
   const pageTitle = metaTitle?.trim()
@@ -169,7 +181,7 @@ const Home = ({ contentBlocks, metaTitle, metaDescription, siteSettings, preview
           canonicalUrl="https://yourdomain.com" // Optional: Set your canonical URL
         />
       )}
-      {contentBlocks.map((block, index) => {
+      {contentBlocks.map((block: BlockType, index: number) => {
         const key = block._key || `${block._type}-${index}`;
         switch (block._type) {
           case 'splash':

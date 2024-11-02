@@ -5,10 +5,11 @@ import { visionTool } from '@sanity/vision'
 import { media } from 'sanity-plugin-media'
 import { imageHotspotArrayPlugin } from 'sanity-plugin-hotspot-array'
 import { colorInput } from '@sanity/color-input'
-import deskStructure from './deskStructure'
-import { StudioProvider } from './src/components/StudioProvider'
+import { structure } from './deskStructure'
+import { defaultDocumentNode } from './plugins/defaultDocumentNode'
 import schemaTypes from './schemas/schema'
 import DatasetSwitcher from './src/components/DatasetSwitcher'
+import { StudioProvider } from './src/components/StudioProvider'
 
 const isBrowser = typeof window !== 'undefined'
 
@@ -32,34 +33,10 @@ export const getNetlifyUrl = (): string => {
 
 const devOnlyPlugins = [visionTool()]
 
-export const iframeOptions = {
-  url: (doc: any) => {
-    if (!doc?._id) return '';
-
-    const baseUrl = process.env.SANITY_STUDIO_PREVIEW_URL || 'http://localhost:3000';
-
-    switch (doc._type) {
-      case 'home':
-        return `${baseUrl}/?preview=true`;
-      case 'post':
-        return `${baseUrl}/posts/${doc._id}?preview=true`;
-      case 'page':
-        return `${baseUrl}/pages/${doc._id}?preview=true`;
-      case 'heroBanner':
-        return `${baseUrl}/api/preview-block?type=heroBanner&id=${doc._id}`;
-      default:
-        return `${baseUrl}/api/preview?type=${doc._type}&id=${doc._id}`;
-    }
-  },
-  defaultSize: 'desktop',
-  reload: {
-    button: true
-  },
-  attributes: {
-    allow: 'fullscreen',
-    referrerPolicy: 'strict-origin-when-cross-origin',
-    sandbox: 'allow-same-origin allow-scripts allow-forms allow-popups'
-  }
+// Define selection type
+interface PreviewSelection {
+  title?: string
+  slug?: { current?: string }
 }
 
 export default defineConfig({
@@ -69,20 +46,16 @@ export default defineConfig({
   dataset: getDefaultDataset(),
   plugins: [
     deskTool({
-      structure: deskStructure,
+      structure,
+      defaultDocumentNode,
     }),
     colorInput(),
     imageHotspotArrayPlugin(),
     media(),
     ...(process.env.NODE_ENV !== 'production' ? devOnlyPlugins : []),
   ],
-  development: {
-    development: {
-      staticDir: './public',
-    },
-  },
   schema: {
-    types: schemaTypes,
+    types: schemaTypes as any,
   },
   document: {
     actions: (prev) => [...prev],
@@ -123,15 +96,5 @@ export default defineConfig({
       `${getNetlifyUrl()}/.netlify/functions`,
     SPOTIFY_CLIENT_ID: process.env.SPOTIFY_CLIENT_ID,
     SPOTIFY_CLIENT_SECRET: process.env.SPOTIFY_CLIENT_SECRET,
-  },
-  cors: {
-    credentials: true,
-    allowOrigins: [
-      'http://localhost:3000',
-      'http://localhost:3333',
-      'http://localhost:8888',
-      'https://staging--all7z.netlify.app',
-      'https://all7z.com',
-    ],
   },
 })

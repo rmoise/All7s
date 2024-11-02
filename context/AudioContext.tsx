@@ -110,10 +110,10 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children }) => {
         onpause: () => setIsPlaying(false),
         onstop: resetAudioState,
         onend: resetAudioState,
-        onloaderror: (id, error) =>
-          console.error(`Error loading track: ${error}`),
-        onplayerror: (id, error) => {
-          console.error(`Error playing track: ${error}`)
+        onloaderror: (id: number, error: { message: string }) =>
+          console.error(`Error loading track: ${error.message}`),
+        onplayerror: (id: number, error: { message: string }) => {
+          console.error(`Error playing track: ${error.message}`)
           newHowl.once('unlock', () => newHowl.play())
         },
       })

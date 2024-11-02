@@ -27,6 +27,27 @@ export default function Page({ data, preview }: PageProps) {
   );
 }
 
+export const getStaticPaths: GetStaticPaths = async () => {
+  const slugs = await safeFetch<string[]>(
+    `*[_type == "post" && defined(slug.current)][].slug.current`
+  );
+
+  // Type guard to ensure slugs is an array
+  if (!Array.isArray(slugs)) {
+    return {
+      paths: [],
+      fallback: 'blocking'
+    };
+  }
+
+  return {
+    paths: slugs.map((slug) => ({
+      params: { slug }
+    })),
+    fallback: 'blocking'
+  };
+};
+
 export const getStaticProps: GetStaticProps = async ({ params, preview = false }) => {
   try {
     const slug = params?.slug || '';

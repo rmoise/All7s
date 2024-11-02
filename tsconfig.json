@@ -8,7 +8,7 @@
     ],
     "allowJs": true,
     "skipLibCheck": true,
-    "strict": false,
+    "strict": true,
     "noEmit": true,
     "incremental": true,
     "module": "esnext",
@@ -41,7 +41,7 @@
     },
     "typeRoots": [
       "./node_modules/@types",
-      "./types"
+      "./fresh_sanity_studio/types"
     ],
     "plugins": [
       {

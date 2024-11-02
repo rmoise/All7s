@@ -12,8 +12,9 @@ import { urlFor } from '../../lib/client';
 
 // Define TypeScript interfaces
 export interface NavigationLink {
-  name: string;
   href: string;
+  label: string;
+  name?: string;
   current?: boolean;
 }
 
@@ -114,7 +115,7 @@ const Navbar: React.FC<{ navbarData?: NavbarData }> = ({ navbarData: externalNav
   const navbarBgColor = finalNavbarData.isTransparent ? 'transparent' : finalNavbarData.backgroundColor?.hex || 'black';
 
   const renderNavLinks = (isMobile = false) => {
-    return finalNavbarData.navigationLinks?.map((item, index) => {
+    return finalNavbarData.navigationLinks?.map((item: NavigationLink, index: number) => {
       const key = generateKey(item, index);
       const linkProps = {
         href: item.href,

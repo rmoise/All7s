@@ -1,19 +1,10 @@
 // ReleaseInfoInput.tsx
 
-import React, {useEffect, useRef} from 'react'
-import {
-  defineField,
-  defineType,
-  type Path,
-  type FormPatch,
-  type ObjectField,
-  type SchemaType,
-  PatchEvent,
-  set,
-  setIfMissing,
-} from 'sanity'
-import {Stack} from '@sanity/ui'
+import React, { useRef } from 'react'
+import type { Path } from '@sanity/types'
+import { Stack } from '@sanity/ui'
 
+// Type definitions
 interface SanityAssetReference {
   _ref: string
   _type: 'reference'
@@ -32,32 +23,34 @@ interface EmbeddedAlbumValue {
   isEmbedSupported?: boolean
 }
 
-interface Metadata {
-  title: string
-  artist: string
-  imageUrl: string
-  releaseType: string
-  embedUrl: string
-  isEmbedSupported: boolean
+interface ObjectField {
+  name: string
+  type: { name: string }
 }
+
+interface SchemaType {
+  fields?: ObjectField[]
+}
+
+// Define PatchEvent type since it's not available in @sanity/types
+type PatchEvent = any // TODO: Replace with proper type if needed
 
 type Props = {
   value?: EmbeddedAlbumValue
-  onChange: (patch: FormPatch | PatchEvent | FormPatch[]) => void
+  onChange: (patch: PatchEvent) => void
   readOnly?: boolean
   schemaType: SchemaType
   renderDefault: (props: any) => React.ReactElement
 }
 
 const ReleaseInfoInput = React.forwardRef<HTMLDivElement, Props>((props, ref) => {
-  const {value = {}, onChange, readOnly, schemaType} = props
-  const {embedCode, customImage, isEmbedSupported} = value
-  const isMetadataFetchedRef = useRef(false)
+  const { value = {}, onChange, readOnly, schemaType } = props
+  const { embedCode, customImage, isEmbedSupported } = value
 
   return (
     <Stack ref={ref} space={4}>
       {(schemaType as any).fields?.find(
-        (field: ObjectField<SchemaType>): field is ObjectField<SchemaType> =>
+        (field: ObjectField): field is ObjectField =>
           field.name === 'customImage' && field.type.name === 'image'
       ) &&
         props.renderDefault({
@@ -65,10 +58,10 @@ const ReleaseInfoInput = React.forwardRef<HTMLDivElement, Props>((props, ref) =>
           value: customImage,
           path: ['customImage'] as Path,
           schemaType: ((schemaType as any).fields?.find(
-            (field: ObjectField<SchemaType>) =>
+            (field: ObjectField) =>
               field.name === 'customImage' && field.type.name === 'image'
           )?.type),
-          onChange: (patch: FormPatch | PatchEvent | FormPatch[]) => {
+          onChange: (patch: PatchEvent) => {
             onChange(patch)
           },
           readOnly,
@@ -76,7 +69,7 @@ const ReleaseInfoInput = React.forwardRef<HTMLDivElement, Props>((props, ref) =>
 
       {embedCode &&
         (isEmbedSupported ? (
-          <div dangerouslySetInnerHTML={{__html: embedCode}} />
+          <div dangerouslySetInnerHTML={{ __html: embedCode }} />
         ) : (
           <div>
             <p>Embedding is not supported for this content. You can view it directly:</p>

@@ -1,19 +1,15 @@
-// Inside Contact.js
+import React from 'react';
 import { Fragment, useState } from 'react';
 import { Popover, Transition } from '@headlessui/react';
-import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
-import { ArrowTopRightOnSquareIcon } from '@heroicons/react/20/solid';
 import Sketch from '../media/Sketch';
 
-interface CommentInfo {
-  name: string;
-  city: string;
-  state: string;
-  comment: string;
-}
-
 interface ContactProps {
-  info: CommentInfo[];
+  info: Array<{
+    name: string;
+    city: string;
+    state: string;
+    comment: string;
+  }>;
   title?: string;
   description?: string;
   address?: string;
@@ -31,14 +27,17 @@ interface ContactProps {
   };
 }
 
-const navigation = [
-  { name: 'Work', href: '#' },
-  { name: 'Services', href: '#' },
-  { name: 'About', href: '#' },
-  { name: 'Blog', href: '#' },
-];
-
-function Contact({ info = [], title, description, address, phoneNumber, email, message, socialLinks, map }: ContactProps) {
+const Contact: React.FC<ContactProps> = ({
+  info = [],
+  title,
+  description,
+  address,
+  phoneNumber,
+  email,
+  message,
+  socialLinks,
+  map
+}) => {
   console.log("Contact Component Loaded");
 
   const [first, setFirst] = useState<string>('');
@@ -206,7 +205,7 @@ function Contact({ info = [], title, description, address, phoneNumber, email, m
       </main>
     </div>
   );
-}
+};
 
 export { Contact };
 export default Contact;
