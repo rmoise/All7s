@@ -4,13 +4,10 @@ import React, {useEffect, useRef} from 'react'
 import {
   defineField,
   defineType,
-  type ObjectSchemaType,
   type Path,
   type FormPatch,
-  type InputProps,
   type ObjectField,
   type SchemaType,
-  type ObjectInputProps,
   PatchEvent,
   set,
   setIfMissing,
@@ -44,7 +41,13 @@ interface Metadata {
   isEmbedSupported: boolean
 }
 
-type Props = ObjectInputProps<EmbeddedAlbumValue, ObjectSchemaType>
+type Props = {
+  value?: EmbeddedAlbumValue
+  onChange: (patch: FormPatch | PatchEvent | FormPatch[]) => void
+  readOnly?: boolean
+  schemaType: SchemaType
+  renderDefault: (props: any) => React.ReactElement
+}
 
 const ReleaseInfoInput = React.forwardRef<HTMLDivElement, Props>((props, ref) => {
   const {value = {}, onChange, readOnly, schemaType} = props
@@ -53,7 +56,7 @@ const ReleaseInfoInput = React.forwardRef<HTMLDivElement, Props>((props, ref) =>
 
   return (
     <Stack ref={ref} space={4}>
-      {(schemaType as ObjectSchemaType).fields?.find(
+      {(schemaType as any).fields?.find(
         (field: ObjectField<SchemaType>): field is ObjectField<SchemaType> =>
           field.name === 'customImage' && field.type.name === 'image'
       ) &&
@@ -61,10 +64,10 @@ const ReleaseInfoInput = React.forwardRef<HTMLDivElement, Props>((props, ref) =>
           ...props,
           value: customImage,
           path: ['customImage'] as Path,
-          schemaType: ((schemaType as ObjectSchemaType).fields?.find(
+          schemaType: ((schemaType as any).fields?.find(
             (field: ObjectField<SchemaType>) =>
               field.name === 'customImage' && field.type.name === 'image'
-          )?.type as ObjectSchemaType),
+          )?.type),
           onChange: (patch: FormPatch | PatchEvent | FormPatch[]) => {
             onChange(patch)
           },
