@@ -4,7 +4,6 @@ import React, {useEffect, useRef} from 'react'
 import {
   defineField,
   defineType,
-  type ObjectInputProps,
   type ImageValue,
   type ObjectSchemaType,
   type Path,
@@ -12,6 +11,7 @@ import {
   type InputProps,
   type ObjectField,
   type SchemaType,
+  type ObjectInputProps,
   PatchEvent,
   set,
   setIfMissing,
@@ -33,7 +33,7 @@ interface Metadata {
   isEmbedSupported: boolean
 }
 
-type Props = InputProps & ObjectInputProps<EmbeddedAlbumValue, ObjectSchemaType>
+type Props = ObjectInputProps<EmbeddedAlbumValue, ObjectSchemaType>
 
 const ReleaseInfoInput = React.forwardRef<HTMLDivElement, Props>((props, ref) => {
   const {value = {}, onChange, readOnly, schemaType} = props
