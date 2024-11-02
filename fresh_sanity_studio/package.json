@@ -17,6 +17,8 @@
   ],
   "dependencies": {
     "@sanity/color-input": "^4.0.1",
+    "@sanity/types": "^3.62.3",
+    "@sanity/ui": "^2.8.18",
     "@sanity/vision": "^3.62.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
