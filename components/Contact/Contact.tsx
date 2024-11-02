@@ -5,6 +5,32 @@ import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 import { ArrowTopRightOnSquareIcon } from '@heroicons/react/20/solid';
 import Sketch from '../media/Sketch';
 
+interface CommentInfo {
+  name: string;
+  city: string;
+  state: string;
+  comment: string;
+}
+
+interface ContactProps {
+  info: CommentInfo[];
+  title?: string;
+  description?: string;
+  address?: string;
+  phoneNumber?: string;
+  email?: string;
+  message?: string;
+  socialLinks?: Array<{
+    platform: string;
+    url: string;
+  }>;
+  map?: {
+    lat: number;
+    lng: number;
+    zoom: number;
+  };
+}
+
 const navigation = [
   { name: 'Work', href: '#' },
   { name: 'Services', href: '#' },
@@ -12,15 +38,15 @@ const navigation = [
   { name: 'Blog', href: '#' },
 ];
 
-function Contact({ info }) {
+function Contact({ info = [], title, description, address, phoneNumber, email, message, socialLinks, map }: ContactProps) {
   console.log("Contact Component Loaded");
 
-  const [first, setFirst] = useState('');
-  const [last, setLast] = useState('');
-  const [email, setEmail] = useState('');
-  const [city, setCity] = useState('');
-  const [state, setState] = useState('');
-  const [comment, setComment] = useState('');
+  const [first, setFirst] = useState<string>('');
+  const [last, setLast] = useState<string>('');
+  const [emailState, setEmail] = useState<string>('');
+  const [city, setCity] = useState<string>('');
+  const [state, setState] = useState<string>('');
+  const [comment, setComment] = useState<string>('');
 
   return (
     <div className="bg-white">
@@ -182,4 +208,5 @@ function Contact({ info }) {
   );
 }
 
+export { Contact };
 export default Contact;

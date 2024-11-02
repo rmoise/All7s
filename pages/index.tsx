@@ -14,6 +14,7 @@ import Script from 'next/script';
 import { GetServerSideProps } from 'next';
 import { safeFetch, getServerClient, urlFor } from '../lib/sanityClient.server';
 
+
 // Existing interfaces
 interface SiteSettings {
   // ... existing SiteSettings interface ...

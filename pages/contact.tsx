@@ -1,21 +1,61 @@
-import ContactComponent from "../components/Contact";
+import { Contact } from "../components/Contact";
 import CustomP5Canvas from "../components/media/CustomP5Canvas";
 import { client } from '../lib/client';
 import SEO from '../components/common/SEO';
 import { useEffect, useState } from 'react';
 
-const ContactPage = ({ contactData }) => {
-  const [dataLoaded, setDataLoaded] = useState(false);
+interface ContactData {
+  title?: string;
+  description?: string;
+  address?: string;
+  phoneNumber?: string;
+  email?: string;
+  contactFormMessage?: string;
+  socialLinks?: Array<{
+    platform: string;
+    url: string;
+  }>;
+  map?: {
+    lat: number;
+    lng: number;
+    zoom: number;
+  };
+  favicon?: {
+    asset?: {
+      url?: string;
+    };
+  };
+  seo?: {
+    metaTitle?: string;
+    metaDescription?: string;
+    openGraphImage?: {
+      asset?: {
+        url?: string;
+      };
+    };
+  };
+  info?: Array<{
+    name: string;
+    city: string;
+    state: string;
+    comment: string;
+  }>;
+}
+
+interface ContactPageProps {
+  contactData: ContactData;
+}
+
+const ContactPage = ({ contactData }: ContactPageProps) => {
+  const [dataLoaded, setDataLoaded] = useState<boolean>(false);
 
   useEffect(() => {
-    // Check if contactData is loaded and log it
     console.log("Fetched contactData:", contactData);
     if (contactData && Object.keys(contactData).length) {
       setDataLoaded(true);
     }
   }, [contactData]);
 
-  // Display loading text only if data is not loaded
   if (!dataLoaded) {
     return <p>Loading site settings...</p>;
   }
@@ -43,12 +83,13 @@ const ContactPage = ({ contactData }) => {
       <SEO
         title={pageTitle}
         description={seo?.metaDescription || description || "Get in touch with us."}
-        favicon={favicon?.asset?.url}
-        openGraphImage={seo?.openGraphImage?.asset?.url}
+        faviconUrl={favicon?.asset?.url}
+        openGraphImageUrl={seo?.openGraphImage?.asset?.url}
         siteName={title || 'Contact Page'}
+        canonicalUrl="https://yourdomain.com"
       />
 
-      <ContactComponent
+      <Contact
         info={info || []}
         title={title}
         description={description}
@@ -74,18 +115,18 @@ export const getServerSideProps = async () => {
     const query = "*[_type == 'contactPage'][0]{title}";
     const contactData = await client.fetch(query);
 
-    console.log("Fetched data:", contactData); // Log the fetched data for verification
+    console.log("Fetched data:", contactData);
 
     return {
       props: {
-        contactData: contactData || {}, // Pass fetched data as props
+        contactData: contactData || {},
       },
     };
   } catch (error) {
-    console.error("Error fetching data from Sanity:", error.message); // Log any error encountered
+    console.error("Error fetching data from Sanity:", error instanceof Error ? error.message : 'Unknown error');
     return {
       props: {
-        contactData: {}, // Return empty if an error occurs
+        contactData: {},
       },
     };
   }
