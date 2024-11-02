@@ -4,7 +4,7 @@ import React, {useEffect, useRef} from 'react'
 import {
   defineField,
   defineType,
-  type Image,
+  type Reference,
   type ObjectSchemaType,
   type Path,
   type FormPatch,
@@ -18,9 +18,16 @@ import {
 } from 'sanity'
 import {Stack} from '@sanity/ui'
 
+interface SanityImageType {
+  _type: 'image'
+  asset: Reference
+  hotspot?: { x: number; y: number }
+  crop?: { top: number; bottom: number; left: number; right: number }
+}
+
 interface EmbeddedAlbumValue {
   embedCode?: string
-  customImage?: Image
+  customImage?: SanityImageType
   isEmbedSupported?: boolean
 }
 
