@@ -99,7 +99,7 @@ const nextConfig = {
   },
 
   experimental: {
-    appDir: true,
+    // Remove appDir since it's now default in Next.js 13+
   },
 };
 

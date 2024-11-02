@@ -1,5 +1,5 @@
 import React from 'react'
-import { defineConfig, SchemaTypeDefinition } from 'sanity'
+import { defineConfig } from 'sanity'
 import { deskTool } from 'sanity/desk'
 import { visionTool } from '@sanity/vision'
 import { media } from 'sanity-plugin-media'
@@ -9,8 +9,6 @@ import deskStructure from './deskStructure'
 import { StudioProvider } from './src/components/StudioProvider'
 import schemaTypes from './schemas/schema'
 import DatasetSwitcher from './src/components/DatasetSwitcher'
-import { DefaultDocumentNodeResolver } from 'sanity/desk'
-import { IframeOptions, Iframe } from 'sanity-plugin-iframe-pane'
 
 const isBrowser = typeof window !== 'undefined'
 
@@ -34,7 +32,7 @@ export const getNetlifyUrl = (): string => {
 
 const devOnlyPlugins = [visionTool()]
 
-export const iframeOptions: IframeOptions = {
+export const iframeOptions = {
   url: (doc: any) => {
     if (!doc?._id) return '';
 
@@ -64,20 +62,6 @@ export const iframeOptions: IframeOptions = {
   }
 }
 
-const defaultDocumentNode: DefaultDocumentNodeResolver = (S, { schemaType }) => {
-  if (['post', 'page', 'home', 'heroBanner'].includes(schemaType)) {
-    return S.document().views([
-      S.view.form(),
-      S.view
-        .component(Iframe as any)
-        .options(iframeOptions)
-        .title('Preview')
-    ])
-  }
-
-  return S.document().views([S.view.form()])
-}
-
 export default defineConfig({
   name: 'default',
   title: 'stak_site',
@@ -86,9 +70,7 @@ export default defineConfig({
   plugins: [
     deskTool({
       structure: deskStructure,
-      defaultDocumentNode,
     }),
-    visionTool(),
     colorInput(),
     imageHotspotArrayPlugin(),
     media(),
@@ -100,7 +82,7 @@ export default defineConfig({
     },
   },
   schema: {
-    types: schemaTypes as SchemaTypeDefinition[],
+    types: schemaTypes,
   },
   document: {
     actions: (prev) => [...prev],
@@ -121,12 +103,10 @@ export default defineConfig({
       layout: (props) => (
         <StudioProvider>
           <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-            <div
-              style={{
-                borderBottom: '1px solid var(--card-border-color)',
-                backgroundColor: 'white',
-              }}
-            >
+            <div style={{
+              borderBottom: '1px solid var(--card-border-color)',
+              backgroundColor: 'white',
+            }}>
               <DatasetSwitcher />
             </div>
             <div style={{ flexGrow: 1, overflow: 'auto' }}>
@@ -135,7 +115,6 @@ export default defineConfig({
           </div>
         </StudioProvider>
       ),
-      navbar: (props) => props.renderDefault(props),
     },
   },
   env: {
