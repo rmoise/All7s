@@ -20,7 +20,7 @@
     "baseUrl": "./",
     "paths": {
       "*": ["node_modules/*"]
-    },
+    }
     // "types": ["node", "event-source-polyfill", "eventsource"]
   },
   "include": [
@@ -30,7 +30,5 @@
     "eventsource.d.ts",
     "sanity-vision.d.ts"
   ],
-  "exclude": [
-    "node_modules"
-  ]
+  "exclude": ["node_modules"]
 }

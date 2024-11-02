@@ -1,11 +1,11 @@
-import {defineConfig} from 'sanity'
-import {deskTool} from 'sanity/desk'
-import {visionTool} from '@sanity/vision'
-import {media} from 'sanity-plugin-media'
-import {imageHotspotArrayPlugin} from 'sanity-plugin-hotspot-array'
-import {colorInput} from '@sanity/color-input'
+import React from 'react'
+import { defineConfig } from 'sanity'
+import { deskTool } from 'sanity/desk'
+import { visionTool } from '@sanity/vision'
+import { media } from 'sanity-plugin-media'
+import { imageHotspotArrayPlugin } from 'sanity-plugin-hotspot-array'
+import { colorInput } from '@sanity/color-input'
 import deskStructure from './deskStructure'
-import {CustomStudioLayout} from './CustomStudioLayout'
 import schemaTypes from './schemas/schema'
 
 const isBrowser = typeof window !== 'undefined'
@@ -17,10 +17,11 @@ const getDefaultDataset = (): string => {
 }
 
 const getNetlifyUrl = (): string => {
-  if (process.env.SANITY_STUDIO_NETLIFY_URL) return process.env.SANITY_STUDIO_NETLIFY_URL
+  if (process.env.SANITY_STUDIO_NETLIFY_URL)
+    return process.env.SANITY_STUDIO_NETLIFY_URL
   if (!isBrowser) return 'https://all7z.com' // Default to production for server-side
   const hostMap: Record<string, string> = {
-    'localhost': 'http://localhost:8888',
+    localhost: 'http://localhost:8888',
     'staging--all7z.netlify.app': 'https://staging--all7z.netlify.app',
     'all7z.com': 'https://all7z.com',
   }
@@ -53,18 +54,23 @@ export default defineConfig({
       assetSources: (previousAssetSources) =>
         previousAssetSources.filter(
           (assetSource) =>
-            assetSource.name === 'media-library' || assetSource.name === 'sanity-default'
+            assetSource.name === 'media-library' ||
+            assetSource.name === 'sanity-default'
         ),
     },
   },
   studio: {
     components: {
-      layout: CustomStudioLayout,
+      layout: (props) => (
+        <StudioProvider>
+        </StudioProvider>
+      ),
     },
   },
   env: {
     NETLIFY_FUNCTION_URL:
-      process.env.SANITY_STUDIO_NETLIFY_FUNCTION_URL || `${getNetlifyUrl()}/.netlify/functions`,
+      process.env.SANITY_STUDIO_NETLIFY_FUNCTION_URL ||
+      `${getNetlifyUrl()}/.netlify/functions`,
     SPOTIFY_CLIENT_ID: process.env.SPOTIFY_CLIENT_ID,
     SPOTIFY_CLIENT_SECRET: process.env.SPOTIFY_CLIENT_SECRET,
   },

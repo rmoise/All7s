@@ -1,7 +1,7 @@
 [build]
   command = "npm run build"
   publish = ".next"
-  functions = "netlify/functions"
+  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF . ../fresh_sanity_studio/"
 
 # Production-specific settings
 [context.production]
@@ -12,6 +12,7 @@
     NEXT_PUBLIC_SANITY_DATASET = "production"
     NEXT_PUBLIC_SANITY_PROJECT_ID = "1gxdk71x"
     NEXT_PUBLIC_NETLIFY = "true"
+    NEXT_PUBLIC_SANITY_STUDIO_URL = "https://all7z.sanity.studio"
     # Removed SANITY_TOKEN
 
 # Staging-specific settings
@@ -23,17 +24,22 @@
     NEXT_PUBLIC_SANITY_DATASET = "staging"
     NEXT_PUBLIC_SANITY_PROJECT_ID = "1gxdk71x"
     NEXT_PUBLIC_NETLIFY = "true"
+    NEXT_PUBLIC_SANITY_STUDIO_URL = "https://all7z.sanity.studio"
     # Removed SANITY_TOKEN
 
 # Deploy previews (pull request builds)
 [context.deploy-preview]
   command = "npm run build"
   publish = ".next"
+  [context.deploy-preview.environment]
+    NEXT_PUBLIC_SANITY_STUDIO_URL = "https://deploy-preview-${REVIEW_ID}--stak-app.netlify.app/studio"
 
 # Branch-specific deploy settings
 [context.branch-deploy]
   command = "npm run build"
   publish = ".next"
+  [context.branch-deploy.environment]
+    NEXT_PUBLIC_SANITY_STUDIO_URL = "https://branch-${BRANCH}--stak-app.netlify.app/studio"
 
 # Redirects
 [[redirects]]
@@ -63,15 +69,19 @@
   command = "npm run dev"
   targetPort = 3000
   port = 8888
-  publish = "public"
-  jwtRolePath = "app_metadata.authorization.roles"
+  publish = ".next"
+  framework = "next"
   autoLaunch = true
 
 [dev.environment]
   NEXT_PUBLIC_NETLIFY = "true"
   SPOTIFY_CLIENT_ID = "env(SPOTIFY_CLIENT_ID)"
   SPOTIFY_CLIENT_SECRET = "env(SPOTIFY_CLIENT_SECRET)"
+  SANITY_STUDIO_PATH = "fresh_sanity_studio"
+  NEXT_PUBLIC_SANITY_STUDIO_URL = "https://all7z.sanity.studio"
 
 [build.environment]
   NETLIFY = "true"
   NEXT_PUBLIC_NETLIFY = "true"
+  NEXT_PUBLIC_SANITY_STUDIO_URL = "https://all7z.sanity.studio"
+  SANITY_STUDIO_PATH = "fresh_sanity_studio"

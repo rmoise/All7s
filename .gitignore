@@ -23,3 +23,5 @@ dist
 
 .env.production.notes
 .notes
+
+src/lib/sanity/live.tsx

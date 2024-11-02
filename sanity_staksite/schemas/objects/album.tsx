@@ -1,9 +1,56 @@
+// schemas/album.tsx
+
 import React from 'react'
-import {defineType, defineField} from 'sanity'
+import {Box} from '@sanity/ui'
+import {defineField, defineType} from 'sanity'
 import ReleaseInfoInput from '../../components/ReleaseInfoInput'
 import {urlFor} from '../../utils/imageUrlBuilder'
 
-export default defineType({
+interface ValidationRule {
+  required: () => ValidationRule
+  custom: (fn: (value: unknown, context: ValidationContext) => true | string) => ValidationRule
+  uri: (options: {scheme: string[]}) => ValidationRule
+  warning: (message: string) => ValidationRule
+}
+
+interface ValidationContext {
+  document?: {
+    albumSource?: string
+    [key: string]: unknown
+  }
+  parent?: Record<string, unknown>
+  path?: string[]
+}
+
+interface SanityImageAsset {
+  _type: 'image'
+  asset: {
+    _ref: string
+    _type: 'reference'
+  }
+  hotspot?: {
+    x: number
+    y: number
+    height: number
+    width: number
+  }
+}
+
+interface AlbumSelection {
+  albumSource: string
+  embeddedTitle?: string
+  embeddedArtist?: string
+  embeddedImageUrl?: string
+  customTitle?: string
+  customArtist?: string
+  customImage?: SanityImageAsset
+}
+
+interface ParentType {
+  albumSource?: string
+}
+
+const albumSchema = defineType({
   name: 'album',
   title: 'Album or Single Release',
   type: 'document',
@@ -19,7 +66,7 @@ export default defineType({
         ],
         layout: 'radio',
       },
-      validation: (Rule) => Rule.required(),
+      validation: (rule: ValidationRule) => rule.required(),
       initialValue: 'embedded',
     }),
     defineField({
@@ -28,21 +75,40 @@ export default defineType({
       type: 'object',
       fields: [
         defineField({
-          name: 'embedUrl',
-          title: 'Embed URL',
-          type: 'string',
-          description: 'Enter Spotify or SoundCloud URL or iframe',
-          validation: (Rule) =>
-            Rule.required().custom((url) => {
-              if (!url) return 'URL or iframe code is required'
-              const sanitizedUrl = url.includes('iframe')
-                ? (url.match(/src="([^"]+)"/)?.[1] ?? '')
-                : url
-              const pattern =
-                /^(https?:\/\/)?(www\.)?(open\.)?(spotify|soundcloud|w\.soundcloud)\.com\/(embed\/)?(album|track|playlist|sets|player)\/?.+$/
-              return pattern.test(sanitizedUrl)
-                ? true
-                : 'Please enter a valid Spotify or SoundCloud URL or iframe'
+          name: 'embedCode',
+          title: 'Embed Code',
+          type: 'text',
+          description: 'Enter Spotify or SoundCloud URL or iframe embed code',
+          readOnly: false,
+          validation: (rule: ValidationRule) =>
+            rule.custom((value: unknown) => {
+              if (!value || typeof value !== 'string' || !value.trim()) {
+                return 'Embed code is required'
+              }
+
+              const embedString = value.trim()
+              const lowerCaseEmbedCode = embedString.toLowerCase()
+
+              if (
+                lowerCaseEmbedCode.includes('<iframe') &&
+                (lowerCaseEmbedCode.includes('soundcloud.com') ||
+                  lowerCaseEmbedCode.includes('spotify.com'))
+              ) {
+                return true
+              }
+
+              const isValidUrl =
+                embedString.startsWith('http://') || embedString.startsWith('https://')
+              const isSpotifyUrl = lowerCaseEmbedCode.includes('spotify.com')
+              const isSoundCloudUrl =
+                lowerCaseEmbedCode.includes('soundcloud.com') ||
+                lowerCaseEmbedCode.includes('api.soundcloud.com')
+
+              if (isValidUrl && (isSpotifyUrl || isSoundCloudUrl)) {
+                return true
+              }
+
+              return 'Please provide a valid Spotify/SoundCloud URL or iframe embed code'
             }),
         }),
         defineField({name: 'title', title: 'Release Title', type: 'string', readOnly: true}),
@@ -53,8 +119,8 @@ export default defineType({
           name: 'imageUrl',
           title: 'Album Image URL',
           type: 'url',
-          validation: (Rule) =>
-            Rule.uri({scheme: ['http', 'https']}).warning('Ensure image URL is an external link.'),
+          validation: (rule: ValidationRule) =>
+            rule.uri({scheme: ['http', 'https']}).warning('Ensure image URL is an external link.'),
         }),
         defineField({
           name: 'customImage',
@@ -65,7 +131,7 @@ export default defineType({
         }),
       ],
       components: {input: ReleaseInfoInput},
-      hidden: ({parent}) => parent?.albumSource !== 'embedded',
+      hidden: ({parent}: {parent: ParentType}) => parent?.albumSource !== 'embedded',
     }),
     defineField({
       name: 'customAlbum',
@@ -76,7 +142,7 @@ export default defineType({
           name: 'title',
           title: 'Release Title',
           type: 'string',
-          validation: (Rule) => Rule.required(),
+          validation: (rule: ValidationRule) => rule.required(),
           initialValue: 'Untitled',
         }),
         defineField({
@@ -84,7 +150,7 @@ export default defineType({
           title: 'Artist',
           type: 'string',
           initialValue: 'Stak',
-          validation: (Rule) => Rule.required(),
+          validation: (rule: ValidationRule) => rule.required(),
         }),
         defineField({
           name: 'releaseType',
@@ -97,12 +163,13 @@ export default defineType({
               {title: 'Compilation', value: 'compilation'},
             ],
           },
-          validation: (Rule) =>
-            Rule.custom((releaseType, context) =>
-              context?.document?.albumSource === 'custom' && !releaseType
-                ? 'Release Type is required for custom albums'
-                : true,
-            ),
+          validation: (rule: ValidationRule) =>
+            rule.custom((value: unknown, context: ValidationContext) => {
+              if (context?.document?.albumSource === 'custom' && !value) {
+                return 'Release Type is required for custom albums'
+              }
+              return true
+            }),
         }),
         defineField({
           name: 'customImage',
@@ -146,7 +213,7 @@ export default defineType({
           description: 'Add individual tracks for this release. You can reorder them by dragging.',
         }),
       ],
-      hidden: ({parent}) => parent?.albumSource !== 'custom',
+      hidden: ({parent}: {parent: ParentType}) => parent?.albumSource !== 'custom',
     }),
   ],
   preview: {
@@ -159,7 +226,7 @@ export default defineType({
       customArtist: 'customAlbum.artist',
       customImage: 'customAlbum.customImage',
     },
-    prepare(selection) {
+    prepare(selection: AlbumSelection) {
       const {
         albumSource,
         embeddedTitle,
@@ -183,7 +250,8 @@ export default defineType({
           ? embeddedArtist || 'Unknown Artist'
           : customArtist || 'Unknown Artist',
         media: (
-          <img
+          <Box
+            as="img"
             src={imageUrl}
             alt="Album Cover"
             style={{width: '100%', height: 'auto', borderRadius: '4px'}}
@@ -193,3 +261,5 @@ export default defineType({
     },
   },
 })
+
+export default albumSchema

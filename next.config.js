@@ -1,3 +1,5 @@
+const path = require('path');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -11,25 +13,56 @@ const nextConfig = {
       ? process.env.NEXT_STAGING_SANITY_TOKEN || 'staging-token'
       : process.env.SANITY_TOKEN || 'production-token',
     NEXT_PUBLIC_NETLIFY: process.env.NEXT_PUBLIC_NETLIFY || process.env.NETLIFY || 'false',
+    NEXT_PUBLIC_SANITY_STUDIO_URL: process.env.NEXT_PUBLIC_SANITY_STUDIO_URL || 'http://localhost:3333',
+    SANITY_API_READ_TOKEN: process.env.SANITY_API_READ_TOKEN,
   },
 
   images: {
-    domains: ['i.scdn.co', 'cdn.sanity.io'], // Add any other domains you're using
+    domains: ['i.scdn.co', 'cdn.sanity.io', 'i1.sndcdn.com'], // Added i1.sndcdn.com
     formats: ['image/avif', 'image/webp'],
   },
 
   async headers() {
     return [
       {
-        source: '/(.*)',
+        source: '/:path*',
         headers: [
           {
+            key: 'Content-Security-Policy',
+            value: [
+              "default-src 'self'",
+              // Scripts
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.typekit.net https://*.youtube.com https://www.youtube.com https://*.youtu.be https://js.stripe.com",
+              // Styles
+              "style-src 'self' 'unsafe-inline' https://*.typekit.net https://use.typekit.net https://p.typekit.net",
+              // Frames
+              "frame-src 'self' https://*.youtube.com https://www.youtube.com https://*.youtu.be https://*.stripe.com",
+              // Images
+              "img-src 'self' data: https: blob: https://*.typekit.net https://*.youtube.com https://www.youtube.com https://*.youtu.be",
+              // Media
+              "media-src 'self' https:",
+              // Connections
+              "connect-src 'self' https: https://*.typekit.net https://*.stripe.com",
+              // Fonts
+              "font-src 'self' data: https://*.typekit.net https://use.typekit.net https://p.typekit.net",
+              // Frame ancestors
+              "frame-ancestors 'self' https://*.sanity.studio http://localhost:3333 http://localhost:3000",
+            ].join('; '),
+          },
+          {
             key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=(), compute-pressure=*',
+            value: [
+              'camera=()',
+              'microphone=()',
+              'geolocation=()',
+              'compute-pressure=*',
+              // Allow presentation API
+              'presentation-api=*'
+            ].join(', '),
           },
           {
             key: 'X-Frame-Options',
-            value: 'DENY',
+            value: 'SAMEORIGIN',
           },
           {
             key: 'X-Content-Type-Options',
@@ -43,6 +76,28 @@ const nextConfig = {
       },
     ];
   },
+
+  webpack: (config) => {
+    config.resolve.alias['@components'] = path.join(__dirname, 'components');
+    config.resolve.alias['@utils'] = path.join(__dirname, 'utils');
+    config.resolve.alias['@pages'] = path.join(__dirname, 'pages');
+    config.resolve.alias['@styles'] = path.join(__dirname, 'styles');
+    config.resolve.alias['@lib'] = path.join(__dirname, 'lib');
+    config.resolve.alias['@context'] = path.join(__dirname, 'context');
+    // Add other aliases here if needed
+
+    return config;
+  },
+
+  async rewrites() {
+    return [
+      {
+        source: '/studio/:path*',
+        destination: 'https://all7z.sanity.studio/:path*',
+      },
+    ]
+  },
 };
 
 module.exports = nextConfig;
+

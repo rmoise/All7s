@@ -75,42 +75,45 @@ const MusicBlock = ({ listenTitle, albums = [] }) => {
           className="w-full max-w-6xl mx-auto pb-32"
         >
           {albums.map((album, index) => {
-            const albumId = album._id || `album-${index}`;
-            return (
-              <div
-                key={albumId}
-                className="flex justify-center items-center w-full p-4 mx-auto"
-              >
-                <FlipCard
-                  album={{
-                    albumId,
-                    title:
-                      album.embeddedAlbum?.title ||
-                      album.customAlbum?.title ||
-                      'Untitled Album',
-                    artist:
-                      album.embeddedAlbum?.artist ||
-                      album.customAlbum?.artist ||
-                      'Unknown Artist',
-                    imageUrl:
-                      album.embeddedAlbum?.imageUrl ||
-                      album.customAlbum?.customImage?.asset?.url ||
-                      '/images/placeholder.png',
-                    songs:
-                      album.embeddedAlbum?.songs ||
-                      album.customAlbum?.songs ||
-                      [],
-                    embedUrl: album.embeddedAlbum?.embedUrl || '',
-                  }}
-                  isFlipped={flippedAlbums.has(albumId)}
-                  toggleFlip={handleFlip}
-                  addFlipCardRef={addFlipCardRef}
-                  titleClass="text-xl md:text-2xl lg:text-3xl whitespace-nowrap truncate"
-                  artistClass="text-lg md:text-xl lg:text-2xl whitespace-nowrap truncate"
-                />
-              </div>
-            );
-          })}
+  if (!album) return null; // Skip if album is null or undefined
+
+  const albumId = album._id || `album-${index}`;
+  return (
+    <div
+      key={albumId}
+      className="flex justify-center items-center w-full p-4 mx-auto"
+    >
+      <FlipCard
+        album={{
+          albumId,
+          title:
+            album.embeddedAlbum?.title ||
+            album.customAlbum?.title ||
+            'Untitled Album',
+          artist:
+            album.embeddedAlbum?.artist ||
+            album.customAlbum?.artist ||
+            'Unknown Artist',
+          imageUrl:
+            album.embeddedAlbum?.imageUrl ||
+            album.customAlbum?.customImage?.asset?.url ||
+            '/images/placeholder.png',
+          songs:
+            album.embeddedAlbum?.songs ||
+            album.customAlbum?.songs ||
+            [],
+          embedUrl: album.embeddedAlbum?.embedUrl || '',
+        }}
+        isFlipped={flippedAlbums.has(albumId)}
+        toggleFlip={handleFlip}
+        addFlipCardRef={addFlipCardRef}
+        titleClass="text-xl md:text-2xl lg:text-3xl whitespace-nowrap truncate"
+        artistClass="text-lg md:text-xl lg:text-2xl whitespace-nowrap truncate"
+      />
+    </div>
+  );
+})}
+
         </Grid>
       </div>
     </section>
