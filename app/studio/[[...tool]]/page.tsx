@@ -1,24 +1,22 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import type { SanityConfig } from 'sanity'
-import config from '../../../fresh_sanity_studio/sanity.config'
+import config from '@/fresh_sanity_studio/sanity.config'
+import productionConfig from '@/fresh_sanity_studio/sanity.production.config'
+import { StudioProps } from 'sanity'
 
-// Create a type-safe studio component
-const StudioComponent = dynamic(
-  () => import('next-sanity/studio').then((mod) => {
-    return mod.NextStudio as any // Force type to avoid mismatch
-  }),
-  {
-    ssr: false,
-  }
-)
+const StudioComponent = dynamic(() =>
+  import('next-sanity/studio').then((mod) => mod.NextStudio)
+, { ssr: false })
 
 export default function StudioPage() {
+  const studioConfig = process.env.NEXT_PUBLIC_ENVIRONMENT === 'production'
+    ? productionConfig
+    : config
+
   return (
     <StudioComponent
-      // @ts-ignore - Known type mismatch between Sanity v2 and v3
-      config={config}
+      config={studioConfig as StudioProps['config']}
     />
   )
 }

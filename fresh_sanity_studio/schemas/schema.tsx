@@ -1,6 +1,5 @@
 // schemas/schema.ts
-import type { SchemaTypeDefinition } from '@sanity/types'
-import { defineType } from 'sanity'
+import type { SchemaTypeDefinition } from 'sanity'
 
 // Import your schema types
 import blockContent from './objects/blockContent'
@@ -30,48 +29,42 @@ import additionalVideo from './objects/additionalVideo'
 import musicBlock from './objects/musicBlock'
 import videoBlock from './objects/videoBlock'
 import backgroundVideoBlock from './objects/backgroundVideoBlock'
+import contentBlock from './objects/contentBlock'
+import splash from './objects/splash'
 
-function isSchemaTypeDefinition(schema: unknown): schema is SchemaTypeDefinition {
-  return (
-    typeof schema === 'object' &&
-    schema !== null &&
-    'type' in schema &&
-    typeof (schema as any).type === 'string' &&
-    'name' in schema &&
-    typeof (schema as any).name === 'string'
-  )
-}
+const schemaTypes: SchemaTypeDefinition[] = [
+  // Document types
+  post,
+  author,
+  page,
+  homePage,
+  about,
+  contactPage,
+  collection,
+  product,
+  comments,
+  footer,
+  navbar,
+  siteSettings,
+  colorTheme,
 
-const schemas = [
-  blockContent,
+  // Object types
+  heroBanner,
+  splash,
   musicBlock,
   videoBlock,
   backgroundVideoBlock,
-  post,
-  author,
-  category,
-  about,
-  youtube,
+  contentBlock,
+  blockContent,
   musicLink,
   videoLink,
   heroVideo,
-  product,
   banner,
-  comments,
-  footer,
-  heroBanner,
-  homePage,
   newsletter,
-  navbar,
-  siteSettings,
-  contactPage,
   album,
-  colorTheme,
-  page,
-  collection,
+  category,
+  youtube,
   additionalVideo,
 ]
-
-const schemaTypes = schemas.filter(isSchemaTypeDefinition)
 
 export default schemaTypes

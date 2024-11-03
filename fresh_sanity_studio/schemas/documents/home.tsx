@@ -40,10 +40,13 @@ export default defineType({
       type: 'array',
       validation: Rule => Rule.required(),
       of: [
-        defineArrayMember({
-          type: 'reference',
-          to: [{ type: 'contentBlock' }],
-        }),
+        defineArrayMember({ type: 'heroBanner' }),
+        defineArrayMember({ type: 'splash' }),
+        defineArrayMember({ type: 'about' }),
+        defineArrayMember({ type: 'musicBlock' }),
+        defineArrayMember({ type: 'videoBlock' }),
+        defineArrayMember({ type: 'backgroundVideoBlock' }),
+        defineArrayMember({ type: 'newsletter' })
       ],
     }),
   ],

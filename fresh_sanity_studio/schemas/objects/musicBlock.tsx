@@ -40,12 +40,13 @@ export default defineType({
   preview: {
     select: {
       title: 'title',
-      albums: 'albums',
+      albumsRaw: 'albums',
     },
-    prepare({ title, albums }: { title: string; albums: any[] }) {
+    prepare(selection: Record<string, any>) {
+      const {title, albumsRaw} = selection
       return {
         title: title || 'Music Block',
-        subtitle: `${albums?.length || 0} albums`,
+        subtitle: `${albumsRaw?.length || 0} albums`,
         media: <MdMusicNote />,
       }
     },

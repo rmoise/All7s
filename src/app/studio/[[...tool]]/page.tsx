@@ -9,15 +9,18 @@
 
 'use client'
 
-import dynamic from 'next/dynamic'
+import { NextStudio } from 'next-sanity/studio'
 import config from '@/fresh_sanity_studio/sanity.config'
-
-// Dynamically import the Studio component
-const StudioComponent = dynamic(() => import('./Studio').then((mod) => mod.Studio), {
-  ssr: false,
-  loading: () => <div>Loading Studio...</div>,
-})
+import { Suspense } from 'react'
 
 export default function StudioPage() {
-  return <StudioComponent />
+  return (
+    <Suspense fallback={<div>Loading Studio...</div>}>
+      <NextStudio
+        {...(config as any)} // Type assertion to bypass type checking
+        unstable_noAuthBoundary
+        unstable_globalStyles
+      />
+    </Suspense>
+  )
 }

@@ -1,46 +1,79 @@
-import type { StructureBuilder } from 'sanity/desk'
+import { deskTool } from 'sanity/desk'
 import { Iframe, IframeOptions } from 'sanity-plugin-iframe-pane'
 
-type DefaultDocumentNode = (
-  S: StructureBuilder,
-  ctx: { schemaType: string }
-) => ReturnType<StructureBuilder['document']>
+interface SanityDocument {
+  _type: string;
+  _id: string;
+  slug?: {
+    current: string;
+  };
+}
 
-// Define proper types for the iframe options
-export const iframeOptions: IframeOptions = {
-  url: (doc: any) => {
-    if (!doc?._id) return '';
-    const baseUrl = process.env.SANITY_STUDIO_PREVIEW_URL || 'http://localhost:3000';
+const getPreviewUrl = (doc: SanityDocument | null): string => {
+  if (!doc) return ''
 
-    switch (doc._type) {
-      case 'home':
-        return `${baseUrl}/?preview=true`;
-      case 'post':
-        return `${baseUrl}/posts/${doc.slug?.current}?preview=true`;
-      case 'page':
-        return `${baseUrl}/pages/${doc.slug?.current}?preview=true`;
-      default:
-        return `${baseUrl}/api/preview?type=${doc._type}&id=${doc._id}`;
+  const baseUrl = (() => {
+    if (typeof window === 'undefined') return 'https://all7z.com'
+
+    const hostMap: Record<string, string> = {
+      'localhost': 'http://localhost:8888',
+      'staging--all7z.netlify.app': 'https://staging--all7z.netlify.app',
+      'all7z.com': 'https://all7z.com'
     }
-  },
-  defaultSize: 'desktop' as const, // Type assertion to literal type
-  reload: {
-    button: true
-  },
-  attributes: {
-    allow: 'fullscreen',
-    referrerPolicy: 'strict-origin-when-cross-origin',
-    sandbox: 'allow-same-origin allow-scripts allow-forms allow-popups'
+
+    return hostMap[window.location.hostname] || 'https://all7z.com'
+  })()
+
+  switch (doc._type) {
+    case 'home':
+      return `${baseUrl}/?preview=true`
+    case 'post':
+      return doc.slug?.current
+        ? `${baseUrl}/posts/${doc.slug.current}?preview=true`
+        : `${baseUrl}/?preview=true`
+    case 'page':
+      return doc.slug?.current
+        ? `${baseUrl}/pages/${doc.slug.current}?preview=true`
+        : `${baseUrl}/?preview=true`
+    default:
+      return `${baseUrl}/api/preview?type=${doc._type}&id=${doc._id}`
   }
 }
 
-export const defaultDocumentNode: DefaultDocumentNode = (S, { schemaType }) => {
-  const doc = S.document()
-  doc.schemaType(schemaType)
+interface DocumentNodeContext {
+  schemaType: string;
+}
 
-  if (['home', 'page', 'post'].includes(schemaType)) {
-    doc.documentId(schemaType === 'home' ? 'singleton-home' : `${schemaType}-preview`)
+export const defaultDocumentNode = (
+  S: any,
+  context: DocumentNodeContext
+) => {
+  const { schemaType } = context
+
+  if (!['home', 'post', 'page'].includes(schemaType)) {
+    return S.document()
   }
 
-  return doc
+  const iframeOptions: IframeOptions = {
+    url: getPreviewUrl,
+    defaultSize: 'desktop',
+    reload: {
+      button: true
+    },
+    attributes: {
+      allow: 'fullscreen',
+      referrerPolicy: 'strict-origin-when-cross-origin',
+      sandbox: 'allow-same-origin allow-scripts allow-forms allow-popups'
+    }
+  }
+
+  return S.document()
+    .schemaType(schemaType)
+    .views([
+      S.view.form(),
+      S.view
+        .component(Iframe)
+        .title('Preview')
+        .options(iframeOptions)
+    ])
 }

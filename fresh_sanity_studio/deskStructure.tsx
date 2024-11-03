@@ -1,17 +1,15 @@
-import {HomeIcon, CogIcon, DocumentsIcon, ColorWheelIcon, ArchiveIcon} from '@sanity/icons'
-import {FaMusic} from 'react-icons/fa'
-import {MdPerson, MdArticle} from 'react-icons/md'
+import { HomeIcon, CogIcon, DocumentsIcon, ColorWheelIcon, ArchiveIcon } from '@sanity/icons'
+import { FaMusic } from 'react-icons/fa'
+import { MdPerson, MdArticle } from 'react-icons/md'
 import type { StructureBuilder } from 'sanity/desk'
 
-// Structure definition
 export const structure = (S: StructureBuilder) =>
   S.list()
     .title('Content')
     .items([
-      // Home singleton
+      // Singleton items
       S.listItem()
         .title('Home')
-        .id('home-singleton')
         .icon(HomeIcon)
         .child(
           S.document()
@@ -19,10 +17,8 @@ export const structure = (S: StructureBuilder) =>
             .documentId('singleton-home')
         ),
 
-      // Settings
       S.listItem()
         .title('Settings')
-        .id('settings-singleton')
         .icon(CogIcon)
         .child(
           S.document()
@@ -30,52 +26,70 @@ export const structure = (S: StructureBuilder) =>
             .documentId('singleton-settings')
         ),
 
-      // Color Themes
-      S.listItem()
-        .title('Color Themes')
-        .id('color-themes')
-        .icon(ColorWheelIcon)
-        .child(S.documentTypeList('colorTheme')),
+      // Divider
+      S.divider(),
 
-      // Pages with Preview
+      // Document types with custom views
       S.listItem()
         .title('Pages')
-        .id('pages-with-preview')
         .icon(DocumentsIcon)
-        .child(S.documentTypeList('page').title('Pages')),
+        .child(
+          S.documentTypeList('page')
+            .title('Pages')
+        ),
 
-      // Collections
-      S.listItem()
-        .title('Collections')
-        .id('collections')
-        .icon(ArchiveIcon)
-        .child(S.documentTypeList('collection')),
-
-      // Albums
-      S.listItem()
-        .title('Albums')
-        .id('albums')
-        .icon(FaMusic)
-        .child(S.documentTypeList('album')),
-
-      // Blog Posts with Preview
       S.listItem()
         .title('Blog Posts')
-        .id('blog-posts-with-preview')
         .icon(MdArticle)
-        .child(S.documentTypeList('post').title('Blog Posts')),
+        .child(
+          S.documentTypeList('post')
+            .title('Blog Posts')
+        ),
 
-      // Authors
       S.listItem()
         .title('Authors')
-        .id('authors')
         .icon(MdPerson)
-        .child(S.documentTypeList('author')),
+        .child(
+          S.documentTypeList('author')
+            .title('Authors')
+        ),
 
-      // Filter out the types we've explicitly defined above
+      // Divider
+      S.divider(),
+
+      // Collections and Media
+      S.listItem()
+        .title('Collections')
+        .icon(ArchiveIcon)
+        .child(
+          S.documentTypeList('collection')
+            .title('Collections')
+        ),
+
+      S.listItem()
+        .title('Albums')
+        .icon(FaMusic)
+        .child(
+          S.documentTypeList('album')
+            .title('Albums')
+        ),
+
+      // Divider
+      S.divider(),
+
+      // Theme and Settings
+      S.listItem()
+        .title('Color Themes')
+        .icon(ColorWheelIcon)
+        .child(
+          S.documentTypeList('colorTheme')
+            .title('Color Themes')
+        ),
+
+      // Filter out already defined types
       ...S.documentTypeListItems().filter(
         (listItem) =>
-          !['home', 'settings', 'colorTheme', 'page', 'collection', 'album', 'author', 'post'].includes(
+          !['home', 'settings', 'page', 'post', 'author', 'colorTheme', 'collection', 'album'].includes(
             listItem.getId() as string
           )
       ),

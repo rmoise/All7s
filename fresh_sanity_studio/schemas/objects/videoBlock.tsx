@@ -58,12 +58,13 @@ export default defineType({
   preview: {
     select: {
       title: 'title',
-      videos: 'videos',
+      videosRaw: 'videos',
     },
-    prepare({ title, videos }: { title: string; videos: any[] }) {
+    prepare(selection: Record<string, any>) {
+      const {title, videosRaw} = selection
       return {
         title: title || 'Video Block',
-        subtitle: `${videos?.length || 0} videos`,
+        subtitle: `${videosRaw?.length || 0} videos`,
         media: <MdPlayCircleOutline />,
       }
     },

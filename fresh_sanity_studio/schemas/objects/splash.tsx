@@ -1,29 +1,29 @@
-import { defineType, defineField } from 'sanity';
+import { defineType } from 'sanity'
 
 export default defineType({
-  name: 'heroBanner',
-  title: 'Hero Banner',
+  name: 'splash',
+  title: 'Splash Section',
   type: 'object',
   fields: [
-    defineField({
+    {
       name: 'title',
       title: 'Title',
       type: 'string',
-    }),
-    defineField({
+    },
+    {
       name: 'subtitle',
       title: 'Subtitle',
       type: 'string',
-    }),
-    defineField({
+    },
+    {
       name: 'backgroundImage',
       title: 'Background Image',
       type: 'image',
       options: {
         hotspot: true,
       },
-    }),
-    defineField({
+    },
+    {
       name: 'cta',
       title: 'Call to Action',
       type: 'object',
@@ -39,6 +39,6 @@ export default defineType({
           type: 'url',
         },
       ],
-    }),
+    },
   ],
-});
+}) 
