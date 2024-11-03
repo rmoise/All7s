@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "dev:staging": "env-cmd -f .env.staging next dev",
-    "build": "npm run studio:build && next build",
+    "build": "NEXT_TELEMETRY_DISABLED=1 npm run studio:build && next build",
     "start": "next start",
     "lint": "next lint",
     "build:staging": "env-cmd -f .env.staging next build",
@@ -13,10 +13,15 @@
     "build:production": "env-cmd -f .env.production next build",
     "start:production": "env-cmd -f .env.production next start",
     "studio:dev": "cd fresh_sanity_studio && sanity dev",
-    "studio:build": "cd fresh_sanity_studio && npm run build",
+    "studio:build": "cd fresh_sanity_studio && npm install && npm run build",
     "studio:deploy": "cd fresh_sanity_studio && sanity deploy",
     "type-check": "tsc --noEmit",
-    "type-check:watch": "tsc --noEmit --watch"
+    "type-check:watch": "tsc --noEmit --watch",
+    "build:all": "npm run studio:build && npm run build",
+    "clean": "rm -rf .next && rm -rf fresh_sanity_studio/dist && rm -rf .sanity",
+    "prebuild": "npm run clean",
+    "clean:all": "npm run clean && rm -rf node_modules && npm install",
+    "postbuild": "next-sitemap"
   },
   "dependencies": {
     "@eslint/config-array": "^0.18.0",
@@ -82,7 +87,13 @@
     "styled-components": "^6.1.13"
   },
   "devDependencies": {
+    "@babel/core": "^7.26.0",
     "@babel/eslint-parser": "^7.25.7",
+    "@babel/plugin-proposal-class-properties": "^7.18.6",
+    "@babel/plugin-proposal-object-rest-spread": "^7.20.7",
+    "@babel/preset-env": "^7.26.0",
+    "@babel/preset-react": "^7.25.9",
+    "@babel/preset-typescript": "^7.26.0",
     "@netlify/plugin-nextjs": "^5.8.1",
     "@sanity/eslint-config-studio": "^4.0.0",
     "@types/animejs": "^3.1.12",
@@ -94,6 +105,7 @@
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
     "autoprefixer": "^10.4.20",
+    "babel-plugin-transform-remove-console": "^6.9.4",
     "env-cmd": "^10.1.0",
     "eslint": "^8.57.0",
     "eslint-config-next": "^13.5.7",

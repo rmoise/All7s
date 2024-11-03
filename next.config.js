@@ -4,6 +4,8 @@ const path = require('path');
 const nextConfig = {
   reactStrictMode: true,
 
+  output: 'standalone',
+
   env: {
     NEXT_PUBLIC_SANITY_PROJECT_ID: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || '1gxdk71x',
     NEXT_PUBLIC_SANITY_DATASET: process.env.NEXT_PUBLIC_ENVIRONMENT === 'staging'
@@ -18,7 +20,8 @@ const nextConfig = {
   },
 
   images: {
-    domains: ['i.scdn.co', 'cdn.sanity.io', 'i1.sndcdn.com'], // Added i1.sndcdn.com
+    unoptimized: process.env.NODE_ENV === 'development',
+    domains: ['i.scdn.co', 'cdn.sanity.io', 'i1.sndcdn.com'],
     formats: ['image/avif', 'image/webp'],
   },
 
@@ -77,7 +80,7 @@ const nextConfig = {
     ];
   },
 
-  webpack: (config) => {
+  webpack: (config, { isServer }) => {
     config.resolve.alias['@components'] = path.join(__dirname, 'components');
     config.resolve.alias['@utils'] = path.join(__dirname, 'utils');
     config.resolve.alias['@pages'] = path.join(__dirname, 'pages');
@@ -86,6 +89,19 @@ const nextConfig = {
     config.resolve.alias['@context'] = path.join(__dirname, 'context');
     // Add other aliases here if needed
 
+    // Optimize CSS
+    if (!isServer) {
+      config.optimization.splitChunks.cacheGroups = {
+        ...config.optimization.splitChunks.cacheGroups,
+        styles: {
+          name: 'styles',
+          test: /\.(css|scss)$/,
+          chunks: 'all',
+          enforce: true,
+        },
+      }
+    }
+
     return config;
   },
 
@@ -93,13 +109,16 @@ const nextConfig = {
     return [
       {
         source: '/studio/:path*',
-        destination: 'https://all7z.sanity.studio/:path*',
+        destination: process.env.NODE_ENV === 'development'
+          ? 'http://localhost:3333/:path*'
+          : 'https://all7z.sanity.studio/:path*',
       },
     ]
   },
 
   experimental: {
-    // Remove appDir since it's now default in Next.js 13+
+    optimizeCss: true,
+    optimizePackageImports: ['@sanity/ui', '@headlessui/react', 'lodash'],
   },
 };
 

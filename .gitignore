@@ -25,3 +25,11 @@ dist
 .notes
 
 src/lib/sanity/live.tsx
+
+# Build directories
+.sanity
+fresh_sanity_studio/dist
+fresh_sanity_studio/.sanity
+
+# Cache
+.cache
