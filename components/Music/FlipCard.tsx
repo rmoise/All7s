@@ -7,13 +7,12 @@ import React, {
   useEffect,
   useCallback,
   useMemo,
-  useLayoutEffect,
 } from 'react'
 import clsx from 'clsx'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPlay, faPause, faSyncAlt } from '@fortawesome/free-solid-svg-icons'
 import anime from 'animejs'
-import { useAudio } from '@context/AudioContext' // Adjust the path as needed
+import { useAudio } from '@/context/AudioContext' // Adjust the path as needed
 import MusicEmbed from '@components/MusicEmbed' // Ensure correct path
 import { debounce } from 'lodash'
 import Image from 'next/image'
@@ -72,9 +71,12 @@ const FlipCard = forwardRef<HTMLDivElement, FlipCardProps>(
     // Handle window resize to set isMobile
     useEffect(() => {
       const handleResize = () => setIsMobile(window.innerWidth <= 768)
-      handleResize()
-      window.addEventListener('resize', handleResize)
-      return () => window.removeEventListener('resize', handleResize)
+      // Only run on client side
+      if (typeof window !== 'undefined') {
+        handleResize()
+        window.addEventListener('resize', handleResize)
+        return () => window.removeEventListener('resize', handleResize)
+      }
     }, [])
 
     // Derived variables to handle data structures
@@ -247,7 +249,7 @@ const FlipCard = forwardRef<HTMLDivElement, FlipCardProps>(
     }
 
     // Animate the image scaling on flip
-    useLayoutEffect(() => {
+    useEffect(() => {
       if (!isMobile) {
         anime({
           targets: imgRef.current,

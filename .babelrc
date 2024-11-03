@@ -1,8 +1,0 @@
-{
-  "presets": ["next/babel"],
-  "plugins": [
-    ["transform-remove-console", { "exclude": ["error", "warn"] }],
-    "@babel/plugin-proposal-class-properties",
-    "@babel/plugin-proposal-object-rest-spread"
-  ]
-} 

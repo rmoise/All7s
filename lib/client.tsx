@@ -1,16 +1,17 @@
-import { createClient, QueryParams } from '@sanity/client';
-import imageUrlBuilder from '@sanity/image-url';
+import { createClient as createSanityClient } from 'next-sanity'
+import imageUrlBuilder from '@sanity/image-url'
+import type { QueryParams } from '@sanity/client'
 
 // Get environment variables
-const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID;
-const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET;
-const token = process.env.SANITY_API_READ_TOKEN;
-const apiVersion = '2024-03-13';
+const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID
+const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET
+const token = process.env.SANITY_API_READ_TOKEN
+const apiVersion = '2024-03-13'
 
 // Validate configuration
-if (!projectId) throw new Error('Missing NEXT_PUBLIC_SANITY_PROJECT_ID');
-if (!dataset) throw new Error('Missing NEXT_PUBLIC_SANITY_DATASET');
-if (!token) throw new Error('Missing SANITY_API_READ_TOKEN');
+if (!projectId) throw new Error('Missing NEXT_PUBLIC_SANITY_PROJECT_ID')
+if (!dataset) throw new Error('Missing NEXT_PUBLIC_SANITY_DATASET')
+if (!token) throw new Error('Missing SANITY_API_READ_TOKEN')
 
 // Base configuration
 const config = {
@@ -19,33 +20,24 @@ const config = {
   apiVersion,
   useCdn: false,
   token,
-  withCredentials: false,
-  cors: true,
-  headers: {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept',
-  }
-};
+  perspective: 'published',
+} as const
 
 // Create clients
-export const client = createClient({
-  ...config,
-  perspective: 'published',
-});
+export const client = createSanityClient(config)
 
-export const previewClient = createClient({
+export const previewClient = createSanityClient({
   ...config,
   perspective: 'previewDrafts',
-});
+})
 
 // Helper function to get the appropriate client
 export const getClient = (usePreview = false) =>
-  usePreview ? previewClient : client;
+  usePreview ? previewClient : client
 
 // Initialize image builder
-const builder = imageUrlBuilder(client);
-export const urlFor = (source: any) => builder.image(source);
+const builder = imageUrlBuilder(client)
+export const urlFor = (source: any) => builder.image(source)
 
 // Add safeFetch function with retry logic and proper typing
 export async function safeFetch<T>(

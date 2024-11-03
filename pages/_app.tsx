@@ -9,10 +9,13 @@ import SEO from '../components/common/SEO';
 import { NavbarProvider } from '../context/NavbarContext';
 import { AudioProvider } from '../context/AudioContext';
 import { YouTubeAPIProvider } from '../components/media/YouTubeAPIProvider';
-import { config } from '@fortawesome/fontawesome-svg-core';
+import * as FontAwesome from '@fortawesome/fontawesome-svg-core';
 import '@fortawesome/fontawesome-svg-core/styles.css';
+import { faUser, faShoppingCart } from '@fortawesome/free-solid-svg-icons';
 import { SanityLive } from '@lib/live';
-config.autoAddCss = false;
+
+FontAwesome.config.autoAddCss = false;
+FontAwesome.library.add(faUser, faShoppingCart);
 
 interface SiteSettings {
   seo?: {

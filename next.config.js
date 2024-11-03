@@ -17,11 +17,12 @@ const nextConfig = {
     NEXT_PUBLIC_NETLIFY: process.env.NEXT_PUBLIC_NETLIFY || process.env.NETLIFY || 'false',
     NEXT_PUBLIC_SANITY_STUDIO_URL: process.env.NEXT_PUBLIC_SANITY_STUDIO_URL || 'http://localhost:3333',
     SANITY_API_READ_TOKEN: process.env.SANITY_API_READ_TOKEN,
+    SANITY_STUDIO_PATH: 'fresh_sanity_studio',
   },
 
   images: {
     unoptimized: process.env.NODE_ENV === 'development',
-    domains: ['i.scdn.co', 'cdn.sanity.io', 'i1.sndcdn.com'],
+    domains: ['cdn.sanity.io'],
     formats: ['image/avif', 'image/webp'],
   },
 
@@ -105,20 +106,25 @@ const nextConfig = {
     return config;
   },
 
+  async redirects() {
+    return []
+  },
+
   async rewrites() {
-    return [
-      {
-        source: '/studio/:path*',
-        destination: process.env.NODE_ENV === 'development'
-          ? 'http://localhost:3333/:path*'
-          : 'https://all7z.sanity.studio/:path*',
-      },
-    ]
+    return []
   },
 
   experimental: {
-    optimizeCss: true,
+    optimizeCss: false,
     optimizePackageImports: ['@sanity/ui', '@headlessui/react', 'lodash'],
+    serverActions: {
+      allowedOrigins: ['localhost:3000'],
+      bodySizeLimit: '2mb',
+    },
+  },
+
+  compiler: {
+    styledComponents: true,
   },
 };
 
