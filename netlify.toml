@@ -1,7 +1,7 @@
 [build]
-  command = "npm run studio:build && npm run build"
+  command = "npm run build"
   publish = ".next"
-  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF . ../fresh_sanity_studio/"
+  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF ."
 
 # Production-specific settings
 [context.production]
@@ -85,3 +85,26 @@
   NEXT_PUBLIC_NETLIFY = "true"
   NEXT_PUBLIC_SANITY_STUDIO_URL = "https://all7z.sanity.studio"
   SANITY_STUDIO_PATH = "fresh_sanity_studio"
+
+# Add cache clearing
+[build.environment]
+  NETLIFY_NEXT_PLUGIN_SKIP = "true"
+  NODE_VERSION = "18"
+
+# Add this section to clear cache
+[build.processing]
+  skip_processing = false
+
+[build.processing.css]
+  bundle = true
+  minify = true
+
+[build.processing.js]
+  bundle = true
+  minify = true
+
+[build.processing.html]
+  pretty_urls = true
+
+[build.processing.images]
+  compress = true

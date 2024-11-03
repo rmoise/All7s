@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "clean": "rm -rf .next fresh_sanity_studio/dist",
+    "clean": "rimraf .next fresh_sanity_studio/dist .netlify/cache",
     "dev": "next dev",
     "dev:staging": "env-cmd -f .env.staging next dev",
     "build": "npm run clean && npm run fresh-studio:build && next build",
@@ -14,7 +14,7 @@
     "build:production": "env-cmd -f .env.production next build",
     "start:production": "env-cmd -f .env.production next start",
     "fresh-studio:dev": "cd fresh_sanity_studio && npm run dev",
-    "fresh-studio:build": "cd fresh_sanity_studio && npm run build",
+    "fresh-studio:build": "cd fresh_sanity_studio && npm install && npm run build",
     "fresh-studio:deploy": "cd fresh_sanity_studio && npm run deploy",
     "type-check": "tsc --noEmit",
     "type-check:watch": "tsc --noEmit --watch"
