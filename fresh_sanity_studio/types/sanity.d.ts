@@ -102,9 +102,11 @@ declare module 'sanity' {
   export interface SanityConfig {
     name: string
     title: string
+    basePath?: string
     projectId: string
     dataset: string
     plugins: any[]
+    icon?: React.ComponentType<any>
     schema: {
       types: any[]
     }
@@ -127,7 +129,15 @@ declare module 'sanity' {
     env?: Record<string, string | undefined>
   }
 
-  export function defineConfig(config: SanityConfig): SanityConfig
+  export function defineConfig(config: SanityConfig | SanityConfig[]): any
+
+  export interface SchemaTypeDefinition {
+    name: string;
+    title?: string;
+    type: string;
+    fields?: any[];
+    preview?: any;
+  }
 }
 
 declare module 'sanity/desk' {
@@ -136,8 +146,15 @@ declare module 'sanity/desk' {
     listItem: () => ListItemBuilder
     documentTypeList: (type: string) => ListBuilder
     documentTypeListItems: () => ListItemBuilder[]
-    document: () => DocumentBuilder
+    document: () => DocumentBuilder & {
+      views: (views: any[]) => DocumentBuilder
+    }
     editor: () => EditorBuilder
+    view: {
+      form: () => any
+      component: (component: any) => any
+    }
+    divider: () => any
   }
 
   interface ListBuilder {
@@ -159,6 +176,8 @@ declare module 'sanity/desk' {
     schemaType: (type: string) => DocumentBuilder
     documentId: (id: string) => DocumentBuilder
     title: (title: string) => DocumentBuilder
+    views: (views: any[]) => DocumentBuilder
+    child?: (child: any) => DocumentBuilder
   }
 
   interface EditorBuilder {
@@ -175,6 +194,13 @@ declare module 'sanity/desk' {
     name: string
     [key: string]: any
   }
+
+  export type DefaultDocumentNodeResolver = (
+    S: StructureBuilder,
+    context: { schemaType: string }
+  ) => DocumentBuilder;
+
+  export const defaultDocumentNode: DefaultDocumentNodeResolver;
 }
 
 declare module 'sanity-plugin-media' {
