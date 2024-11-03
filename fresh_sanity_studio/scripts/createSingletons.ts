@@ -1,8 +1,6 @@
-import { createClient } from '@sanity/client'
-import dotenv from 'dotenv'
-
-// Load environment variables from .env file
-dotenv.config()
+// @ts-check
+const { createClient } = require('@sanity/client')
+require('dotenv').config()
 
 const token = process.env.SANITY_STUDIO_API_TOKEN
 console.log('Token present:', !!token)
@@ -13,7 +11,7 @@ if (!token) {
 }
 
 const client = createClient({
-  projectId: '1gxdk71x', // Your project ID from sanity.config.ts
+  projectId: '1gxdk71x',
   dataset: 'staging',
   token: token,
   useCdn: false,

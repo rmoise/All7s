@@ -12,7 +12,7 @@ import Newsletter from '../components/common/Newsletter';
 import HeroBanner from '../components/home/HeroBanner';
 import Script from 'next/script';
 import { GetServerSideProps } from 'next';
-import { safeFetch, getServerClient, urlFor } from '../lib/sanityClient.server';
+import { safeFetch, getServerClient, urlFor } from '@lib/server';
 
 
 // Existing interfaces

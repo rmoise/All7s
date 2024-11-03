@@ -8,7 +8,7 @@ import { useRouter } from 'next/router';
 import Cart from '../shop/Cart';
 import { useStateContext } from '../../context/StateContext';
 import { useNavbar } from '../../context/NavbarContext';
-import { urlFor } from '../../lib/client';
+import { client, urlFor } from '@lib/client';
 
 // Define TypeScript interfaces
 export interface NavigationLink {

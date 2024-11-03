@@ -2,10 +2,30 @@
 
 import { defineType, defineField, defineArrayMember } from 'sanity';
 
-export default defineType({
+interface PreviewSelection {
+  title?: string
+}
+
+interface HomeSchema {
+  name: string
+  title: string
+  type: 'document'
+  __experimental_actions: Array<'update' | 'publish'>
+  fields: any[]
+  preview: {
+    select: {
+      title: string
+    }
+    prepare(selection: PreviewSelection): { title: string }
+  }
+  views?: any[]
+}
+
+const home = defineType({
   name: 'home',
   title: 'Home',
   type: 'document',
+  __experimental_actions: ['update', 'publish'],
   fields: [
     defineField({
       name: 'title',
@@ -38,26 +58,27 @@ export default defineType({
       name: 'contentBlocks',
       title: 'Content Blocks',
       type: 'array',
-      validation: Rule => Rule.required(),
       of: [
-        defineArrayMember({ type: 'heroBanner' }),
-        defineArrayMember({ type: 'splash' }),
-        defineArrayMember({ type: 'about' }),
-        defineArrayMember({ type: 'musicBlock' }),
-        defineArrayMember({ type: 'videoBlock' }),
-        defineArrayMember({ type: 'backgroundVideoBlock' }),
-        defineArrayMember({ type: 'newsletter' })
-      ],
+        { type: 'splash' },
+        { type: 'about' },
+        { type: 'musicBlock' },
+        { type: 'videoBlock' },
+        { type: 'backgroundVideoBlock' },
+        { type: 'newsletter' },
+        { type: 'heroBanner' },
+      ].map(type => defineArrayMember(type)),
     }),
   ],
   preview: {
     select: {
-      title: 'title',
+      title: 'title'
     },
-    prepare({ title }) {
+    prepare(selection: PreviewSelection) {
       return {
-        title: title || 'Home',
+        title: selection.title || 'Home'
       }
-    },
-  },
-})
+    }
+  }
+} as HomeSchema)
+
+export default home;

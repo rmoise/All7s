@@ -1,7 +1,7 @@
 import { HomeIcon, CogIcon, DocumentsIcon, ColorWheelIcon, ArchiveIcon } from '@sanity/icons'
 import { FaMusic } from 'react-icons/fa'
 import { MdPerson, MdArticle } from 'react-icons/md'
-import type { StructureBuilder } from 'sanity/desk'
+import type { StructureBuilder, DefaultDocumentNodeResolver } from 'sanity/desk'
 import { Iframe } from 'sanity-plugin-iframe-pane'
 
 const getPreviewUrl = (doc: any) => {
@@ -23,37 +23,64 @@ const getPreviewUrl = (doc: any) => {
   }
 }
 
+// Helper function for singleton items
+const singletonListItem = (
+  S: StructureBuilder,
+  typeName: string,
+  title: string,
+  icon: any,
+  preview = false
+) => {
+  const documentNode = S.document()
+    .schemaType(typeName)
+    .documentId(`singleton-${typeName}`)
+
+  if (preview) {
+    return S.listItem()
+      .title(title)
+      .icon(icon)
+      .child(
+        documentNode.views([
+          S.view.form(),
+          S.view
+            .component(Iframe)
+            .title('Preview')
+            .options({
+              url: (doc: any) => getPreviewUrl(doc)
+            })
+        ])
+      )
+  }
+
+  return S.listItem()
+    .title(title)
+    .icon(icon)
+    .child(documentNode)
+}
+
+export const getDefaultDocumentNode: DefaultDocumentNodeResolver = (S, { schemaType }) => {
+  // Only show preview pane on 'home' document
+  if (schemaType === 'home') {
+    return S.document().views([
+      S.view.form(),
+      S.view
+        .component(Iframe)
+        .title('Preview')
+        .options({
+          url: (doc: any) => getPreviewUrl(doc),
+        })
+    ])
+  }
+  return S.document()
+}
+
 export const structure = (S: StructureBuilder) =>
   S.list()
     .title('Content')
     .items([
-      // Singleton items
-      S.listItem()
-        .title('Home')
-        .icon(HomeIcon)
-        .child(
-          S.document()
-            .schemaType('home')
-            .documentId('singleton-home')
-            .views([
-              S.view.form(),
-              S.view
-                .component(Iframe)
-                .title('Preview')
-                .options({
-                  url: (doc: any) => getPreviewUrl(doc)
-                })
-            ])
-        ),
-
-      S.listItem()
-        .title('Settings')
-        .icon(CogIcon)
-        .child(
-          S.document()
-            .schemaType('settings')
-            .documentId('singleton-settings')
-        ),
+      // Singleton items using helper
+      singletonListItem(S, 'home', 'Home', HomeIcon, true),
+      singletonListItem(S, 'settings', 'Settings', CogIcon),
 
       // Divider
       S.divider(),

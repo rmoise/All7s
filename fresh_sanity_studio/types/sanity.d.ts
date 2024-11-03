@@ -109,9 +109,10 @@ declare module 'sanity' {
     icon?: React.ComponentType<any>
     schema: {
       types: any[]
+      templates?: (prev: any[]) => any[]
     }
     document?: {
-      actions?: (prev: any[]) => any[]
+      actions?: (input: any[], context: { schemaType: string }) => any[]
     }
     form?: {
       file?: {
@@ -131,13 +132,46 @@ declare module 'sanity' {
 
   export function defineConfig(config: SanityConfig | SanityConfig[]): any
 
-  export interface SchemaTypeDefinition {
-    name: string;
-    title?: string;
-    type: string;
-    fields?: any[];
-    preview?: any;
+  export type ExperimentalAction = 'create' | 'update' | 'delete' | 'publish'
+
+  export interface BaseSchemaDefinition {
+    name: string
+    title?: string
+    type: string
+    __experimental_actions?: ExperimentalAction[]
+    [key: string]: any
   }
+
+  export interface PrepareViewOptions {
+    [key: string]: any
+  }
+
+  export interface PreviewValue {
+    title?: string
+    subtitle?: string
+    media?: any
+  }
+
+  export interface PreviewConfig<TSelect extends Record<string, string>> {
+    select: TSelect
+    prepare: (
+      value: { [K in keyof TSelect]: any },
+      viewOptions?: PrepareViewOptions
+    ) => PreviewValue
+  }
+
+  export interface DocumentDefinition extends BaseSchemaDefinition {
+    name: string
+    title?: string
+    type: 'document'
+    __experimental_actions?: ExperimentalAction[]
+    fields?: any[]
+    preview?: PreviewConfig<Record<string, string>>
+  }
+
+  export function defineType<T extends DocumentDefinition>(schema: T): T
+  export function defineField<T extends BaseSchemaDefinition>(field: T): T
+  export function defineArrayMember<T extends BaseSchemaDefinition>(member: T): T
 }
 
 declare module 'sanity/desk' {

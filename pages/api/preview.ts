@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { client } from '../../lib/client';
+import { client } from '@lib/client';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   // Enable Preview Mode

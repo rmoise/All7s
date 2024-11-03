@@ -1,6 +1,6 @@
 import { Contact } from "../components/Contact";
 import CustomP5Canvas from "../components/media/CustomP5Canvas";
-import { client } from '../lib/client';
+import { client } from '@lib/client';
 import SEO from '../components/common/SEO';
 import { useEffect, useState } from 'react';
 

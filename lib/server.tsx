@@ -1,5 +1,6 @@
-import { createClient, ClientConfig, QueryParams } from '@sanity/client';
+import { createClient } from 'next-sanity';
 import imageUrlBuilder from '@sanity/image-url';
+import type { ClientConfig, QueryParams } from 'next-sanity';
 
 // Environment variables
 const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID;

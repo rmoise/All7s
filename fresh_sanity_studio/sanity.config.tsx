@@ -10,6 +10,10 @@ import { structure } from './deskStructure'
 import schemaTypes from './schemas/schema'
 import type { AssetSource, SchemaTypeDefinition } from '@sanity/types'
 
+// Define singleton actions and types
+const singletonActions = new Set(['publish', 'discardChanges', 'restore'])
+const singletonTypes = new Set(['home', 'settings'])
+
 const projectId = process.env.SANITY_STUDIO_PROJECT_ID || '1gxdk71x'
 
 // Define base plugins
@@ -27,6 +31,20 @@ const baseConfig = {
   projectId,
   schema: {
     types: schemaTypes as SchemaTypeDefinition[],
+    // Filter out singleton types from "New document" menu
+    templates: (templates: any) =>
+      templates.filter(({ schemaType }: { schemaType: string }) =>
+        !singletonTypes.has(schemaType)
+      ),
+  },
+  document: {
+    // Filter actions for singleton types
+    actions: (input: any, context: any) =>
+      singletonTypes.has(context.schemaType)
+        ? input.filter(({ action }: { action: string }) =>
+            action && singletonActions.has(action)
+          )
+        : input,
   },
   form: {
     file: {

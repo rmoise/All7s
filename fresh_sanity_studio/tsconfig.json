@@ -23,6 +23,8 @@
     "./plugins/**/*.tsx",
     "./schemas/**/*.ts",
     "./schemas/**/*.tsx",
+    "./lib/**/*.ts",
+    "./lib/**/*.tsx",
     "./deskStructure.tsx",
     "./sanity.config.tsx",
     "./sanity.cli.ts"

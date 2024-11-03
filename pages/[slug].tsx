@@ -1,6 +1,6 @@
 import React from 'react';
 import { GetStaticProps, GetStaticPaths } from 'next';
-import { safeFetch, getClient } from '@lib/client';
+import { safeFetch } from '@lib/server';
 import { SanityDocument } from '@sanity/types';
 import { PreviewProvider } from '@lib/live';
 

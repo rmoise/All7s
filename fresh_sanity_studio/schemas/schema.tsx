@@ -1,5 +1,5 @@
 // schemas/schema.ts
-import type { SchemaTypeDefinition } from 'sanity'
+import type { BaseSchemaDefinition } from 'sanity'
 
 // Import your schema types
 import blockContent from './objects/blockContent'
@@ -32,7 +32,7 @@ import backgroundVideoBlock from './objects/backgroundVideoBlock'
 import contentBlock from './objects/contentBlock'
 import splash from './objects/splash'
 
-const schemaTypes: SchemaTypeDefinition[] = [
+const schemaTypes: BaseSchemaDefinition[] = [
   // Document types
   post,
   author,
