@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "dev:staging": "env-cmd -f .env.staging next dev",
-    "build": "next build",
+    "build": "npm run studio:build && next build",
     "start": "next start",
     "lint": "next lint",
     "build:staging": "env-cmd -f .env.staging next build",
@@ -13,7 +13,7 @@
     "build:production": "env-cmd -f .env.production next build",
     "start:production": "env-cmd -f .env.production next start",
     "studio:dev": "cd fresh_sanity_studio && sanity dev",
-    "studio:build": "cd fresh_sanity_studio && sanity build",
+    "studio:build": "cd fresh_sanity_studio && npm run build",
     "studio:deploy": "cd fresh_sanity_studio && sanity deploy",
     "type-check": "tsc --noEmit",
     "type-check:watch": "tsc --noEmit --watch"
@@ -30,8 +30,10 @@
     "@portabletext/react": "^3.1.0",
     "@sanity/client": "^6.22.1",
     "@sanity/color-input": "^4.0.1",
+    "@sanity/desk-tool": "^2.36.2",
     "@sanity/icons": "^3.4.0",
     "@sanity/image-url": "^1.1.0",
+    "@sanity/types": "^3.62.3",
     "@sanity/ui": "^2.8.13",
     "@sanity/vision": "^3.62.3",
     "@sanity/visual-editing": "^2.4.2",

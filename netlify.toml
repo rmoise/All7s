@@ -1,5 +1,5 @@
 [build]
-  command = "npm run build"
+  command = "npm run studio:build && npm run build"
   publish = ".next"
   ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF . ../fresh_sanity_studio/"
 

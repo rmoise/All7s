@@ -1,4 +1,5 @@
 packages:
+  - '.'
   - 'fresh_sanity_studio'
   - 'fresh_sanity_studio/staging'
   - 'fresh_sanity_studio/production' 
