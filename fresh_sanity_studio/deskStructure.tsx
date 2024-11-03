@@ -2,6 +2,26 @@ import { HomeIcon, CogIcon, DocumentsIcon, ColorWheelIcon, ArchiveIcon } from '@
 import { FaMusic } from 'react-icons/fa'
 import { MdPerson, MdArticle } from 'react-icons/md'
 import type { StructureBuilder } from 'sanity/desk'
+import { Iframe } from 'sanity-plugin-iframe-pane'
+
+const getPreviewUrl = (doc: any) => {
+  if (!doc) return ''
+
+  const baseUrl = window.location.hostname === 'localhost'
+    ? 'http://localhost:3000'
+    : 'https://your-production-url.com'
+
+  switch (doc._type) {
+    case 'home':
+      return `${baseUrl}/api/preview?type=home`
+    case 'post':
+      return `${baseUrl}/api/preview?type=post&slug=${doc?.slug?.current}`
+    case 'page':
+      return `${baseUrl}/api/preview?type=page&slug=${doc?.slug?.current}`
+    default:
+      return `${baseUrl}/api/preview`
+  }
+}
 
 export const structure = (S: StructureBuilder) =>
   S.list()
@@ -15,6 +35,15 @@ export const structure = (S: StructureBuilder) =>
           S.document()
             .schemaType('home')
             .documentId('singleton-home')
+            .views([
+              S.view.form(),
+              S.view
+                .component(Iframe)
+                .title('Preview')
+                .options({
+                  url: (doc: any) => getPreviewUrl(doc)
+                })
+            ])
         ),
 
       S.listItem()

@@ -12,17 +12,19 @@ import type { AssetSource, SchemaTypeDefinition } from '@sanity/types'
 
 const projectId = process.env.SANITY_STUDIO_PROJECT_ID || '1gxdk71x'
 
+// Define base plugins
+const basePlugins = [
+  deskTool({
+    structure,
+    defaultDocumentNode
+  }),
+  colorInput(),
+  imageHotspotArrayPlugin(),
+  media(),
+]
+
 const baseConfig = {
   projectId,
-  plugins: [
-    deskTool({
-      structure,
-      defaultDocumentNode
-    }),
-    colorInput(),
-    imageHotspotArrayPlugin(),
-    media(),
-  ],
   schema: {
     types: schemaTypes as SchemaTypeDefinition[],
   },
@@ -38,6 +40,12 @@ const baseConfig = {
   }
 }
 
+// Create production plugins based on environment
+const productionPlugins = [...basePlugins]
+if (process.env.NODE_ENV === 'development') {
+  productionPlugins.push(visionTool())
+}
+
 export default defineConfig([
   {
     ...baseConfig,
@@ -46,10 +54,7 @@ export default defineConfig([
     basePath: '/production',
     dataset: 'production',
     icon: RocketIcon,
-    plugins: [
-      ...baseConfig.plugins,
-      process.env.NODE_ENV === 'development' && visionTool()
-    ].filter(Boolean)
+    plugins: productionPlugins
   },
   {
     ...baseConfig,
@@ -59,7 +64,7 @@ export default defineConfig([
     dataset: 'staging',
     icon: RobotIcon,
     plugins: [
-      ...baseConfig.plugins,
+      ...basePlugins,
       visionTool()
     ]
   }
