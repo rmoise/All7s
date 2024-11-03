@@ -11,8 +11,8 @@ if (!token) {
 }
 
 const client = createClient({
-  projectId: '1gxdk71x',
-  dataset: 'staging',
+  projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || '1gxdk71x',
+  dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || 'production',
   token: token,
   useCdn: false,
   apiVersion: '2024-03-13',

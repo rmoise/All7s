@@ -24,8 +24,6 @@ dist
 .env.production.notes
 .notes
 
-src/lib/sanity/live.tsx
-
 # Build directories
 .sanity
 fresh_sanity_studio/dist

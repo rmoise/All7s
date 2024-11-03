@@ -11,8 +11,8 @@ const __dirname = dirname(__filename)
 dotenv.config({ path: path.resolve(__dirname, '../.env') })
 
 const client = createClient({
-  projectId: '1gxdk71x',
-  dataset: process.env.SANITY_STUDIO_DATASET || 'production',
+  projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || '1gxdk71x',
+  dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || 'production',
   apiVersion: '2024-03-19',
   useCdn: false,
   token: process.env.SANITY_STUDIO_API_TOKEN

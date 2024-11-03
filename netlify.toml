@@ -24,6 +24,7 @@
     NEXT_PUBLIC_SANITY_PROJECT_ID = "1gxdk71x"
     NEXT_PUBLIC_NETLIFY = "true"
     NEXT_PUBLIC_SANITY_STUDIO_URL = "https://all7z.sanity.studio"
+    NEXT_PUBLIC_SITE_URL = "https://all7z.com"
 
 # Staging-specific settings
 [context.staging]
@@ -35,6 +36,7 @@
     NEXT_PUBLIC_SANITY_PROJECT_ID = "1gxdk71x"
     NEXT_PUBLIC_NETLIFY = "true"
     NEXT_PUBLIC_SANITY_STUDIO_URL = "https://all7z.sanity.studio"
+    NEXT_PUBLIC_SITE_URL = "https://staging.all7z.com"
 
 # Deploy previews
 [context.deploy-preview]
@@ -42,6 +44,7 @@
   publish = ".next"
   [context.deploy-preview.environment]
     NEXT_PUBLIC_SANITY_STUDIO_URL = "https://deploy-preview-${REVIEW_ID}--stak-app.netlify.app/studio"
+    NEXT_PUBLIC_SITE_URL = "https://deploy-preview-${REVIEW_ID}--stak-app.netlify.app"
 
 # Branch deploys
 [context.branch-deploy]
@@ -49,6 +52,7 @@
   publish = ".next"
   [context.branch-deploy.environment]
     NEXT_PUBLIC_SANITY_STUDIO_URL = "https://branch-${BRANCH}--stak-app.netlify.app/studio"
+    NEXT_PUBLIC_SITE_URL = "https://branch-${BRANCH}--stak-app.netlify.app"
 
 # Processing and optimization
 [build.processing]

@@ -1,7 +1,7 @@
 // pages/index.tsx
 import React from 'react';
 import PropTypes from 'prop-types';
-import { client } from '@lib/client'; // Correct import path
+import { getServerClient } from '@lib/server'; // Updated import
 import SEO from '../components/common/SEO';
 import Splash from '../components/home/Splash';
 import About from '../components/home/About';
@@ -12,7 +12,7 @@ import Newsletter from '../components/common/Newsletter';
 import HeroBanner from '../components/home/HeroBanner';
 import Script from 'next/script';
 import { GetServerSideProps } from 'next';
-import { safeFetch, getServerClient, urlFor } from '@lib/server';
+import { safeFetch, urlFor } from '@lib/server';
 
 
 // Existing interfaces
@@ -178,7 +178,7 @@ const Home = ({ contentBlocks, metaTitle, metaDescription, siteSettings, preview
           faviconUrl={siteSettings?.favicon?.asset?.url || '/favicon.ico'}
           openGraphImageUrl={siteSettings?.seo?.openGraphImage?.asset?.url}
           siteName={siteSettings?.title}
-          canonicalUrl="https://yourdomain.com" // Optional: Set your canonical URL
+          canonicalUrl={process.env.NEXT_PUBLIC_SITE_URL} // Dynamic canonical URL
         />
       )}
       {contentBlocks.map((block: BlockType, index: number) => {
