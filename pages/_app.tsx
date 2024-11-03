@@ -67,7 +67,7 @@ function MyApp({ Component, pageProps }: ExtendedAppProps) {
         faviconUrl={siteSettings?.favicon?.asset?.url || '/favicon.ico'}
         openGraphImageUrl={siteSettings?.seo?.openGraphImage?.asset?.url}
         siteName={siteSettings?.title}
-        canonicalUrl={pageProps.canonicalUrl || process.env.NEXT_PUBLIC_SITE_URL}
+        canonicalUrl={pageProps.canonicalUrl || process.env.NEXT_PUBLIC_SITE_URL || 'https://all7z.com'}
       />
 
       <StateContext>
