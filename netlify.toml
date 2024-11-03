@@ -3,6 +3,17 @@
   publish = ".next"
   ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF ."
 
+[build.environment]
+  NETLIFY = "true"
+  NEXT_PUBLIC_NETLIFY = "true"
+  NEXT_PUBLIC_SANITY_STUDIO_URL = "https://all7z.sanity.studio"
+  SANITY_STUDIO_PATH = "fresh_sanity_studio"
+  NETLIFY_NEXT_PLUGIN_SKIP = "true"
+  NODE_VERSION = "18"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
 # Production-specific settings
 [context.production]
   command = "npm run build"
@@ -13,7 +24,6 @@
     NEXT_PUBLIC_SANITY_PROJECT_ID = "1gxdk71x"
     NEXT_PUBLIC_NETLIFY = "true"
     NEXT_PUBLIC_SANITY_STUDIO_URL = "https://all7z.sanity.studio"
-    # Removed SANITY_TOKEN
 
 # Staging-specific settings
 [context.staging]
@@ -25,73 +35,22 @@
     NEXT_PUBLIC_SANITY_PROJECT_ID = "1gxdk71x"
     NEXT_PUBLIC_NETLIFY = "true"
     NEXT_PUBLIC_SANITY_STUDIO_URL = "https://all7z.sanity.studio"
-    # Removed SANITY_TOKEN
 
-# Deploy previews (pull request builds)
+# Deploy previews
 [context.deploy-preview]
   command = "npm run build"
   publish = ".next"
   [context.deploy-preview.environment]
     NEXT_PUBLIC_SANITY_STUDIO_URL = "https://deploy-preview-${REVIEW_ID}--stak-app.netlify.app/studio"
 
-# Branch-specific deploy settings
+# Branch deploys
 [context.branch-deploy]
   command = "npm run build"
   publish = ".next"
   [context.branch-deploy.environment]
     NEXT_PUBLIC_SANITY_STUDIO_URL = "https://branch-${BRANCH}--stak-app.netlify.app/studio"
 
-# Redirects
-[[redirects]]
-  from = "/api/music-metadata"
-  to = "/.netlify/functions/music-metadata"
-  status = 200
-  force = true
-
-# Functions configuration
-[functions]
-  directory = "netlify/functions"
-  node_bundler = "esbuild"
-
-[functions.extract-album-durations]
-  included_files = ["lib/extractDurations.js"]
-
-[functions.music-metadata]
-  included_files = ["lib/spotify.js"]
-
-[functions.fetchBatchSpotifyMetadata]
-  included_files = ["lib/spotify.js"]
-
-[[plugins]]
-  package = "@netlify/plugin-nextjs"
-
-[dev]
-  command = "npm run dev"
-  targetPort = 3000
-  port = 8888
-  publish = ".next"
-  framework = "next"
-  autoLaunch = true
-
-[dev.environment]
-  NEXT_PUBLIC_NETLIFY = "true"
-  SPOTIFY_CLIENT_ID = "env(SPOTIFY_CLIENT_ID)"
-  SPOTIFY_CLIENT_SECRET = "env(SPOTIFY_CLIENT_SECRET)"
-  SANITY_STUDIO_PATH = "fresh_sanity_studio"
-  NEXT_PUBLIC_SANITY_STUDIO_URL = "https://all7z.sanity.studio"
-
-[build.environment]
-  NETLIFY = "true"
-  NEXT_PUBLIC_NETLIFY = "true"
-  NEXT_PUBLIC_SANITY_STUDIO_URL = "https://all7z.sanity.studio"
-  SANITY_STUDIO_PATH = "fresh_sanity_studio"
-
-# Add cache clearing
-[build.environment]
-  NETLIFY_NEXT_PLUGIN_SKIP = "true"
-  NODE_VERSION = "18"
-
-# Add this section to clear cache
+# Processing and optimization
 [build.processing]
   skip_processing = false
 
@@ -108,3 +67,40 @@
 
 [build.processing.images]
   compress = true
+
+# Functions configuration
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+[functions.extract-album-durations]
+  included_files = ["lib/extractDurations.js"]
+
+[functions.music-metadata]
+  included_files = ["lib/spotify.js"]
+
+[functions.fetchBatchSpotifyMetadata]
+  included_files = ["lib/spotify.js"]
+
+# Redirects
+[[redirects]]
+  from = "/api/music-metadata"
+  to = "/.netlify/functions/music-metadata"
+  status = 200
+  force = true
+
+# Development settings
+[dev]
+  command = "npm run dev"
+  targetPort = 3000
+  port = 8888
+  publish = ".next"
+  framework = "next"
+  autoLaunch = true
+
+[dev.environment]
+  NEXT_PUBLIC_NETLIFY = "true"
+  SPOTIFY_CLIENT_ID = "env(SPOTIFY_CLIENT_ID)"
+  SPOTIFY_CLIENT_SECRET = "env(SPOTIFY_CLIENT_SECRET)"
+  SANITY_STUDIO_PATH = "fresh_sanity_studio"
+  NEXT_PUBLIC_SANITY_STUDIO_URL = "https://all7z.sanity.studio"
