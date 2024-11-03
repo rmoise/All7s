@@ -4,8 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "dev:staging": "env-cmd -f .env.staging next dev",
-    "build": "NEXT_TELEMETRY_DISABLED=1 npm run studio:build && next build",
+    "build": "npm run studio:build && next build",
+    "build:staging": "env-cmd -f .env.staging npm run build",
+    "build:production": "env-cmd -f .env.production npm run build",
     "start": "next start",
     "lint": "next lint",
     "build:staging": "env-cmd -f .env.staging next build",

@@ -6,15 +6,26 @@
 [build.environment]
   NETLIFY_NEXT_PLUGIN_SKIP = "false"
   NODE_VERSION = "18"
-  NEXT_PUBLIC_SANITY_PROJECT_ID = "1gxdk71x"
-  NEXT_PUBLIC_SANITY_DATASET = "production"
-  NEXT_PUBLIC_SANITY_API_VERSION = "2024-03-13"
-  NEXT_TELEMETRY_DISABLED = "1"
-  NODE_OPTIONS = "--max_old_space_size=4096"
 
-[functions]
-  node_bundler = "esbuild"
-  external_node_modules = ["sharp"]
+# Staging-specific settings
+[context.staging]
+  command = "npm run build:staging"
+  [context.staging.environment]
+    NEXT_PUBLIC_ENVIRONMENT = "staging"
+    NEXT_PUBLIC_SANITY_DATASET = "staging"
+    NEXT_PUBLIC_SANITY_PROJECT_ID = "1gxdk71x"
+    NEXT_PUBLIC_NETLIFY = "true"
+    NODE_ENV = "development"
+
+# Production-specific settings
+[context.production]
+  command = "npm run build:production"
+  [context.production.environment]
+    NEXT_PUBLIC_ENVIRONMENT = "production"
+    NEXT_PUBLIC_SANITY_DATASET = "production"
+    NEXT_PUBLIC_SANITY_PROJECT_ID = "1gxdk71x"
+    NEXT_PUBLIC_NETLIFY = "true"
+    NODE_ENV = "production"
 
 [[plugins]]
 package = "@netlify/plugin-nextjs"
@@ -35,5 +46,5 @@ package = "@netlify/plugin-nextjs"
 
 [[redirects]]
   from = "/*"
-  to = "/.netlify/functions/server"
+  to = "/.netlify/functions/next"
   status = 200
