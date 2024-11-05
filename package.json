@@ -17,12 +17,16 @@
     "fresh-studio:build": "cd fresh_sanity_studio && npm install && npm run build",
     "fresh-studio:deploy": "cd fresh_sanity_studio && npm run deploy",
     "type-check": "tsc --noEmit",
-    "type-check:watch": "tsc --noEmit --watch"
+    "type-check:watch": "tsc --noEmit --watch",
+    "dev:all:staging": "concurrently \"npm run dev:staging\" \"npm run fresh-studio:dev:staging\"",
+    "fresh-studio:dev:staging": "cd fresh_sanity_studio && SANITY_STUDIO_DATASET=staging npm run dev:staging"
   },
   "dependencies": {
     "@eslint/config-array": "^0.18.0",
     "@eslint/object-schema": "^2.1.4",
     "@fortawesome/fontawesome-svg-core": "^6.6.0",
+    "@fortawesome/free-brands-svg-icons": "^6.6.0",
+    "@fortawesome/free-regular-svg-icons": "^6.6.0",
     "@fortawesome/free-solid-svg-icons": "^6.6.0",
     "@fortawesome/react-fontawesome": "^0.2.2",
     "@headlessui/react": "^2.1.9",
@@ -30,7 +34,6 @@
     "@jridgewell/gen-mapping": "^0.3.5",
     "@portabletext/react": "^3.1.0",
     "@sanity/client": "^6.22.1",
-    "@sanity/color-input": "^4.0.1",
     "@sanity/icons": "^3.4.0",
     "@sanity/image-url": "^1.1.0",
     "@sanity/types": "^3.62.3",
@@ -95,6 +98,7 @@
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
     "autoprefixer": "^10.4.20",
+    "concurrently": "^9.0.1",
     "env-cmd": "^10.1.0",
     "eslint": "^8.57.0",
     "eslint-config-next": "^13.5.7",

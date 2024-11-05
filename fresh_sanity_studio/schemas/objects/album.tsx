@@ -1,54 +1,43 @@
-// album.tsx
+// schemas/album.tsx
 
-import React from 'react';
-import { defineType, defineField } from 'sanity';
-import ReleaseInfoInput from '../../components/ReleaseInfoInput';
-import { urlFor } from '../../utils/imageUrlBuilder';
+import React from 'react'
+import {Box} from '@sanity/ui'
+import {defineField, defineType} from 'sanity'
+import ReleaseInfoInput from '../../components/ReleaseInfoInput'
+import {urlFor} from '../../utils/imageUrlBuilder'
+import type {SanityImage} from '../../../types/sanity'
 
-// Define the same types as in ReleaseInfoInput
-interface SanityAssetReference {
-  _ref: string;
-  _type: 'reference';
+interface ValidationRule {
+  required: () => ValidationRule
+  custom: (fn: (value: unknown, context: ValidationContext) => true | string) => ValidationRule
+  uri: (options: {scheme: string[]}) => ValidationRule
+  warning: (message: string) => ValidationRule
 }
 
-interface SanityImageType {
-  _type: 'image';
-  asset: SanityAssetReference;
-  hotspot?: { x: number; y: number };
-  crop?: { top: number; bottom: number; left: number; right: number };
+interface ValidationContext {
+  document?: {
+    albumSource?: string
+    [key: string]: unknown
+  }
+  parent?: Record<string, unknown>
+  path?: string[]
 }
 
-interface EmbeddedAlbumValue {
-  embedCode?: string;
-  customImage?: SanityImageType;
-  isEmbedSupported?: boolean;
+interface ParentType {
+  albumSource?: string
 }
 
-interface ObjectField {
-  name: string;
-  type: { name: string };
+interface AlbumSelection {
+  albumSource: string
+  embeddedTitle?: string
+  embeddedArtist?: string
+  embeddedImageUrl?: string
+  customTitle?: string
+  customArtist?: string
+  customImage?: SanityImage
 }
 
-interface SchemaType {
-  fields?: ObjectField[];
-}
-
-type Props = {
-  value?: EmbeddedAlbumValue;
-  onChange: (patch: any) => void;
-  readOnly?: boolean;
-  schemaType: SchemaType;
-  renderDefault: (props: any) => React.ReactElement;
-}
-
-// Define the component using the exact same Props type
-const MyComponent = (props: Props) => {
-  return <ReleaseInfoInput {...props} />;
-};
-
-MyComponent.displayName = 'MyComponent';
-
-export default defineType({
+const albumSchema = defineType({
   name: 'album',
   title: 'Album or Single Release',
   type: 'document',
@@ -64,31 +53,29 @@ export default defineType({
         ],
         layout: 'radio',
       },
-      validation: (Rule) => Rule.required(),
+      validation: (rule: ValidationRule) => rule.required(),
       initialValue: 'embedded',
     }),
     defineField({
       name: 'embeddedAlbum',
       title: 'Embedded Album Info',
       type: 'object',
-      components: {
-        input: MyComponent
-      },
       fields: [
         defineField({
           name: 'embedCode',
           title: 'Embed Code',
-          type: 'text', // Changed to 'text' which automatically provides textarea functionality
+          type: 'text',
           description: 'Enter Spotify or SoundCloud URL or iframe embed code',
-          readOnly: false, // Ensure this is set
-          validation: (Rule) =>
-            Rule.custom((embedCode) => {
-              if (!embedCode || !embedCode.trim()) return 'Embed code is required'
+          readOnly: false,
+          validation: (rule: ValidationRule) =>
+            rule.custom((value: unknown) => {
+              if (!value || typeof value !== 'string' || !value.trim()) {
+                return 'Embed code is required'
+              }
 
-              const embedString = embedCode.trim()
+              const embedString = value.trim()
               const lowerCaseEmbedCode = embedString.toLowerCase()
 
-              // Check for iframe with SoundCloud or Spotify URLs
               if (
                 lowerCaseEmbedCode.includes('<iframe') &&
                 (lowerCaseEmbedCode.includes('soundcloud.com') ||
@@ -97,11 +84,12 @@ export default defineType({
                 return true
               }
 
-              // Check for direct URLs
               const isValidUrl =
                 embedString.startsWith('http://') || embedString.startsWith('https://')
               const isSpotifyUrl = lowerCaseEmbedCode.includes('spotify.com')
-              const isSoundCloudUrl = lowerCaseEmbedCode.includes('soundcloud.com')
+              const isSoundCloudUrl =
+                lowerCaseEmbedCode.includes('soundcloud.com') ||
+                lowerCaseEmbedCode.includes('api.soundcloud.com')
 
               if (isValidUrl && (isSpotifyUrl || isSoundCloudUrl)) {
                 return true
@@ -118,8 +106,8 @@ export default defineType({
           name: 'imageUrl',
           title: 'Album Image URL',
           type: 'url',
-          validation: (Rule) =>
-            Rule.uri({scheme: ['http', 'https']}).warning('Ensure image URL is an external link.'),
+          validation: (rule: ValidationRule) =>
+            rule.uri({scheme: ['http', 'https']}).warning('Ensure image URL is an external link.'),
         }),
         defineField({
           name: 'customImage',
@@ -129,7 +117,8 @@ export default defineType({
           description: 'Optional: override auto-fetched image by uploading your own.',
         }),
       ],
-      hidden: ({ parent }: { parent: { albumSource: string } }) => parent?.albumSource !== 'embedded',
+      components: {input: ReleaseInfoInput},
+      hidden: ({parent}: {parent: ParentType}) => parent?.albumSource !== 'embedded',
     }),
     defineField({
       name: 'customAlbum',
@@ -140,7 +129,7 @@ export default defineType({
           name: 'title',
           title: 'Release Title',
           type: 'string',
-          validation: (Rule) => Rule.required(),
+          validation: (rule: ValidationRule) => rule.required(),
           initialValue: 'Untitled',
         }),
         defineField({
@@ -148,7 +137,7 @@ export default defineType({
           title: 'Artist',
           type: 'string',
           initialValue: 'Stak',
-          validation: (Rule) => Rule.required(),
+          validation: (rule: ValidationRule) => rule.required(),
         }),
         defineField({
           name: 'releaseType',
@@ -161,12 +150,13 @@ export default defineType({
               {title: 'Compilation', value: 'compilation'},
             ],
           },
-          validation: (Rule) =>
-            Rule.custom((releaseType, context) =>
-              context?.document?.albumSource === 'custom' && !releaseType
-                ? 'Release Type is required for custom albums'
-                : true,
-            ),
+          validation: (rule: ValidationRule) =>
+            rule.custom((value: unknown, context: ValidationContext) => {
+              if (context?.document?.albumSource === 'custom' && !value) {
+                return 'Release Type is required for custom albums'
+              }
+              return true
+            }),
         }),
         defineField({
           name: 'customImage',
@@ -210,7 +200,7 @@ export default defineType({
           description: 'Add individual tracks for this release. You can reorder them by dragging.',
         }),
       ],
-      hidden: ({ parent }: { parent: { albumSource: string } }) => parent?.albumSource !== 'custom',
+      hidden: ({parent}: {parent: ParentType}) => parent?.albumSource !== 'custom',
     }),
   ],
   preview: {
@@ -223,7 +213,7 @@ export default defineType({
       customArtist: 'customAlbum.artist',
       customImage: 'customAlbum.customImage',
     },
-    prepare(selection) {
+    prepare(selection: AlbumSelection) {
       const {
         albumSource,
         embeddedTitle,
@@ -235,25 +225,67 @@ export default defineType({
       } = selection
 
       const isEmbedded = albumSource === 'embedded'
-      const imageUrl = isEmbedded
-        ? embeddedImageUrl || 'https://example.com/placeholder.png'
-        : customImage
-          ? urlFor(customImage).width(200).url()
-          : 'https://example.com/placeholder.png'
+
+      let imageUrl: string = ''
+
+      console.log('Embedded Image URL:', embeddedImageUrl)
+      console.log('Custom Image:', customImage)
+
+      if (isEmbedded && embeddedImageUrl) {
+        imageUrl = embeddedImageUrl
+      } else if (customImage) {
+        imageUrl = urlFor(customImage) as string
+      }
+
+      console.log('Final Image URL:', imageUrl)
 
       return {
         title: isEmbedded ? embeddedTitle || 'Untitled Release' : customTitle || 'Untitled Release',
         subtitle: isEmbedded
           ? embeddedArtist || 'Unknown Artist'
           : customArtist || 'Unknown Artist',
-        media: (
-          <img
-            src={imageUrl}
-            alt="Album Cover"
-            style={{width: '100%', height: 'auto', borderRadius: '4px'}}
-          />
+        media: imageUrl ? (
+          <div style={{
+            backgroundColor: '#f3f3f3',
+            borderRadius: '4px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
+            <img
+              src={imageUrl}
+              alt="Album Cover"
+              style={{
+                display: 'block',
+                width: 'auto',
+                height: 'auto',
+                maxWidth: '100%',
+                borderRadius: '4px',
+                backgroundColor: '#f3f3f3'
+              }}
+              onError={(e) => {
+                console.error('Image failed to load:', imageUrl)
+                e.currentTarget.style.display = 'none'
+              }}
+            />
+          </div>
+        ) : (
+          <div
+            style={{
+              backgroundColor: '#f3f3f3',
+              borderRadius: '4px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '10px'
+            }}
+          >
+            No Image
+          </div>
         ),
       }
     },
   },
 })
+
+export default albumSchema

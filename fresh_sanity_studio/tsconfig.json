@@ -8,13 +8,17 @@
     "forceConsistentCasingInFileNames": true,
     "noEmit": true,
     "esModuleInterop": true,
-    "module": "esnext",
-    "moduleResolution": "node",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
-    "baseUrl": "."
+    "baseUrl": ".",
+    "allowImportingTsExtensions": true,
+    "paths": {
+      "@/*": ["./*"]
+    }
   },
   "include": [
     "./components/**/*.ts",
@@ -25,9 +29,12 @@
     "./schemas/**/*.tsx",
     "./lib/**/*.ts",
     "./lib/**/*.tsx",
+    "./scripts/**/*.ts",
+    "./scripts/**/*.mts",
     "./deskStructure.tsx",
     "./sanity.config.tsx",
-    "./sanity.cli.ts"
+    "./sanity.cli.ts",
+    "./types/**/*.d.ts"
   ],
   "exclude": [
     "node_modules",

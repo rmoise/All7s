@@ -1,23 +1,22 @@
 'use client'
 
 import { NextStudio } from 'next-sanity/studio'
-import config from '@/fresh_sanity_studio/sanity.config'
-import { useEffect, useState } from 'react'
+import config from '../../../../fresh_sanity_studio/sanity.config'
+import { StudioProvider, StudioLayout } from 'sanity'
 
-export function Studio() {
-  const [mounted, setMounted] = useState(false)
+export default function Studio() {
+  const studioConfig = Array.isArray(config) ? config[0] : config;
 
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  if (!mounted) return null
-
-  // Check if NextStudio requires a different setup
   return (
-    <NextStudio
-      // Assuming NextStudio might require a different setup
-      // Check the documentation for the correct props
-    />
+    <StudioProvider
+      config={{
+        ...studioConfig,
+        apiVersion: '2024-03-19',
+        dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || 'production',
+        projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || '1gxdk71x',
+      }}
+    >
+      <StudioLayout />
+    </StudioProvider>
   )
 }

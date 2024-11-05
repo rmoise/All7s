@@ -53,6 +53,61 @@ declare module 'part:@sanity/base/portable-text-editor' {
 
 // Add new declarations for schema definitions
 declare module 'sanity' {
+  import type { ComponentType, ReactElement } from 'react'
+  import type { Config } from 'sanity'
+
+  // Update the plugin types
+  export interface PluginOptions {
+    name: string
+    [key: string]: any
+  }
+
+  // Update the config interface
+  export interface SanityConfig extends Config {
+    name: string
+    title: string
+    basePath?: string
+    projectId: string
+    dataset: string
+    plugins: PluginOptions[]
+    icon?: ComponentType<any>
+    schema: {
+      types: SchemaTypeDefinition[];
+    };
+    document?: {
+      actions?: (input: any[], context: { schemaType: string }) => any[]
+    }
+    form?: {
+      file?: {
+        assetSources?: (prev: any[]) => any[]
+      }
+      image?: {
+        assetSources?: (prev: any[]) => any[]
+      }
+    }
+    studio?: {
+      components?: {
+        layout?: ComponentType<any>
+      }
+    }
+    env?: Record<string, string | undefined>
+  }
+
+  export interface SchemaPluginOptions {
+    types: SchemaTypeDefinition[]
+    templates?: (prev: any[]) => any[]
+  }
+
+  export interface SchemaTypeDefinition extends BaseSchemaDefinition {
+    type: string
+    validation?: (rule: ValidationRule) => ValidationRule
+  }
+
+  // Add module augmentation for .js extensions
+  export interface ImportMetaEnv {
+    readonly [key: string]: string | undefined
+  }
+
   export interface ValidationRule {
     required: () => ValidationRule
     custom: (fn: (value: any, context: ValidationContext) => true | string) => ValidationRule
@@ -99,37 +154,6 @@ declare module 'sanity' {
   }): any
 
   // Add the defineConfig type
-  export interface SanityConfig {
-    name: string
-    title: string
-    basePath?: string
-    projectId: string
-    dataset: string
-    plugins: any[]
-    icon?: React.ComponentType<any>
-    schema: {
-      types: any[]
-      templates?: (prev: any[]) => any[]
-    }
-    document?: {
-      actions?: (input: any[], context: { schemaType: string }) => any[]
-    }
-    form?: {
-      file?: {
-        assetSources?: (prev: any[]) => any[]
-      }
-      image?: {
-        assetSources?: (prev: any[]) => any[]
-      }
-    }
-    studio?: {
-      components?: {
-        layout?: React.ComponentType<any>
-      }
-    }
-    env?: Record<string, string | undefined>
-  }
-
   export function defineConfig(config: SanityConfig | SanityConfig[]): any
 
   export type ExperimentalAction = 'create' | 'update' | 'delete' | 'publish'
@@ -175,6 +199,8 @@ declare module 'sanity' {
 }
 
 declare module 'sanity/desk' {
+  import type { PluginOptions } from 'sanity'
+
   export interface StructureBuilder {
     list: () => ListBuilder
     listItem: () => ListItemBuilder
@@ -221,13 +247,12 @@ declare module 'sanity/desk' {
     title: (title: string) => EditorBuilder
   }
 
-  export const deskTool: (options?: {
+  export interface DeskToolOptions {
     structure?: (builder: StructureBuilder) => ListBuilder
     defaultDocumentNode?: (S: StructureBuilder, ctx: any) => DocumentBuilder | EditorBuilder
-  }) => {
-    name: string
-    [key: string]: any
   }
+
+  export const deskTool: (options?: DeskToolOptions) => PluginOptions
 
   export type DefaultDocumentNodeResolver = (
     S: StructureBuilder,
@@ -238,29 +263,133 @@ declare module 'sanity/desk' {
 }
 
 declare module 'sanity-plugin-media' {
-  export const media: () => {
-    name: string
-    [key: string]: any
-  }
+  import type { PluginOptions } from 'sanity'
+  export const media: () => PluginOptions
 }
 
 declare module '@sanity/color-input' {
-  export const colorInput: () => {
-    name: string
-    [key: string]: any
-  }
+  import type { PluginOptions } from 'sanity'
+  export const colorInput: () => PluginOptions
 }
 
 declare module '@sanity/vision' {
-  export const visionTool: () => {
-    name: string
-    [key: string]: any
-  }
+  import type { PluginOptions } from 'sanity'
+  export const visionTool: () => PluginOptions
 }
 
 declare module 'sanity-plugin-hotspot-array' {
-  export const imageHotspotArrayPlugin: () => {
-    name: string
-    [key: string]: any
-  }
+  import type { PluginOptions } from 'sanity'
+  export const imageHotspotArrayPlugin: () => PluginOptions
+}
+
+// Update module declarations for local files to use string literals
+declare module '*.js' {
+  const content: any
+  export default content
+}
+
+declare module '*.jsx' {
+  const content: any
+  export default content
+}
+
+declare module '*.ts' {
+  const content: any
+  export default content
+}
+
+declare module '*.tsx' {
+  const content: any
+  export default content
+}
+
+// Add or update these interfaces
+export interface SanityImageHotspot {
+  _type: 'sanity.imageHotspot';
+  x: number;
+  y: number;
+  height: number;
+  width: number;
+}
+
+export interface SanityImageType {
+  _type: 'image';
+  asset: {
+    _ref: string;
+    _type: 'reference';
+  };
+  hotspot?: SanityImageHotspot;
+  crop?: {
+    _type: 'sanity.imageCrop';
+    top: number;
+    bottom: number;
+    left: number;
+    right: number;
+  };
+}
+
+export interface EmbeddedAlbumValue {
+  customImage?: SanityImageType;
+  // ... other properties
+}
+
+// Update the Props interface
+interface Props {
+  value?: EmbeddedAlbumValue;
+  onChange: (patch: any) => void;
+  readOnly?: boolean;
+  schemaType: SchemaType;
+  renderDefault: (props: any) => ReactElement;
+}
+
+export interface SchemaValidationValue {
+  (rule: ValidationRule): ValidationRule | ValidationRule[];
+}
+
+// Update the TypeAliasDefinition interface to include all possible schema types
+export interface TypeAliasDefinition<Name extends string, Type extends SchemaType> {
+  name: Name;
+  type: Type;
+  title?: string;
+  validation?: SchemaValidationValue;
+  [key: string]: any;
+}
+
+// Add a type for all possible Sanity schema types
+type SchemaType =
+  | 'string'
+  | 'number'
+  | 'boolean'
+  | 'object'
+  | 'text'
+  | 'color'
+  | 'image'
+  | 'date'
+  | 'email'
+  | 'file'
+  | 'url'
+  | 'geopoint'
+  | 'reference'
+  | 'block'
+  | 'slug'
+  | 'document'
+  | 'array'
+  | 'crossDatasetReference'
+  | 'datetime';
+
+export interface SchemaTypeDefinition extends TypeAliasDefinition<string, SchemaType> {
+  validation?: (rule: ValidationRule) => ValidationRule | ValidationRule[];
+  fields?: Array<{
+    name: string;
+    type: SchemaType;
+    [key: string]: any;
+  }>;
+  preview?: {
+    select: Record<string, string>;
+    prepare: (selection: any) => {
+      title: string;
+      subtitle?: string;
+      media?: React.ReactElement;
+    };
+  };
 }

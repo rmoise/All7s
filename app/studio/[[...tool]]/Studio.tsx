@@ -4,14 +4,17 @@ import { NextStudio } from 'next-sanity/studio'
 import sanityConfig from '@/fresh_sanity_studio/sanity.config'
 
 export function Studio() {
-  // Assuming you want to use the first workspace configuration
   const config = Array.isArray(sanityConfig) ? sanityConfig[0] : sanityConfig;
+
+  // Ensure apiVersion is explicitly set
+  const studioConfig = {
+    ...config,
+    apiVersion: '2024-03-19',
+  }
 
   return (
     <div className="h-screen">
-      <NextStudio
-        {...config} // Spread the config properties directly
-      />
+      <NextStudio {...studioConfig} />
     </div>
   )
 }

@@ -12,61 +12,48 @@ import { YouTubeAPIProvider } from '../components/media/YouTubeAPIProvider';
 import * as FontAwesome from '@fortawesome/fontawesome-svg-core';
 import '@fortawesome/fontawesome-svg-core/styles.css';
 import { faUser, faShoppingCart } from '@fortawesome/free-solid-svg-icons';
-import { SanityLive } from '@lib/live';
+import { SiteSettings, SanityImage } from '../types/sanity';
+import { urlFor } from '../lib/client';
 
 FontAwesome.config.autoAddCss = false;
 FontAwesome.library.add(faUser, faShoppingCart);
 
-interface SiteSettings {
-  seo?: {
-    metaTitle?: string;
-    metaDescription?: string;
-    openGraphImage?: {
-      asset?: {
-        url?: string;
-      };
-    };
-  };
-  favicon?: {
-    asset?: {
-      url?: string;
-    };
-  };
-  title?: string;
+interface PageProps {
+  siteSettings?: SiteSettings;
+  metaTitle?: string;
+  metaDescription?: string;
+  preview?: boolean;
+  canonicalUrl?: string;
 }
 
-interface ExtendedAppProps extends AppProps {
-  pageProps: {
-    siteSettings?: SiteSettings;
-    metaTitle?: string;
-    metaDescription?: string;
-    preview?: boolean;
-    canonicalUrl?: string;
-  };
-}
-
-function MyApp({ Component, pageProps }: ExtendedAppProps) {
+function MyApp({ Component, pageProps }: AppProps<PageProps>) {
   useEffect(() => {
     const fixedHighZIndexElement = document.querySelector('div[style*="z-index: 9999"]');
     if (fixedHighZIndexElement) {
       fixedHighZIndexElement.remove();
     }
+
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn = () => {};
+    }
   }, []);
 
-  const { siteSettings } = pageProps;
+  const settings = pageProps.siteSettings;
 
-  if (!siteSettings) {
-    return <div>Loading site settings...</div>;
-  }
+  // Helper function to get image URL
+  const getImageUrl = (image: SanityImage | null | undefined): string => {
+    if (!image?.asset?._ref) return '';
+    return urlFor(image).url() || '';
+  };
 
   return (
     <>
       <SEO
-        title={pageProps?.metaTitle || siteSettings?.seo?.metaTitle}
-        description={pageProps?.metaDescription || siteSettings?.seo?.metaDescription}
-        faviconUrl={siteSettings?.favicon?.asset?.url || '/favicon.ico'}
-        openGraphImageUrl={siteSettings?.seo?.openGraphImage?.asset?.url}
-        siteName={siteSettings?.title}
+        title={pageProps?.metaTitle || pageProps?.siteSettings?.seo?.metaTitle}
+        description={pageProps?.metaDescription || pageProps?.siteSettings?.seo?.metaDescription}
+        faviconUrl={getImageUrl(settings?.favicon)}
+        openGraphImageUrl={getImageUrl(settings?.seo?.openGraphImage)}
+        siteName={pageProps?.siteSettings?.title}
         canonicalUrl={pageProps.canonicalUrl || process.env.NEXT_PUBLIC_SITE_URL || 'https://all7z.com'}
       />
 
@@ -74,7 +61,7 @@ function MyApp({ Component, pageProps }: ExtendedAppProps) {
         <NavbarProvider>
           <AudioProvider>
             <YouTubeAPIProvider>
-              <Layout siteSettings={siteSettings}>
+              <Layout settings={settings}>
                 <Toaster />
                 <Component {...pageProps} />
               </Layout>

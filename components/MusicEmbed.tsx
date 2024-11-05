@@ -1,5 +1,5 @@
 // components/MusicEmbed.tsx
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { useInView } from 'react-intersection-observer'
 
 interface MusicEmbedProps {
@@ -16,13 +16,24 @@ const MusicEmbed: React.FC<MusicEmbedProps> = ({
   const [isLoaded, setIsLoaded] = useState(false)
   const { ref, inView } = useInView({ threshold: 0.1, triggerOnce: true })
 
-  // Choose formatted embed URL based on the platform
-  const formattedEmbedUrl =
-    platform === 'soundcloud' && embedUrl
-      ? `https://w.soundcloud.com/player/?url=${encodeURIComponent(
-          embedUrl
-        )}&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&visual=true`
-      : embedUrl // Use embedUrl directly for Spotify
+  const formattedEmbedUrl = useMemo(() => {
+    if (platform === 'soundcloud') {
+      try {
+        // Extract the original URL from the player URL
+        const url = new URL(embedUrl);
+        const originalUrl = url.searchParams.get('url');
+
+        if (!originalUrl) return embedUrl;
+
+        // Create new player URL with clean parameters
+        return `https://w.soundcloud.com/player/?url=${originalUrl}&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true`;
+      } catch (error) {
+        console.error('Error formatting SoundCloud URL:', error);
+        return embedUrl;
+      }
+    }
+    return embedUrl; // For Spotify, use as is
+  }, [embedUrl, platform]);
 
   useEffect(() => {
     if (inView) {
@@ -31,7 +42,9 @@ const MusicEmbed: React.FC<MusicEmbedProps> = ({
     }
   }, [inView])
 
-  console.log('Embed URL for iframe:', formattedEmbedUrl) // Log to ensure it's correct
+  console.log('Platform:', platform);
+  console.log('Original Embed URL:', embedUrl);
+  console.log('Formatted Embed URL:', formattedEmbedUrl);
 
   return (
     <div

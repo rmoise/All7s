@@ -5,7 +5,8 @@ export const client = createClient({
   projectId: config.projectId,
   dataset: config.dataset,
   useCdn: false,
-  apiVersion: '2024-03-13',
+  apiVersion: '2024-03-19',
+  token: process.env.SANITY_STUDIO_API_TOKEN || process.env.SANITY_API_READ_TOKEN
 })
 
 export const studioConfig = {

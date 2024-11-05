@@ -8,50 +8,30 @@ import { useRouter } from 'next/router';
 import Cart from '../shop/Cart';
 import { useStateContext } from '../../context/StateContext';
 import { useNavbar } from '../../context/NavbarContext';
-import { client, urlFor } from '@lib/client';
+import { urlFor as urlForImage } from '../../lib/client';
+import { SanityImage, NavigationLink, NavbarData } from '../../types/sanity';
 
-// Define TypeScript interfaces
-export interface NavigationLink {
-  href: string;
-  label: string;
-  name?: string;
-  current?: boolean;
-}
-
-export interface NavbarData {
-  logo?: {
-    _type: string;
-    asset: {
-      _ref: string;
-      _type: string;
-    };
-  };
-  isTransparent?: boolean;
-  backgroundColor?: {
-    hex: string;
-  };
-  navigationLinks?: NavigationLink[];
-}
-
-// Type the utility functions
+// Utility functions
 const generateKey = (item: NavigationLink, index: number): string =>
   `${item.name}-${index}-${item.href}`;
 
 const classNames = (...classes: string[]): string =>
   classes.filter(Boolean).join(' ');
 
-// Update the Navbar component to accept props
+const DEFAULT_LOGO = '/images/logo.png';
+
 const Navbar: React.FC<{ navbarData?: NavbarData }> = ({ navbarData: externalNavbarData }) => {
   const router = useRouter();
   const { navbarData: contextNavbarData, loading } = useNavbar();
   const { showCart, setShowCart, totalQuantities } = useStateContext();
   const [hydrated, setHydrated] = useState<boolean>(false);
   const [isMobile, setIsMobile] = useState<boolean>(false);
+  const [logoError, setLogoError] = useState(false);
+  const [logoDimensions, setLogoDimensions] = useState({ width: 200, height: 80 }); // Default dimensions
 
-  // Use external navbarData if provided, otherwise use context data
   const finalNavbarData = externalNavbarData || contextNavbarData;
 
-  // Hydration and mobile state check
+  // Hydration and mobile check
   useEffect(() => {
     setHydrated(true);
     const handleResize = () => {
@@ -65,7 +45,7 @@ const Navbar: React.FC<{ navbarData?: NavbarData }> = ({ navbarData: externalNav
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Scroll animation for mobile
+  // Mobile scroll animation
   useEffect(() => {
     if (isMobile) {
       let lastScrollTop = 0;
@@ -83,7 +63,7 @@ const Navbar: React.FC<{ navbarData?: NavbarData }> = ({ navbarData: externalNav
     }
   }, [isMobile]);
 
-  // Smooth scrolling effect
+  // Smooth scroll handler
   const handleSmoothScroll = useCallback((e: React.MouseEvent, href: string) => {
     e.preventDefault();
     if (href.startsWith('/#')) {
@@ -111,7 +91,14 @@ const Navbar: React.FC<{ navbarData?: NavbarData }> = ({ navbarData: externalNav
     return null;
   }
 
-  const logoUrl = finalNavbarData.logo ? urlFor(finalNavbarData.logo).url() : '/default-logo.png';
+  // Logo URL handling
+  const getLogo = (logo: string | SanityImage | undefined): string => {
+    if (!logo) return DEFAULT_LOGO;
+    if (typeof logo === 'string') return logo;
+    return urlForImage(logo).url();
+  };
+
+  const logoUrl = !logoError ? getLogo(finalNavbarData.logo) : DEFAULT_LOGO;
   const navbarBgColor = finalNavbarData.isTransparent ? 'transparent' : finalNavbarData.backgroundColor?.hex || 'black';
 
   const renderNavLinks = (isMobile = false) => {
@@ -168,11 +155,21 @@ const Navbar: React.FC<{ navbarData?: NavbarData }> = ({ navbarData: externalNav
                   <img
                     src={logoUrl}
                     alt="Logo"
-                    className="h-12 w-auto"
-                    onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-                      const target = e.target as HTMLImageElement;
-                      target.onerror = null;
-                      target.src = '/default-logo.png';
+                    className="w-auto max-h-16 sm:max-h-20"
+                    style={{
+                      height: 'auto',
+                      maxWidth: '200px',
+                      objectFit: 'contain'
+                    }}
+                    onError={() => {
+                      setLogoError(true);
+                    }}
+                    onLoad={(e) => {
+                      const img = e.target as HTMLImageElement;
+                      setLogoDimensions({
+                        width: img.naturalWidth,
+                        height: img.naturalHeight
+                      });
                     }}
                   />
                 </Link>

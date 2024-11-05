@@ -41,4 +41,19 @@ export default defineType({
       ],
     }),
   ],
+  preview: {
+    select: {
+      title: 'title',
+      subtitle: 'subtitle',
+      media: 'backgroundImage'
+    },
+    prepare(selection) {
+      const { media } = selection;
+      return {
+        title: 'Hero Banner Section',
+        subtitle: 'Hero banner with background image and CTA',
+        media: media
+      };
+    },
+  },
 });

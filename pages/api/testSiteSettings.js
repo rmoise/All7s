@@ -1,4 +1,11 @@
-import { client } from '../../lib/client';
+import { createClient } from '@sanity/client';
+import { sanityConfig } from '../../lib/config';
+
+const client = createClient({
+  ...sanityConfig,
+  token: process.env.SANITY_API_READ_TOKEN,
+  useCdn: false
+});
 
 export default async function handler(req, res) {
   const query = `*[_type == "settings"][0]{

@@ -1,101 +1,54 @@
-import { createClient } from 'next-sanity';
-import imageUrlBuilder from '@sanity/image-url';
-import type { ClientConfig, QueryParams } from 'next-sanity';
+import { createClient } from '@sanity/client'
+import imageUrlBuilder from '@sanity/image-url'
+import { sanityConfig, previewConfig } from './config'
+import type { QueryParams } from 'next-sanity'
 
-// Environment variables
-const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID;
-const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET;
-const token = process.env.SANITY_API_READ_TOKEN;
-const apiVersion = '2024-03-13';
+// Create server clients
+export const serverClient = createClient(sanityConfig)
+export const previewClient = createClient(previewConfig)
 
-// Validate environment variables
-if (!projectId) throw new Error('Missing NEXT_PUBLIC_SANITY_PROJECT_ID');
-if (!dataset) throw new Error('Missing NEXT_PUBLIC_SANITY_DATASET');
-if (!token) throw new Error('Missing SANITY_API_READ_TOKEN');
+// Helper to select appropriate client
+export const getServerClient = (usePreview = false) =>
+  usePreview ? previewClient : serverClient
 
-// Client configuration
-const config: ClientConfig = {
-  projectId,
-  dataset,
-  apiVersion,
-  useCdn: false, // Disable CDN for fresh data
-  token, // Read token for server-side operations
-};
+// Image builder
+const builder = imageUrlBuilder(serverClient)
+export const urlFor = (source: any) => builder.image(source)
 
-// Create Sanity clients
-export const serverClient = createClient({
-  ...config,
-  perspective: 'published',
-});
-
-export const previewClient = createClient({
-  ...config,
-  perspective: 'previewDrafts',
-});
-
-// Helper to select the appropriate client
-export const getServerClient = (usePreview: boolean = false) =>
-  usePreview ? previewClient : serverClient;
-
-// Image URL builder
-const builder = imageUrlBuilder(serverClient);
-export const urlFor = (source: any) => builder.image(source);
-
-// Safer fetch function with retries
+// Enhanced fetch with retries and logging
 export async function safeFetch<T>(
   query: string,
   params: QueryParams = {},
+  usePreview = false
 ): Promise<T> {
-  const maxRetries = 3;
+  const client = getServerClient(usePreview)
+  const maxRetries = 3
+  let lastError
 
   for (let i = 0; i < maxRetries; i++) {
     try {
-      return await serverClient.fetch<T>(query, params);
+      console.log(`Attempt ${i + 1} - Fetching with config:`, {
+        hasToken: !!client.config().token,
+        tokenLength: client.config().token?.length,
+        query: query.slice(0, 100) + '...',
+        preview: usePreview,
+      })
+
+      const result = await client.fetch<T>(query, params)
+      console.log('Fetch successful:', { hasData: !!result })
+      return result
     } catch (error: any) {
+      lastError = error
       console.error(`Attempt ${i + 1} failed:`, {
         message: error.message,
-        stack: error.stack,
-        query,
-        params,
-        projectId,
-        dataset,
-      });
+        statusCode: error.statusCode,
+        details: error.details,
+      })
 
-      if (i === maxRetries - 1) throw error;
-
-      // Exponential backoff
-      await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
+      if (i === maxRetries - 1) break
+      await new Promise((resolve) => setTimeout(resolve, Math.pow(2, i) * 1000))
     }
   }
 
-  throw new Error('Failed to fetch from Sanity after multiple retries');
+  throw lastError
 }
-
-// Test connection with detailed logging
-const testConnection = async () => {
-  try {
-    const result = await safeFetch('*[_type == "settings"][0]');
-    console.log('✓ Sanity connection successful', result);
-    return true;
-  } catch (error: unknown) {
-    if (error instanceof Error) {
-      console.error('× Sanity connection failed:', {
-        error: error.message,
-        projectId,
-        dataset,
-        hasToken: !!token,
-      });
-    } else {
-      console.error('× Sanity connection failed:', {
-        error: String(error),
-        projectId,
-        dataset,
-        hasToken: !!token,
-      });
-    }
-    throw error;
-  }
-};
-
-// Run connection test
-testConnection();

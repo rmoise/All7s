@@ -16,12 +16,7 @@ import { useAudio } from '@/context/AudioContext' // Adjust the path as needed
 import MusicEmbed from '@components/MusicEmbed' // Ensure correct path
 import { debounce } from 'lodash'
 import Image from 'next/image'
-
-interface Song {
-  trackTitle: string
-  url: string
-  duration: number
-}
+import type { Song } from '@/types/sanity'  // Import the Song type
 
 interface CustomImage {
   asset: {
@@ -44,10 +39,13 @@ interface FlipCardProps {
   album: Album
   isFlipped: boolean
   toggleFlip: (albumId: string) => void
+  addFlipCardRef: (albumId: string, ref: HTMLDivElement | null) => void
+  titleClass?: string
+  artistClass?: string
 }
 
 const FlipCard = forwardRef<HTMLDivElement, FlipCardProps>(
-  ({ album, isFlipped, toggleFlip }, ref) => {
+  ({ album, isFlipped, toggleFlip, addFlipCardRef, titleClass, artistClass }, ref) => {
     const imgRef = useRef<HTMLImageElement>(null)
     const {
       currentHowl,
@@ -89,12 +87,13 @@ const FlipCard = forwardRef<HTMLDivElement, FlipCardProps>(
 
     // Determine the platform based on the embedUrl
     const platform = useMemo(() => {
-      const url = embedUrl?.toLowerCase() || ''
-      if (url.includes('spotify.com')) return 'spotify'
-      if (url.includes('soundcloud.com') || url.includes('api.soundcloud.com'))
-        return 'soundcloud'
-      return null
-    }, [embedUrl])
+      if (!embedUrl) return null;
+      const url = embedUrl.toLowerCase();
+      if (url.includes('spotify.com')) return 'spotify';
+      if (url.includes('soundcloud.com') || url.includes('api.soundcloud.com')) return 'soundcloud';
+      console.log('No platform detected for URL:', url); // Add debugging
+      return null;
+    }, [embedUrl]);
 
     // Logging for debugging
     useEffect(() => {

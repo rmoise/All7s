@@ -32,40 +32,52 @@ export default defineType({
   icon: MdPlayCircleOutline,
   fields: [
     defineField({
-      name: 'title',
-      title: 'Title',
+      name: 'lookTitle',
+      title: 'Look Title',
       type: 'string',
       validation: Rule => Rule.required(),
     }),
     defineField({
-      name: 'description',
-      title: 'Description',
-      type: 'text',
+      name: 'heroVideoLink',
+      title: 'Hero Video Link',
+      type: 'url',
+      description: 'The main/hero YouTube video URL',
+      validation: Rule => Rule.required(),
     }),
     defineField({
-      name: 'videos',
-      title: 'Videos',
+      name: 'additionalVideos',
+      title: 'Additional Videos',
       type: 'array',
-      of: [{ type: 'additionalVideo' }],
-      description: 'List of additional video links',
-      validation: Rule =>
-        Rule.required().custom((videos) => {
-          if (!videos?.length) return 'At least one video link is required'
-          return true
-        }),
+      of: [
+        defineArrayMember({
+          type: 'object',
+          name: 'video',
+          fields: [
+            defineField({
+              name: 'url',
+              type: 'url',
+              title: 'YouTube URL',
+              validation: Rule => Rule.required()
+            })
+          ]
+        })
+      ],
+      description: 'Additional YouTube video links',
     }),
   ],
   preview: {
     select: {
-      title: 'title',
-      videosRaw: 'videos',
+      title: 'lookTitle',
+      heroVideo: 'heroVideoLink',
+      additionalVideos: 'additionalVideos',
     },
     prepare(selection: Record<string, any>) {
-      const {title, videosRaw} = selection
+      const {title, heroVideo, additionalVideos} = selection
+      const videoCount = (additionalVideos?.length || 0) + (heroVideo ? 1 : 0)
       return {
         title: title || 'Video Block',
-        subtitle: `${videosRaw?.length || 0} videos`,
-        media: <MdPlayCircleOutline />,
+        subtitle: `${videoCount} video${videoCount === 1 ? '' : 's'}`,
+        media: React.createElement(MdPlayCircleOutline)
       }
     },
   },

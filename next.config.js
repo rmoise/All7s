@@ -3,7 +3,6 @@ const path = require('path');
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-
   output: 'standalone',
 
   env: {
@@ -18,12 +17,49 @@ const nextConfig = {
     NEXT_PUBLIC_SANITY_STUDIO_URL: process.env.NEXT_PUBLIC_SANITY_STUDIO_URL || 'http://localhost:3333',
     SANITY_API_READ_TOKEN: process.env.SANITY_API_READ_TOKEN,
     SANITY_STUDIO_PATH: 'fresh_sanity_studio',
+    SANITY_PREVIEW_SECRET: process.env.SANITY_PREVIEW_SECRET || '',
+    NEXT_PUBLIC_PREVIEW_SECRET: process.env.SANITY_PREVIEW_SECRET || '',
   },
 
   images: {
     unoptimized: process.env.NODE_ENV === 'development',
-    domains: ['cdn.sanity.io'],
+    domains: ['cdn.sanity.io', 'i.scdn.co'],
     formats: ['image/avif', 'image/webp'],
+  },
+
+  webpack: (config, { isServer, dev }) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@components': path.join(__dirname, 'components'),
+      '@utils': path.join(__dirname, 'utils'),
+      '@pages': path.join(__dirname, 'pages'),
+      '@styles': path.join(__dirname, 'styles'),
+      '@lib': path.join(__dirname, 'lib'),
+      '@context': path.join(__dirname, 'context'),
+    };
+
+    if (dev && !isServer) {
+      config.optimization = {
+        minimize: false,
+        splitChunks: {
+          chunks: 'all',
+          cacheGroups: {
+            default: false,
+            vendors: false,
+          },
+        },
+      };
+    }
+
+    return config;
+  },
+
+  experimental: {
+    serverActions: {
+      allowedOrigins: ['localhost:3000', 'all7z.com'],
+      bodySizeLimit: '2mb'
+    },
+    optimizePackageImports: ['@sanity/ui', '@headlessui/react', 'lodash']
   },
 
   async headers() {
@@ -36,95 +72,51 @@ const nextConfig = {
             value: [
               "default-src 'self'",
               // Scripts
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.typekit.net https://*.youtube.com https://www.youtube.com https://*.youtu.be https://js.stripe.com",
+              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://apis.google.com https://*.youtube.com http://*.youtube.com https://*.stripe.com https://*.typekit.net",
               // Styles
-              "style-src 'self' 'unsafe-inline' https://*.typekit.net https://use.typekit.net https://p.typekit.net",
-              // Frames
-              "frame-src 'self' https://*.youtube.com https://www.youtube.com https://*.youtu.be https://*.stripe.com",
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://*.typekit.net",
+              "style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com https://*.typekit.net",
               // Images
-              "img-src 'self' data: https: blob: https://*.typekit.net https://*.youtube.com https://www.youtube.com https://*.youtu.be",
+              "img-src 'self' data: blob: https: http:",
               // Media
-              "media-src 'self' https:",
-              // Connections
-              "connect-src 'self' https: https://*.typekit.net https://*.stripe.com",
+              "media-src 'self' https://*.scdn.co https://*.spotify.com https://*.ytimg.com https://*.imagekit.io blob:",
               // Fonts
-              "font-src 'self' data: https://*.typekit.net https://use.typekit.net https://p.typekit.net",
-              // Frame ancestors
-              "frame-ancestors 'self' https://*.sanity.studio http://localhost:3333 http://localhost:3000",
-            ].join('; '),
-          },
-          {
-            key: 'Permissions-Policy',
-            value: [
-              'camera=()',
-              'microphone=()',
-              'geolocation=()',
-              'compute-pressure=*',
-              // Allow presentation API
-              'presentation-api=*'
-            ].join(', '),
-          },
-          {
-            key: 'X-Frame-Options',
-            value: 'SAMEORIGIN',
-          },
-          {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff',
-          },
-          {
-            key: 'Referrer-Policy',
-            value: 'strict-origin-when-cross-origin',
-          },
-        ],
-      },
-    ];
-  },
-
-  webpack: (config, { isServer }) => {
-    config.resolve.alias['@components'] = path.join(__dirname, 'components');
-    config.resolve.alias['@utils'] = path.join(__dirname, 'utils');
-    config.resolve.alias['@pages'] = path.join(__dirname, 'pages');
-    config.resolve.alias['@styles'] = path.join(__dirname, 'styles');
-    config.resolve.alias['@lib'] = path.join(__dirname, 'lib');
-    config.resolve.alias['@context'] = path.join(__dirname, 'context');
-    // Add other aliases here if needed
-
-    // Optimize CSS
-    if (!isServer) {
-      config.optimization.splitChunks.cacheGroups = {
-        ...config.optimization.splitChunks.cacheGroups,
-        styles: {
-          name: 'styles',
-          test: /\.(css|scss)$/,
-          chunks: 'all',
-          enforce: true,
-        },
+              "font-src 'self' data: https://fonts.gstatic.com https://*.typekit.net",
+              // Connect
+              "connect-src 'self' https: wss:",
+              // Frames
+              [
+                "frame-src 'self'",
+                "https://www.youtube.com",
+                "https://youtube.com",
+                "https://*.youtube.com",
+                "http://*.youtube.com",
+                "https://open.spotify.com",
+                "https://*.stripe.com",
+                "https://js.stripe.com",
+                "https://w.soundcloud.com",
+                "https://*.soundcloud.com"
+              ].join(' '),
+              // Objects
+              "object-src 'none'",
+              // Manifests
+              "manifest-src 'self'"
+            ].join('; ')
+          }
+        ]
       }
-    }
-
-    return config;
-  },
-
-  async redirects() {
-    return []
-  },
-
-  async rewrites() {
-    return []
-  },
-
-  experimental: {
-    optimizeCss: false,
-    optimizePackageImports: ['@sanity/ui', '@headlessui/react', 'lodash'],
-    serverActions: {
-      allowedOrigins: ['localhost:3000'],
-      bodySizeLimit: '2mb',
-    },
+    ]
   },
 
   compiler: {
     styledComponents: true,
+  },
+
+  devServer: {
+    hot: true,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+    },
   },
 };
 

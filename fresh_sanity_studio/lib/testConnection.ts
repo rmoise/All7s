@@ -1,21 +1,9 @@
-import { createClient } from '@sanity/client'
-import dotenv from 'dotenv'
-import { fileURLToPath } from 'url'
-import { dirname } from 'path'
-import path from 'path'
-
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = dirname(__filename)
-
-// Load environment variables
-dotenv.config({ path: path.resolve(__dirname, '../.env') })
+import {createClient} from '@sanity/client'
+import {sanityConfig} from '../../lib/config'
 
 const client = createClient({
-  projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || '1gxdk71x',
-  dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || 'production',
-  apiVersion: '2024-03-19',
-  useCdn: false,
-  token: process.env.SANITY_STUDIO_API_TOKEN
+  ...sanityConfig,
+  token: process.env.SANITY_STUDIO_API_TOKEN,
 })
 
 async function testConnection() {

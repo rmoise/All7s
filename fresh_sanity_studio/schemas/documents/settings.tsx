@@ -18,6 +18,11 @@ interface SettingsSchema {
     };
     prepare(selection: PreviewSelection): { title: string; media?: any };
   };
+  hooks?: {
+    onPublish?: (props: any) => Promise<any>;
+    onCreate?: (props: any) => Promise<any>;
+    onDelete?: (props: any) => Promise<any>;
+  };
 }
 
 const settings = defineType({
@@ -94,7 +99,7 @@ const settings = defineType({
         defineField({
           name: 'backgroundColor',
           title: 'Background Color',
-          type: 'color',
+          type: 'colorPicker',
         }),
         defineField({
           name: 'isTransparent',
@@ -112,35 +117,13 @@ const settings = defineType({
           name: 'copyrightText',
           title: 'Copyright Text',
           type: 'string',
-        }),
-        defineField({
-          name: 'footerLinks',
-          title: 'Footer Links',
-          type: 'array',
-          of: [{ type: 'object', fields: [
-            defineField({ name: 'text', type: 'string', title: 'Link Text' }),
-            defineField({ name: 'url', type: 'url', title: 'URL' })
-          ]}],
-        }),
-        defineField({
-          name: 'socialLinks',
-          title: 'Social Media Links',
-          type: 'array',
-          of: [{ type: 'object', fields: [
-            defineField({ name: 'platform', type: 'string', title: 'Social Media Platform' }),
-            defineField({ name: 'url', type: 'url', title: 'URL' }),
-            defineField({ name: 'iconUrl', type: 'url', title: 'Icon URL' })
-          ]}],
-        }),
-        defineField({
-          name: 'fontColor',
-          title: 'Footer Text Color',
-          type: 'color',
+          validation: Rule => Rule.required()
         }),
         defineField({
           name: 'alignment',
           title: 'Text Alignment',
           type: 'string',
+          validation: Rule => Rule.required(),
           options: {
             list: [
               { title: 'Left', value: 'left' },
@@ -150,7 +133,84 @@ const settings = defineType({
             layout: 'radio',
           },
         }),
-      ],
+        defineField({
+          name: 'fontColor',
+          title: 'Footer Text Color',
+          type: 'colorPicker',
+          description: 'Choose a color for your footer text',
+          initialValue: {
+            _type: 'color',
+            hex: '#000000',
+            alpha: 1
+          }
+        }),
+        defineField({
+          name: 'footerLinks',
+          title: 'Footer Links',
+          type: 'array',
+          description: 'Add links to important pages',
+          of: [{
+            type: 'object',
+            preview: {
+              select: {
+                title: 'text',
+                subtitle: 'url'
+              }
+            },
+            fields: [
+              defineField({
+                name: 'text',
+                type: 'string',
+                title: 'Link Text',
+                description: 'The text to display for this link'
+              }),
+              defineField({
+                name: 'url',
+                type: 'url',
+                title: 'URL',
+                description: 'Where should this link go?'
+              })
+            ]
+          }],
+          initialValue: []
+        }),
+        defineField({
+          name: 'socialLinks',
+          title: 'Social Media Links',
+          type: 'array',
+          description: 'Add your social media links',
+          of: [{
+            type: 'object',
+            preview: {
+              select: {
+                title: 'platform',
+                subtitle: 'url'
+              }
+            },
+            fields: [
+              defineField({
+                name: 'platform',
+                type: 'string',
+                title: 'Platform',
+                description: 'e.g., Instagram, Twitter, etc.'
+              }),
+              defineField({
+                name: 'url',
+                type: 'url',
+                title: 'URL',
+                description: 'Link to your social media profile'
+              }),
+              defineField({
+                name: 'iconUrl',
+                type: 'url',
+                title: 'Icon URL',
+                description: 'URL to the social media icon'
+              })
+            ]
+          }],
+          initialValue: []
+        })
+      ]
     }),
   ],
   preview: {
@@ -165,6 +225,78 @@ const settings = defineType({
       };
     },
   },
+  hooks: {
+    async onPublish(props) {
+      console.group('📝 Settings Document Publishing')
+
+      // Log the mutation details
+      console.log('Mutation Details:', {
+        type: props.type,
+        transition: props.transition,
+        previousRev: props.document._rev
+      })
+
+      // Log footer state
+      console.log('Footer State:', {
+        current: props.document.footer,
+        hasRequiredFields: !!(
+          props.document.footer?.alignment &&
+          props.document.footer?.copyrightText
+        ),
+        missingFields: [
+          !props.document.footer?.fontColor && 'fontColor',
+          !props.document.footer?.footerLinks && 'footerLinks',
+          !props.document.footer?.socialLinks && 'socialLinks'
+        ].filter(Boolean)
+      })
+
+      // Validate footer structure
+      const validationIssues = []
+
+      if (!props.document.footer) {
+        validationIssues.push('Footer object is missing')
+      } else {
+        if (!props.document.footer.copyrightText) {
+          validationIssues.push('Copyright text is missing')
+        }
+        if (!props.document.footer.alignment) {
+          validationIssues.push('Alignment is missing')
+        }
+        if (!props.document.footer.fontColor) {
+          validationIssues.push('Font color is missing')
+        }
+        if (!props.document.footer.footerLinks) {
+          validationIssues.push('Footer links array is missing')
+        }
+        if (!props.document.footer.socialLinks) {
+          validationIssues.push('Social links array is missing')
+        }
+      }
+
+      if (validationIssues.length > 0) {
+        console.warn('⚠️ Validation Issues:', validationIssues)
+      } else {
+        console.log('✅ Document is valid')
+      }
+
+      console.groupEnd()
+      return props
+    },
+
+    async onCreate(props) {
+      console.group('📝 Settings Document Created')
+      console.log('Document:', props.document)
+      console.groupEnd()
+      return props
+    },
+
+    async onDelete(props) {
+      console.group('🗑️ Settings Document Deleted')
+      console.log('Document ID:', props.document._id)
+      console.groupEnd()
+      return props
+    }
+  }
 } as SettingsSchema);
 
 export default settings;

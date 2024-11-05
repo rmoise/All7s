@@ -1,5 +1,6 @@
 // @ts-check
-const { createClient } = require('@sanity/client')
+import {createClient} from '@sanity/client'
+import {sanityConfig} from '../../lib/config'
 require('dotenv').config()
 
 const token = process.env.SANITY_STUDIO_API_TOKEN
@@ -11,11 +12,8 @@ if (!token) {
 }
 
 const client = createClient({
-  projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || '1gxdk71x',
-  dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || 'production',
+  ...sanityConfig,
   token: token,
-  useCdn: false,
-  apiVersion: '2024-03-13',
 })
 
 async function testConnection() {
@@ -41,7 +39,7 @@ async function createSingletons() {
       title: 'Home Page',
       metaTitle: 'Welcome to All7s',
       metaDescription: 'Welcome to All7s website',
-      contentBlocks: []
+      contentBlocks: [],
     })
     console.log('✓ Created/ensured home singleton')
 
@@ -52,16 +50,16 @@ async function createSingletons() {
       title: 'Site Settings',
       seo: {
         metaTitle: 'All7s',
-        metaDescription: 'All7s website settings'
+        metaDescription: 'All7s website settings',
       },
       navbar: {
         isTransparent: false,
-        navigationLinks: []
+        navigationLinks: [],
       },
       footer: {
         copyrightText: '© 2024 All7s. All rights reserved.',
-        alignment: 'center'
-      }
+        alignment: 'center',
+      },
     })
     console.log('✓ Created/ensured settings singleton')
   } catch (err) {

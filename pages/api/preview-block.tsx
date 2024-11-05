@@ -1,73 +1,41 @@
-import { NextApiRequest, NextApiResponse } from 'next';
-import React from 'react';
-import { renderToString } from 'react-dom/server';
-import dynamic from 'next/dynamic';
-import { client } from '../../lib/client';
+import type { NextApiRequest, NextApiResponse } from 'next'
+import { previewClient } from '../../lib/client'
 
-// Import your existing HeroBanner component
-const HeroBanner = dynamic(() => import('../../components/home/HeroBanner'), {
-  ssr: true
-});
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
+  // Check for secret to confirm this is a valid request
+  if (req.query.secret !== process.env.SANITY_PREVIEW_SECRET) {
+    return res.status(401).json({ message: 'Invalid token' })
+  }
 
-// Match your schema structure
-interface HeroBannerData {
-  backgroundImage?: {
-    asset: {
-      _ref: string;
-    };
-  };
-  smallText?: string;
-  midText?: string;
-  largeText1?: string;
-  ctaText?: string;
-  ctaLink?: string;
-  metaTitle?: string;
-  metaDescription?: string;
-  openGraphImage?: {
-    asset: {
-      _ref: string;
-    };
-  };
-}
-
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const { type, id } = req.query;
+  const { type, id } = req.query
 
   if (!type || !id) {
-    return res.status(400).json({ error: 'Missing required parameters' });
+    return res.status(400).json({ message: 'Missing type or id parameter' })
   }
 
-  // Fetch the block data from Sanity
-  const blockData = await client.fetch<HeroBannerData>(`
-    *[_type == $type && _id == $id][0]
-  `, { type, id });
+  try {
+    // Check if the document exists
+    const document = await previewClient.fetch(
+      `*[_type == $type && _id == $id][0]`,
+      { type, id }
+    )
 
-  if (!blockData) {
-    return res.status(404).json({ error: 'Block not found' });
+    if (!document) {
+      return res.status(404).json({ message: 'Document not found' })
+    }
+
+    // Enable Preview Mode by setting the cookies
+    res.setPreviewData({ id })
+
+    // Redirect to the path from the fetched document
+    const path = type === 'home' ? '/' : `/${type}/${document.slug?.current || ''}`
+    res.writeHead(307, { Location: path })
+    res.end()
+  } catch (err) {
+    console.error('Preview Error:', err)
+    return res.status(500).json({ message: 'Error checking preview' })
   }
-
-  // Wrap the data to match your component's props
-  const componentProps = {
-    heroBanner: blockData
-  };
-
-  // Return HTML that renders the preview
-  res.setHeader('Content-Type', 'text/html');
-  res.send(`
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Preview - ${blockData.metaTitle || 'Content Block'}</title>
-        <link rel="stylesheet" href="/css/styles.css">
-        <script src="https://cdn.tailwindcss.com"></script>
-      </head>
-      <body>
-        <div id="preview">
-          ${type === 'heroBanner' ? await renderToString(<HeroBanner {...componentProps} />) : ''}
-        </div>
-      </body>
-    </html>
-  `);
 }
