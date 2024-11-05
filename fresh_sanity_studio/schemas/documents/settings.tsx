@@ -99,7 +99,10 @@ const settings = defineType({
         defineField({
           name: 'backgroundColor',
           title: 'Background Color',
-          type: 'colorPicker',
+          type: 'color',
+          options: {
+            disableAlpha: true
+          }
         }),
         defineField({
           name: 'isTransparent',
@@ -136,13 +139,11 @@ const settings = defineType({
         defineField({
           name: 'fontColor',
           title: 'Footer Text Color',
-          type: 'colorPicker',
-          description: 'Choose a color for your footer text',
-          initialValue: {
-            _type: 'color',
-            hex: '#000000',
-            alpha: 1
-          }
+          type: 'color',
+          options: {
+            disableAlpha: true
+          },
+          validation: Rule => Rule.required()
         }),
         defineField({
           name: 'footerLinks',

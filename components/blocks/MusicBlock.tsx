@@ -4,6 +4,7 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
 import FlipCard from '@components/Music/FlipCard';
 import Grid from '@components/common/Grid/Grid';
 import type { Album, Song, MusicBlock as MusicBlockType } from '../../types/sanity';
+import { urlFor } from '@/lib/client';
 
 interface MusicBlockProps {
   listenTitle?: string;
@@ -84,6 +85,26 @@ const MusicBlock: React.FC<MusicBlockProps> = ({ listenTitle = 'LISTEN', albums 
     return '';
   };
 
+  const getImageUrl = (album: Album): string => {
+    // For custom albums
+    if (album.albumSource === 'custom' && album.customAlbum?.customImage) {
+      return urlFor(album.customAlbum.customImage).url();
+    }
+
+    // For embedded albums with custom image override
+    if (album.albumSource === 'embedded' && album.embeddedAlbum?.customImage) {
+      return urlFor(album.embeddedAlbum.customImage).url();
+    }
+
+    // For embedded albums with imageUrl
+    if (album.albumSource === 'embedded' && album.embeddedAlbum?.imageUrl) {
+      return album.embeddedAlbum.imageUrl;
+    }
+
+    // Fallback
+    return '/images/placeholder.png';
+  };
+
   return (
     <section id={listenId} className="w-full px-2 sm:px-4 md:px-8 lg:px-32 relative z-10">
       <div className="flex flex-col items-center space-y-8">
@@ -112,10 +133,7 @@ const MusicBlock: React.FC<MusicBlockProps> = ({ listenTitle = 'LISTEN', albums 
                     albumId,
                     title: album.embeddedAlbum?.title || album.customAlbum?.title || 'Untitled Album',
                     artist: album.embeddedAlbum?.artist || album.customAlbum?.artist || 'Unknown Artist',
-                    imageUrl:
-                      album.embeddedAlbum?.imageUrl ||
-                      album.customAlbum?.customImage?.asset?.url ||
-                      '/images/placeholder.png',
+                    imageUrl: getImageUrl(album),
                     songs: getSongs(album),
                     embedUrl: embedUrl,
                     albumSource: album.embeddedAlbum ? 'embedded' : 'custom',

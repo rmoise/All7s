@@ -160,7 +160,12 @@ export interface CustomAlbum {
   _type: 'customAlbum';
   title?: string;
   artist?: string;
-  customImage?: SanityImage;
+  customImage?: {
+    asset?: {
+      _ref: string;
+      url?: string;
+    };
+  };
   songs?: Song[];
 }
 
@@ -169,12 +174,15 @@ export interface EmbeddedAlbum {
   _type: 'embeddedAlbum';
   title?: string;
   artist?: string;
-  platform?: string;
-  releaseType?: string;
   imageUrl?: string;
-  embedUrl?: string;
+  customImage?: {
+    asset?: {
+      _ref: string;
+      url?: string;
+    };
+  };
   embedCode?: string;
-  isEmbedSupported?: boolean;
+  platform?: string;
   songs?: Song[];
 }
 

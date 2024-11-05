@@ -146,7 +146,7 @@ const ReleaseInfoInput = (props: ObjectInputProps) => {
         artist: data.artist || 'Unknown Artist',
         platform,
         releaseType: data.releaseType || 'album',
-        imageUrl: data.imageUrl || 'https://example.com/placeholder.png',
+        imageUrl: data.imageUrl || '/images/placeholder.png',
         embedUrl: sanitizedUrl,
         isEmbedSupported: supportsEmbedding,
         customImage: value.customImage as SanityImageAsset | undefined
@@ -251,7 +251,7 @@ const ReleaseInfoInput = (props: ObjectInputProps) => {
           artist: data.artist || 'Unknown Artist',
           platform: detectedPlatform,
           releaseType: data.releaseType || 'album',
-          imageUrl: data.imageUrl || 'https://example.com/placeholder.png',
+          imageUrl: data.imageUrl || '/images/placeholder.png',
           embedUrl: sanitizedUrl,
           isEmbedSupported: data.isEmbedSupported,
         }
