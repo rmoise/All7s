@@ -3,6 +3,14 @@ import { NextApiRequest, NextApiResponse } from 'next'
 export default async function preview(req: NextApiRequest, res: NextApiResponse) {
   const { secret, id, type } = req.query
 
+  console.log('Preview request:', {
+    secret: req.query.secret,
+    hasPreviewSecret: !!process.env.SANITY_PREVIEW_SECRET,
+    hasPublicPreviewSecret: !!process.env.NEXT_PUBLIC_PREVIEW_SECRET,
+    secretsMatch: req.query.secret === process.env.SANITY_PREVIEW_SECRET ||
+                  req.query.secret === process.env.NEXT_PUBLIC_PREVIEW_SECRET
+  })
+
   // Check if the preview secret matches
   if (secret !== process.env.SANITY_PREVIEW_SECRET &&
       secret !== process.env.NEXT_PUBLIC_PREVIEW_SECRET) {
