@@ -86,22 +86,22 @@ const MusicBlock: React.FC<MusicBlockProps> = ({ listenTitle = 'LISTEN', albums 
   };
 
   const getImageUrl = (album: Album): string => {
-    // For custom albums
-    if (album.albumSource === 'custom' && album.customAlbum?.customImage) {
-      return urlFor(album.customAlbum.customImage).url();
-    }
+    console.log('Getting image URL for album:', album);
 
-    // For embedded albums with custom image override
-    if (album.albumSource === 'embedded' && album.embeddedAlbum?.customImage) {
-      return urlFor(album.embeddedAlbum.customImage).url();
-    }
-
-    // For embedded albums with imageUrl
+    // For embedded albums with imageUrl (SoundCloud/Spotify)
     if (album.albumSource === 'embedded' && album.embeddedAlbum?.imageUrl) {
+      console.log('Using embedded album imageUrl:', album.embeddedAlbum.imageUrl);
       return album.embeddedAlbum.imageUrl;
     }
 
-    // Fallback
+    // For custom albums or embedded albums with custom image override
+    if (album.customAlbum?.customImage?.asset || album.embeddedAlbum?.customImage?.asset) {
+      const image = album.customAlbum?.customImage || album.embeddedAlbum?.customImage;
+      console.log('Using custom image:', image);
+      return urlFor(image).url();
+    }
+
+    console.log('Using placeholder image');
     return '/images/placeholder.png';
   };
 

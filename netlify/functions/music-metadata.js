@@ -99,31 +99,33 @@ async function fetchSoundCloudData(url) {
     console.log(`Fetching SoundCloud metadata from: ${apiUrl}`);
 
     const response = await axios.get(apiUrl);
+    console.log('SoundCloud API Response:', response.data);
 
     const { title, author_name: artist, thumbnail_url: imageUrl } = response.data;
 
-    // Validate the fetched data
-    if (!title || !artist) {
-      throw new Error('Incomplete metadata received from SoundCloud.');
+    if (!imageUrl) {
+      console.warn('No thumbnail URL received from SoundCloud');
     }
+
+    const highResImageUrl = imageUrl ? imageUrl.replace('-large', '-t500x500') : null;
 
     return {
       title: title || 'Untitled SoundCloud Release',
       artist: artist || 'Unknown Artist',
-      imageUrl: imageUrl || 'https://example.com/soundcloud-placeholder.png',
+      imageUrl: highResImageUrl || imageUrl || '/images/placeholder.png',
       releaseType: 'playlist',
-      embedUrl: baseUrl, // Use the base URL as the embed URL
-      isEmbedSupported: false, // Indicate that embedding is not supported
+      embedUrl: url,
+      isEmbedSupported: true
     };
   } catch (error) {
     console.error(`Failed to fetch SoundCloud data for URL ${url}:`, error.message);
     return {
       title: 'SoundCloud Release',
       artist: 'Unknown Artist',
-      imageUrl: 'https://example.com/soundcloud-placeholder.png',
+      imageUrl: '/images/placeholder.png',
       releaseType: 'playlist',
-      embedUrl: url, // Provide the original URL
-      isEmbedSupported: false,
+      embedUrl: url,
+      isEmbedSupported: true
     };
   }
 }
