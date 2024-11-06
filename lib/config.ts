@@ -37,3 +37,11 @@ export const studioConfig: ClientConfig = {
   useCdn: false,
   token: process.env.SANITY_STUDIO_API_TOKEN || apiToken
 }
+
+// Preview configuration
+export const previewConfig: ClientConfig = {
+  ...sanityConfig,
+  useCdn: false,
+  token: process.env.SANITY_PREVIEW_TOKEN || apiToken,
+  perspective: 'previewDrafts'
+}
