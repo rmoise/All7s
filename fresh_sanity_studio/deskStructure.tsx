@@ -14,7 +14,8 @@ interface SanityDocument {
 const getPreviewUrl = (doc: SanityDocument | null) => {
   if (!doc) return ''
 
-  const secret = process.env.SANITY_STUDIO_PREVIEW_SECRET
+  const secret = process.env.SANITY_STUDIO_PREVIEW_SECRET ||
+                 process.env.NEXT_PUBLIC_PREVIEW_SECRET
   const baseUrl = window.location.hostname === 'localhost'
     ? 'http://localhost:3000'
     : window.location.pathname.includes('/staging')

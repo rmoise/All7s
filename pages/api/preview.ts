@@ -4,7 +4,8 @@ export default async function preview(req: NextApiRequest, res: NextApiResponse)
   const { secret, id, type } = req.query
 
   // Check if the preview secret matches
-  if (secret !== process.env.NEXT_PUBLIC_PREVIEW_SECRET) {
+  if (secret !== process.env.SANITY_PREVIEW_SECRET &&
+      secret !== process.env.NEXT_PUBLIC_PREVIEW_SECRET) {
     return res.status(401).json({ message: 'Invalid secret' })
   }
 
