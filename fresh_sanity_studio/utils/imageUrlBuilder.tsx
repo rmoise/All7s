@@ -7,11 +7,37 @@ import type {SanityImage as SanityImageType} from '../../types/sanity'
 // Export the SanityImage type
 export type SanityImage = SanityImageType
 
-const projectId = process.env.SANITY_STUDIO_PROJECT_ID || ''
-const dataset = process.env.SANITY_STUDIO_DATASET || ''
+const projectId = process.env.SANITY_STUDIO_PROJECT_ID || '1gxdk71x'
 
-console.log('Current environment:', process.env.NODE_ENV)
-console.log('Using dataset:', dataset)
+// Enhanced dataset detection
+const getDataset = () => {
+  // Check window location first for production
+  if (typeof window !== 'undefined' && window.location.hostname === 'all7z.sanity.studio') {
+    return 'production';
+  }
+
+  // Then check environment variables
+  if (process.env.NODE_ENV === 'production' || process.env.NEXT_PUBLIC_ENVIRONMENT === 'production') {
+    return 'production';
+  }
+
+  if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'staging' || process.env.SANITY_STUDIO_DATASET === 'staging') {
+    return 'staging';
+  }
+
+  return process.env.SANITY_STUDIO_DATASET || 'production';
+};
+
+const dataset = getDataset();
+
+console.log('Image Builder Environment:', {
+  NODE_ENV: process.env.NODE_ENV,
+  NEXT_PUBLIC_ENVIRONMENT: process.env.NEXT_PUBLIC_ENVIRONMENT,
+  SANITY_STUDIO_DATASET: process.env.SANITY_STUDIO_DATASET,
+  hostname: typeof window !== 'undefined' ? window.location.hostname : 'server',
+  dataset,
+  projectId
+});
 
 const client = createClient({
   projectId,

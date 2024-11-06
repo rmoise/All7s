@@ -172,17 +172,18 @@ export interface CustomAlbum {
 // Add EmbeddedAlbum interface
 export interface EmbeddedAlbum {
   _type: 'embeddedAlbum';
-  title?: string;
-  artist?: string;
-  imageUrl?: string;
+  embedCode: string;
+  title: string;
+  artist: string;
+  platform: 'spotify' | 'soundcloud' | '';
+  releaseType: 'album' | 'playlist' | 'track';
+  imageUrl: string;
+  processedImageUrl?: string;
+  embedUrl: string;
+  isEmbedSupported: boolean;
   customImage?: {
-    asset?: {
-      _ref: string;
-      url?: string;
-    };
+    asset?: SanityImageAsset;
   };
-  embedCode?: string;
-  platform?: string;
   songs?: Song[];
 }
 
@@ -192,4 +193,17 @@ export interface Album {
   albumSource: 'embedded' | 'custom';
   embeddedAlbum?: EmbeddedAlbum;
   customAlbum?: CustomAlbum;
+}
+
+// Add or update these interfaces
+export interface SanityImageAsset {
+  _id?: string;
+  url?: string;
+  metadata?: {
+    dimensions?: {
+      width: number;
+      height: number;
+      aspectRatio: number;
+    };
+  };
 }

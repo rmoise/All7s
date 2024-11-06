@@ -34,14 +34,35 @@ const singletonActions = new Set(['publish', 'discardChanges', 'restore'])
 const singletonTypes = new Set(['home', 'settings'])
 
 // Ensure projectId and dataset are always defined
-const projectId = process.env.SANITY_STUDIO_PROJECT_ID
-const dataset = process.env.SANITY_STUDIO_DATASET
-if (!projectId) {
-  throw new Error('Missing SANITY_STUDIO_PROJECT_ID')
-}
-if (!dataset) {
-  throw new Error('Missing SANITY_STUDIO_DATASET')
-}
+const projectId = process.env.SANITY_STUDIO_PROJECT_ID || '1gxdk71x'
+
+const getDataset = () => {
+  // Check window location first for production
+  if (typeof window !== 'undefined' && window.location.hostname === 'all7z.sanity.studio') {
+    return 'production';
+  }
+
+  // Then check environment variables
+  if (process.env.NODE_ENV === 'production' || process.env.NEXT_PUBLIC_ENVIRONMENT === 'production') {
+    return 'production';
+  }
+
+  if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'staging' || process.env.SANITY_STUDIO_DATASET === 'staging') {
+    return 'staging';
+  }
+
+  return process.env.SANITY_STUDIO_DATASET || 'production';
+};
+
+const dataset = getDataset();
+
+console.log('Sanity Config:', {
+  env: process.env.NEXT_PUBLIC_ENVIRONMENT,
+  NODE_ENV: process.env.NODE_ENV,
+  hostname: typeof window !== 'undefined' ? window.location.hostname : 'server',
+  dataset,
+  projectId
+})
 
 // Define schema configuration
 const schemaConfig: WorkspaceConfig['schema'] = {
@@ -100,8 +121,8 @@ const baseConfig: Omit<WorkspaceConfig, 'name' | 'title' | 'dataset' | 'icon'> =
         source.name === 'media-library' || source.name === 'sanity-default'
       )
     }
-  }
-} as const
+  } as const
+}
 
 // Create workspace configurations
 const workspaces: WorkspaceConfig[] = [

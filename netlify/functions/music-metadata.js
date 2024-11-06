@@ -81,72 +81,84 @@ async function fetchSpotifyAlbumData(albumId, accessToken) {
  */
 async function fetchSoundCloudData(url) {
   try {
-    // If the URL is a SoundCloud player URL, extract the 'url' parameter
+    // Extract URL from player if needed
     if (url.includes('w.soundcloud.com/player')) {
       const urlObj = new URL(url);
       const resourceUrlEncoded = urlObj.searchParams.get('url');
       if (resourceUrlEncoded) {
         url = decodeURIComponent(resourceUrlEncoded);
-      } else {
-        throw new Error('Unable to extract resource URL from SoundCloud player URL.');
       }
     }
 
-    // Sanitize the URL by removing query parameters
     const baseUrl = url.split('?')[0];
     const apiUrl = `https://soundcloud.com/oembed?format=json&url=${encodeURIComponent(baseUrl)}`;
 
-    console.log(`Fetching SoundCloud metadata from: ${apiUrl}`);
-
     const response = await axios.get(apiUrl);
-    console.log('SoundCloud API Response:', response.data);
-
     const { title, author_name: artist, thumbnail_url: imageUrl } = response.data;
 
-    if (!imageUrl) {
-      console.warn('No thumbnail URL received from SoundCloud');
-    }
-
+    // Always try to get the high-res version first
     const highResImageUrl = imageUrl ? imageUrl.replace('-large', '-t500x500') : null;
+    const mediumResImageUrl = imageUrl ? imageUrl.replace('-large', '-t300x300') : null;
 
-    // Add cache headers for the image
-    const imageHeaders = {
-      'Cache-Control': 'public, max-age=31536000',
-      'Access-Control-Allow-Origin': '*'
-    };
+    let finalImageUrl = null;
 
-    // Verify the image URL is accessible
+    // Try high res first
     if (highResImageUrl) {
       try {
-        await axios.head(highResImageUrl);
-      } catch (error) {
-        console.warn(`High-res image not accessible: ${highResImageUrl}`, error.message);
-        // Fall back to original imageUrl if high-res isn't available
-        return {
-          title: title || 'Untitled SoundCloud Release',
-          artist: artist || 'Unknown Artist',
-          imageUrl: imageUrl || '/images/placeholder.png',
-          releaseType: 'playlist',
-          embedUrl: url,
-          isEmbedSupported: true
-        };
+        const response = await axios.head(highResImageUrl);
+        if (response.status === 200) {
+          finalImageUrl = highResImageUrl;
+        }
+      } catch {
+        console.warn('High res image not accessible');
       }
+    }
+
+    // Fall back to medium res
+    if (!finalImageUrl && mediumResImageUrl) {
+      try {
+        const response = await axios.head(mediumResImageUrl);
+        if (response.status === 200) {
+          finalImageUrl = mediumResImageUrl;
+        }
+      } catch {
+        console.warn('Medium res image not accessible');
+      }
+    }
+
+    // Fall back to original URL
+    if (!finalImageUrl && imageUrl) {
+      try {
+        const response = await axios.head(imageUrl);
+        if (response.status === 200) {
+          finalImageUrl = imageUrl;
+        }
+      } catch {
+        console.warn('Original image not accessible');
+      }
+    }
+
+    // If all attempts fail, use placeholder
+    if (!finalImageUrl) {
+      finalImageUrl = '/images/music-placeholder.png';
     }
 
     return {
       title: title || 'Untitled SoundCloud Release',
       artist: artist || 'Unknown Artist',
-      imageUrl: highResImageUrl || imageUrl || '/images/placeholder.png',
+      imageUrl: finalImageUrl,
+      processedImageUrl: finalImageUrl,
       releaseType: 'playlist',
       embedUrl: url,
       isEmbedSupported: true
     };
   } catch (error) {
-    console.error(`Failed to fetch SoundCloud data for URL ${url}:`, error.message);
+    console.error('Failed to fetch SoundCloud data:', error);
     return {
       title: 'SoundCloud Release',
       artist: 'Unknown Artist',
-      imageUrl: '/images/placeholder.png',
+      imageUrl: '/images/music-placeholder.png',
+      processedImageUrl: '/images/music-placeholder.png',
       releaseType: 'playlist',
       embedUrl: url,
       isEmbedSupported: true
@@ -166,7 +178,10 @@ exports.handler = async (event, context) => {
     'https://all7z.sanity.studio',
     'https://all7z.com',
     'https://www.all7z.com',
-    'https://i1.sndcdn.com'  // Add SoundCloud's image domain
+    'https://i1.sndcdn.com',
+    'https://i2.sndcdn.com',
+    'https://i3.sndcdn.com',
+    'https://i4.sndcdn.com'
   ];
 
   const origin = event.headers.origin;

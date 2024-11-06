@@ -65,6 +65,9 @@ const FlipCard = forwardRef<HTMLDivElement, FlipCardProps>(
       {}
     )
     const [isMobile, setIsMobile] = useState(false)
+    const [imageError, setImageError] = useState(false)
+    const [retryCount, setRetryCount] = useState(0)
+    const maxRetries = 3
 
     // Handle window resize to set isMobile
     useEffect(() => {
@@ -90,8 +93,8 @@ const FlipCard = forwardRef<HTMLDivElement, FlipCardProps>(
       if (!embedUrl) return null;
       const url = embedUrl.toLowerCase();
       if (url.includes('spotify.com')) return 'spotify';
-      if (url.includes('soundcloud.com') || url.includes('api.soundcloud.com')) return 'soundcloud';
-      console.log('No platform detected for URL:', url); // Add debugging
+      if (url.includes('soundcloud.com')) return 'soundcloud';
+      if (url.includes('api.soundcloud.com')) return 'soundcloud';
       return null;
     }, [embedUrl]);
 
@@ -363,6 +366,37 @@ const FlipCard = forwardRef<HTMLDivElement, FlipCardProps>(
       toggleFlip(album.albumId)
     }, [toggleFlip, album.albumId])
 
+    const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+      console.error('Image failed to load:', album.imageUrl);
+
+      if (retryCount < maxRetries) {
+        setRetryCount(prev => prev + 1);
+
+        // Try different variations of the URL
+        const img = e.currentTarget;
+        const currentSrc = img.src;
+
+        if (currentSrc.includes('sndcdn.com')) {
+          if (currentSrc.startsWith('https:')) {
+            // Try HTTP version
+            img.src = currentSrc.replace('https:', 'http:');
+          } else if (currentSrc.includes('-t500x500')) {
+            // Try large version
+            img.src = currentSrc.replace('-t500x500', '-large');
+          } else if (album.imageUrl) {
+            // Try original URL without modifications if it exists
+            img.src = album.imageUrl;
+          }
+        }
+      } else {
+        setImageError(true);
+        e.currentTarget.src = '/images/placeholder.png';
+      }
+    };
+
+    // Get the image URL with fallback
+    const displayImageUrl = album.imageUrl || '/images/placeholder.png';
+
     return (
       <div
         ref={ref}
@@ -394,7 +428,7 @@ const FlipCard = forwardRef<HTMLDivElement, FlipCardProps>(
                 <div className="w-full h-0 pb-[100%] relative">
                   <Image
                     ref={imgRef}
-                    src={imageUrl}
+                    src={displayImageUrl}
                     alt={album.title || 'Album Image'}
                     fill
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
@@ -433,7 +467,7 @@ const FlipCard = forwardRef<HTMLDivElement, FlipCardProps>(
                     {/* Player UI */}
                     <div className="flex items-center space-x-4 mb-4">
                       <Image
-                        src={imageUrl}
+                        src={displayImageUrl}
                         alt={album.title}
                         width={64}
                         height={64}
@@ -650,13 +684,21 @@ const FlipCard = forwardRef<HTMLDivElement, FlipCardProps>(
             position: relative;
           }
 
+          .music-embed {
+            width: 100%;
+            height: 100%;
+            min-height: 352px;
+            position: relative;
+            background-color: transparent;
+            border-radius: 12px;
+            overflow: hidden;
+          }
+
           .music-embed iframe {
             width: 100%;
             height: 100%;
             border: none;
             border-radius: 12px;
-            opacity: 0;
-            transition: opacity 0.3s ease-in;
           }
 
           .music-embed iframe.loaded {

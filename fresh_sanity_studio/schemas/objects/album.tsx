@@ -116,6 +116,13 @@ const albumSchema = defineType({
           options: {hotspot: true},
           description: 'Optional: override auto-fetched image by uploading your own.',
         }),
+        defineField({
+          name: 'processedImageUrl',
+          type: 'string',
+          title: 'Processed Image URL',
+          readOnly: true,
+          description: 'Automatically processed high-resolution image URL'
+        })
       ],
       components: {input: ReleaseInfoInput},
       hidden: ({parent}: {parent: ParentType}) => parent?.albumSource !== 'embedded',

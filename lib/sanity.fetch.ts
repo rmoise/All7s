@@ -56,9 +56,18 @@ export async function getHome() {
                 platform,
                 releaseType,
                 imageUrl,
+                "processedImageUrl": select(
+                  platform == 'soundcloud' && defined(imageUrl) =>
+                    imageUrl,  // Return original URL, let Next.js handle optimization
+                  defined(imageUrl) => imageUrl,
+                  '/images/placeholder.png'
+                ),
                 customImage {
                   asset-> {
-                    url
+                    url,
+                    metadata {
+                      dimensions
+                    }
                   }
                 }
               },

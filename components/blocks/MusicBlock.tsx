@@ -88,20 +88,18 @@ const MusicBlock: React.FC<MusicBlockProps> = ({ listenTitle = 'LISTEN', albums 
   const getImageUrl = (album: Album): string => {
     console.log('Getting image URL for album:', album);
 
-    // For embedded albums with imageUrl (SoundCloud/Spotify)
-    if (album.albumSource === 'embedded' && album.embeddedAlbum?.imageUrl) {
-      const imageUrl = album.embeddedAlbum.imageUrl;
-      console.log('Using embedded album imageUrl:', imageUrl);
-
-      // Verify if it's a SoundCloud image and ensure it's using HTTPS
-      if (imageUrl.includes('sndcdn.com') && !imageUrl.startsWith('https:')) {
-        return imageUrl.replace('http:', 'https:');
+    if (album.albumSource === 'embedded' && album.embeddedAlbum) {
+      if (album.embeddedAlbum.processedImageUrl) {
+        console.log('Using processed image URL:', album.embeddedAlbum.processedImageUrl);
+        return album.embeddedAlbum.processedImageUrl;
       }
 
-      return imageUrl;
+      if (album.embeddedAlbum.imageUrl) {
+        console.log('Using embedded album imageUrl:', album.embeddedAlbum.imageUrl);
+        return album.embeddedAlbum.imageUrl;
+      }
     }
 
-    // For custom albums or embedded albums with custom image override
     if (album.customAlbum?.customImage?.asset || album.embeddedAlbum?.customImage?.asset) {
       const image = album.customAlbum?.customImage || album.embeddedAlbum?.customImage;
       console.log('Using custom image:', image);

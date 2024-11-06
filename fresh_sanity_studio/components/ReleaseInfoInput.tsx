@@ -50,6 +50,30 @@ interface ReleaseInfoValue {
   [key: string]: any
 }
 
+// Add this function at the top level, before the ReleaseInfoInput component
+const getFunctionUrl = () => {
+  // Check if we're in Sanity Studio
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+
+    // For Sanity Studio in production
+    if (hostname.includes('sanity.studio')) {
+      return 'https://all7z.com/.netlify/functions/music-metadata';
+    }
+
+    // For local development
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      // Check if Netlify Functions are running
+      return fetch('http://localhost:8888/.netlify/functions/music-metadata')
+        .then(() => 'http://localhost:8888/.netlify/functions/music-metadata')
+        .catch(() => 'https://all7z.com/.netlify/functions/music-metadata');
+    }
+  }
+
+  // Default to production URL
+  return 'https://all7z.com/.netlify/functions/music-metadata';
+};
+
 const ReleaseInfoInput = (props: ObjectInputProps) => {
   const {value = {}, onChange, readOnly, renderDefault} = props as {
     value: ReleaseInfoValue
@@ -127,18 +151,31 @@ const ReleaseInfoInput = (props: ObjectInputProps) => {
     supportsEmbedding: boolean
   ) => {
     try {
-      const hostname = typeof window !== 'undefined' ? window.location.hostname : ''
-      const functionUrl =
-        hostname === 'localhost'
-          ? 'http://localhost:8888/.netlify/functions/music-metadata'
-          : hostname.includes('staging')
-            ? 'https://staging--all7z.netlify.app/.netlify/functions/music-metadata'
-            : 'https://all7z.com/.netlify/functions/music-metadata'
+      const functionUrl = getFunctionUrl();
+      console.log('Metadata fetch attempt:', {
+        functionUrl,
+        sanitizedUrl,
+        platform,
+        hostname: typeof window !== 'undefined' ? window.location.hostname : 'unknown'
+      });
 
-      const response = await fetch(`${functionUrl}?url=${encodeURIComponent(sanitizedUrl)}`)
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
-      const data: Metadata = await response.json()
+      const response = await fetch(`${functionUrl}?url=${encodeURIComponent(sanitizedUrl)}`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        // Add timeout
+        signal: AbortSignal.timeout(10000) // 10 second timeout
+      });
 
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      // Create patch with the fetched data
       const patch: EmbeddedAlbum = {
         _type: 'embeddedAlbum',
         embedCode,
@@ -149,38 +186,51 @@ const ReleaseInfoInput = (props: ObjectInputProps) => {
         imageUrl: data.imageUrl || '/images/placeholder.png',
         embedUrl: sanitizedUrl,
         isEmbedSupported: supportsEmbedding,
-        customImage: value.customImage as SanityImageAsset | undefined
-      }
+        customImage: value.customImage
+      };
 
       onChange(PatchEvent.from([
         set(patch),
         value.customImage
-          ? set(value.customImage as SanityImageAsset, ['customImage'])
+          ? set(value.customImage, ['customImage'])
           : unset(['customImage'])
-      ]))
+      ]));
+
+      isMetadataFetchedRef.current = true;
 
     } catch (error) {
-      console.error('Error fetching metadata:', error)
-      const fallbackPatch: Omit<EmbeddedAlbum, 'customImage'> = {
+      console.error('Metadata fetch error:', {
+        error,
+        functionUrl: getFunctionUrl(),
+        sanitizedUrl,
+        platform,
+        hostname: typeof window !== 'undefined' ? window.location.hostname : 'unknown'
+      });
+
+      // Use fallback values
+      const fallbackPatch: EmbeddedAlbum = {
         _type: 'embeddedAlbum',
         embedCode,
         title: 'Error Loading Metadata',
         artist: 'Unknown Artist',
         platform,
         releaseType: 'album',
-        imageUrl: 'https://example.com/placeholder.png',
+        imageUrl: '/images/placeholder.png',
         embedUrl: sanitizedUrl,
-        isEmbedSupported: supportsEmbedding
-      }
+        isEmbedSupported: supportsEmbedding,
+        customImage: value.customImage
+      };
 
       onChange(PatchEvent.from([
         set(fallbackPatch),
         value.customImage
-          ? set(value.customImage as SanityImageAsset, ['customImage'])
+          ? set(value.customImage, ['customImage'])
           : unset(['customImage'])
-      ]))
+      ]));
+
+      isMetadataFetchedRef.current = true;
     }
-  }
+  };
 
   useEffect(() => {
     if (!embedCode || isMetadataFetchedRef.current) return
@@ -218,16 +268,19 @@ const ReleaseInfoInput = (props: ObjectInputProps) => {
 
     console.log(`Detected platform: ${detectedPlatform}, Sanitized URL: ${sanitizedUrl}`)
 
-    const hostname = typeof window !== 'undefined' ? window.location.hostname : ''
-    const functionUrl =
-      hostname === 'localhost'
-        ? 'http://localhost:8888/.netlify/functions/music-metadata'
-        : hostname.includes('staging')
-          ? 'https://staging--all7z.netlify.app/.netlify/functions/music-metadata'
-          : 'https://all7z.com/.netlify/functions/music-metadata'
+    const functionUrl = getFunctionUrl();
+    console.log('Using function URL:', functionUrl);
 
     async function fetchMetadata() {
       try {
+        const functionUrl = await getFunctionUrl();
+        console.log('Metadata fetch attempt:', {
+          functionUrl,
+          sanitizedUrl,
+          platform: detectedPlatform,
+          hostname: typeof window !== 'undefined' ? window.location.hostname : 'unknown'
+        });
+
         let data: Metadata = {
           title: '',
           artist: '',
@@ -235,13 +288,21 @@ const ReleaseInfoInput = (props: ObjectInputProps) => {
           releaseType: '',
           embedUrl: sanitizedUrl,
           isEmbedSupported: supportsEmbedding,
-        }
+        };
 
         if (detectedPlatform === 'spotify' || detectedPlatform === 'soundcloud') {
-          const response = await fetch(`${functionUrl}?url=${encodeURIComponent(sanitizedUrl)}`)
-          if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
-          data = await response.json()
-          data.isEmbedSupported = supportsEmbedding
+          const response = await fetch(`${functionUrl}?url=${encodeURIComponent(sanitizedUrl)}`, {
+            method: 'GET',
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json',
+            },
+            signal: AbortSignal.timeout(10000)
+          });
+
+          if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+          data = await response.json();
+          data.isEmbedSupported = supportsEmbedding;
         }
 
         const patch: EmbeddedAlbum = {

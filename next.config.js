@@ -1,30 +1,61 @@
 const path = require('path');
 
+const getDataset = () => {
+  if (process.env.NODE_ENV === 'production') {
+    console.log('Production mode detected, using production dataset');
+    return 'production';
+  }
+  if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'staging') {
+    console.log('Staging environment detected');
+    return 'staging';
+  }
+  const devDataset = process.env.SANITY_STUDIO_DATASET || 'production';
+  console.log(`Development environment, using ${devDataset} dataset`);
+  return devDataset;
+};
+
+const dataset = getDataset();
+
+console.log('Next.js Config Environment:', {
+  NODE_ENV: process.env.NODE_ENV,
+  NEXT_PUBLIC_ENVIRONMENT: process.env.NEXT_PUBLIC_ENVIRONMENT,
+  NEXT_PUBLIC_SANITY_DATASET: dataset,
+  dataset
+});
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  output: 'standalone',
 
   env: {
-    NEXT_PUBLIC_SANITY_PROJECT_ID: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || '1gxdk71x',
-    NEXT_PUBLIC_SANITY_DATASET: process.env.NEXT_PUBLIC_ENVIRONMENT === 'staging'
-      ? process.env.NEXT_PUBLIC_SANITY_DATASET || 'staging'
-      : process.env.NEXT_PUBLIC_SANITY_DATASET || 'production',
-    SANITY_TOKEN: process.env.NEXT_PUBLIC_ENVIRONMENT === 'staging'
-      ? process.env.NEXT_STAGING_SANITY_TOKEN || 'staging-token'
-      : process.env.SANITY_TOKEN || 'production-token',
-    NEXT_PUBLIC_NETLIFY: process.env.NEXT_PUBLIC_NETLIFY || process.env.NETLIFY || 'false',
+    NEXT_PUBLIC_ENVIRONMENT: process.env.NODE_ENV === 'production'
+      ? 'production'
+      : process.env.NEXT_PUBLIC_ENVIRONMENT || 'development',
+    NEXT_PUBLIC_SANITY_PROJECT_ID: '1gxdk71x',
+    NEXT_PUBLIC_SANITY_DATASET: dataset,
     NEXT_PUBLIC_SANITY_STUDIO_URL: process.env.NEXT_PUBLIC_SANITY_STUDIO_URL || 'http://localhost:3333',
+    SANITY_TOKEN: process.env.NEXT_PUBLIC_ENVIRONMENT === 'staging'
+      ? process.env.NEXT_STAGING_SANITY_TOKEN
+      : process.env.SANITY_TOKEN,
+    NEXT_PUBLIC_NETLIFY: process.env.NEXT_PUBLIC_NETLIFY || process.env.NETLIFY || 'false',
     SANITY_API_READ_TOKEN: process.env.SANITY_API_READ_TOKEN,
     SANITY_STUDIO_PATH: 'fresh_sanity_studio',
     SANITY_PREVIEW_SECRET: process.env.SANITY_PREVIEW_SECRET || '',
     NEXT_PUBLIC_PREVIEW_SECRET: process.env.SANITY_PREVIEW_SECRET || '',
+    SANITY_STUDIO_DATASET: dataset,
   },
 
   images: {
     unoptimized: process.env.NODE_ENV === 'development',
-    domains: ['cdn.sanity.io', 'i.scdn.co'],
+    domains: ['cdn.sanity.io', 'i.scdn.co', 'i1.sndcdn.com', 'i2.sndcdn.com', 'i3.sndcdn.com', 'i4.sndcdn.com'],
     formats: ['image/avif', 'image/webp'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**.sndcdn.com',
+        pathname: '/artworks-**',
+      },
+    ],
   },
 
   webpack: (config, { isServer, dev }) => {
@@ -52,14 +83,6 @@ const nextConfig = {
     }
 
     return config;
-  },
-
-  experimental: {
-    serverActions: {
-      allowedOrigins: ['localhost:3000', 'all7z.com'],
-      bodySizeLimit: '2mb'
-    },
-    optimizePackageImports: ['@sanity/ui', '@headlessui/react', 'lodash']
   },
 
   async headers() {
@@ -104,19 +127,21 @@ const nextConfig = {
             ].join('; ')
           }
         ]
-      }
+      },
+      {
+        source: '/studio/:path*',
+        headers: [
+          { key: 'Access-Control-Allow-Credentials', value: 'true' },
+          { key: 'Access-Control-Allow-Origin', value: '*' },
+          { key: 'Access-Control-Allow-Methods', value: 'GET,OPTIONS,PATCH,DELETE,POST,PUT' },
+          { key: 'Access-Control-Allow-Headers', value: 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version' },
+        ],
+      },
     ]
   },
 
   compiler: {
     styledComponents: true,
-  },
-
-  devServer: {
-    hot: true,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-    },
   },
 };
 

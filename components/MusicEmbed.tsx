@@ -1,6 +1,7 @@
 // components/MusicEmbed.tsx
 import React, { useState, useEffect, useMemo } from 'react'
 import { useInView } from 'react-intersection-observer'
+import LoadingSpinner from './LoadingSpinner'
 
 interface MusicEmbedProps {
   embedUrl: string
@@ -47,42 +48,18 @@ const MusicEmbed: React.FC<MusicEmbedProps> = ({
   console.log('Formatted Embed URL:', formattedEmbedUrl);
 
   return (
-    <div
-      ref={ref}
-      className={`${platform}-embed-container`}
-      style={{ position: 'relative' }}
-    >
-      {!isLoaded && (
-        <div className={`${platform}-loading`}>
-          <p className="text-lg font-semibold">
-            Loading {platform === 'spotify' ? 'Spotify' : 'SoundCloud'}{' '}
-            player...
-          </p>
-        </div>
-      )}
-      {inView && (
-        <iframe
-          src={formattedEmbedUrl}
-          className={`${platform}-iframe ${isLoaded ? 'loaded' : ''}`}
-          width="100%"
-          height="100%"
-          frameBorder="0"
-          allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-          allowFullScreen
-          title={`${
-            platform === 'spotify' ? 'Spotify' : 'SoundCloud'
-          } ${title}`}
-          onLoad={() => setIsLoaded(true)}
-          style={{
-            zIndex: 10001,
-            overflow: 'auto',
-            height: '100%',
-            border: 'none',
-          }}
-        />
-      )}
+    <div ref={ref} className={`w-full h-full ${
+      platform === 'soundcloud' ? 'soundcloud-embed-container' : 'spotify-embed-container'
+    }`}>
+      <iframe
+        className={platform === 'soundcloud' ? 'soundcloud-iframe' : 'w-full h-full'}
+        src={formattedEmbedUrl}
+        title={title}
+        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+        loading="lazy"
+      />
     </div>
-  )
+  );
 }
 
 export default MusicEmbed
