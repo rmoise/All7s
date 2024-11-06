@@ -14,27 +14,40 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
-    "baseUrl": ".",
+    "baseUrl": "..",
     "allowImportingTsExtensions": true,
     "paths": {
-      "@/*": ["./*"]
-    }
+      "@/*": ["./*"],
+      "@lib/*": ["lib/*"],
+      "@components/*": ["components/*"],
+      "@utils/*": ["fresh_sanity_studio/utils/*"],
+      "@schemas/*": ["fresh_sanity_studio/schemas/*"],
+      "@plugins/*": ["fresh_sanity_studio/plugins/*"]
+    },
+    "typeRoots": [
+      "../node_modules/@types",
+      "./types",
+      "../types"
+    ],
+    "strictNullChecks": true
   },
   "include": [
-    "./components/**/*.ts",
-    "./components/**/*.tsx",
-    "./plugins/**/*.ts",
-    "./plugins/**/*.tsx",
-    "./schemas/**/*.ts",
-    "./schemas/**/*.tsx",
-    "./lib/**/*.ts",
-    "./lib/**/*.tsx",
-    "./scripts/**/*.ts",
-    "./scripts/**/*.mts",
-    "./deskStructure.tsx",
-    "./sanity.config.tsx",
-    "./sanity.cli.ts",
-    "./types/**/*.d.ts"
+    "lib/**/*.ts",
+    "lib/**/*.tsx",
+    "fresh_sanity_studio/components/**/*.ts",
+    "fresh_sanity_studio/components/**/*.tsx",
+    "fresh_sanity_studio/plugins/**/*.ts",
+    "fresh_sanity_studio/plugins/**/*.tsx",
+    "fresh_sanity_studio/schemas/**/*.ts",
+    "fresh_sanity_studio/schemas/**/*.tsx",
+    "fresh_sanity_studio/lib/**/*.ts",
+    "fresh_sanity_studio/lib/**/*.tsx",
+    "fresh_sanity_studio/scripts/**/*.ts",
+    "fresh_sanity_studio/scripts/**/*.mts",
+    "fresh_sanity_studio/deskStructure.tsx",
+    "fresh_sanity_studio/sanity.config.tsx",
+    "fresh_sanity_studio/sanity.cli.ts",
+    "fresh_sanity_studio/types/**/*.d.ts"
   ],
   "exclude": [
     "node_modules",

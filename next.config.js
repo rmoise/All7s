@@ -1,20 +1,6 @@
 const path = require('path');
 
-const getDataset = () => {
-  if (process.env.NODE_ENV === 'production') {
-    console.log('Production mode detected, using production dataset');
-    return 'production';
-  }
-  if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'staging') {
-    console.log('Staging environment detected');
-    return 'staging';
-  }
-  const devDataset = process.env.SANITY_STUDIO_DATASET || 'production';
-  console.log(`Development environment, using ${devDataset} dataset`);
-  return devDataset;
-};
-
-const dataset = getDataset();
+const dataset = process.env.SANITY_STUDIO_DATASET || 'production';
 
 console.log('Next.js Config Environment:', {
   NODE_ENV: process.env.NODE_ENV,

@@ -10,7 +10,7 @@ const __dirname = dirname(__filename);
 dotenv.config({ path: resolve(__dirname, '../.env') });
 
 const token = process.env.SANITY_STUDIO_API_TOKEN;
-const dataset = process.env.SANITY_STUDIO_DATASET || 'staging';
+const dataset = process.env.SANITY_STUDIO_DATASET || 'production';
 
 console.log('Using dataset:', dataset);
 console.log('Token present:', !!token);

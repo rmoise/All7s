@@ -3,42 +3,38 @@
 import { NextStudio } from 'next-sanity/studio'
 import config from '../../../../fresh_sanity_studio/sanity.config'
 import { StudioProvider, StudioLayout } from 'sanity'
+import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 
 export default function Studio() {
-  const studioConfig = Array.isArray(config) ? config[0] : config;
+  const pathname = usePathname();
+  const workspaces = Array.isArray(config) ? config : [config];
+  const currentWorkspace = workspaces.find(workspace =>
+    pathname?.includes(workspace.basePath)
+  ) || workspaces[0];
 
-  // Get dataset based on environment
-  const getDataset = () => {
-    if (process.env.NODE_ENV === 'production') return 'production';
-    if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'staging') return 'staging';
-    return process.env.SANITY_STUDIO_DATASET || 'production';
-  };
-
-  const dataset = getDataset();
-  const baseUrl = process.env.NODE_ENV === 'production'
-    ? 'https://all7z.com'
-    : process.env.NEXT_PUBLIC_ENVIRONMENT === 'staging'
-      ? 'https://staging--all7z.netlify.app'
-      : 'http://localhost:3000';
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('sanityDataset');
+    }
+  }, []);
 
   console.log('Studio Environment:', {
     NODE_ENV: process.env.NODE_ENV,
     NEXT_PUBLIC_ENVIRONMENT: process.env.NEXT_PUBLIC_ENVIRONMENT,
-    SANITY_STUDIO_DATASET: process.env.SANITY_STUDIO_DATASET,
-    dataset,
-    baseUrl
+    workspace: currentWorkspace.name,
+    dataset: currentWorkspace.dataset,
+    pathname,
+    baseUrl: currentWorkspace.baseUrl
   });
 
   return (
     <StudioProvider
       config={{
-        ...studioConfig,
+        ...currentWorkspace,
         apiVersion: '2024-03-19',
-        dataset,
         projectId: '1gxdk71x',
         token: process.env.SANITY_API_READ_TOKEN || process.env.SANITY_TOKEN,
-        basePath: '/studio',
-        baseUrl
       }}
     >
       <StudioLayout />

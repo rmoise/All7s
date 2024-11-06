@@ -5,7 +5,7 @@
   "main": "package.json",
   "license": "UNLICENSED",
   "scripts": {
-    "dev": "sanity dev",
+    "dev": "cross-env SANITY_STUDIO_DATASET=production sanity dev",
     "dev:staging": "cross-env SANITY_STUDIO_DATASET=staging sanity dev",
     "start": "cross-env NODE_ENV=production SANITY_STUDIO_DATASET=production sanity start",
     "build": "cross-env NODE_ENV=production SANITY_STUDIO_DATASET=production sanity build",
