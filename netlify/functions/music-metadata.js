@@ -109,6 +109,30 @@ async function fetchSoundCloudData(url) {
 
     const highResImageUrl = imageUrl ? imageUrl.replace('-large', '-t500x500') : null;
 
+    // Add cache headers for the image
+    const imageHeaders = {
+      'Cache-Control': 'public, max-age=31536000',
+      'Access-Control-Allow-Origin': '*'
+    };
+
+    // Verify the image URL is accessible
+    if (highResImageUrl) {
+      try {
+        await axios.head(highResImageUrl);
+      } catch (error) {
+        console.warn(`High-res image not accessible: ${highResImageUrl}`, error.message);
+        // Fall back to original imageUrl if high-res isn't available
+        return {
+          title: title || 'Untitled SoundCloud Release',
+          artist: artist || 'Unknown Artist',
+          imageUrl: imageUrl || '/images/placeholder.png',
+          releaseType: 'playlist',
+          embedUrl: url,
+          isEmbedSupported: true
+        };
+      }
+    }
+
     return {
       title: title || 'Untitled SoundCloud Release',
       artist: artist || 'Unknown Artist',
@@ -138,8 +162,11 @@ exports.handler = async (event, context) => {
   // Define allowed origins based on environment
   const allowedOrigins = [
     'http://localhost:3333',
+    'http://localhost:3000',
     'https://all7z.sanity.studio',
     'https://all7z.com',
+    'https://www.all7z.com',
+    'https://i1.sndcdn.com'  // Add SoundCloud's image domain
   ];
 
   const origin = event.headers.origin;
@@ -147,8 +174,9 @@ exports.handler = async (event, context) => {
 
   const defaultHeaders = {
     'Access-Control-Allow-Origin': allowOriginHeader,
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Credentials': 'true',
     'Content-Type': 'application/json',
   };
 
