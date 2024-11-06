@@ -15,7 +15,7 @@
     "start:production": "cross-env NODE_ENV=production NEXT_PUBLIC_ENVIRONMENT=production SANITY_STUDIO_DATASET=production next start",
     "fresh-studio:dev": "cd fresh_sanity_studio && npm run dev",
     "fresh-studio:build": "cd fresh_sanity_studio && cross-env SANITY_STUDIO_DATASET=production npm install && npm run build",
-    "fresh-studio:deploy": "cd fresh_sanity_studio && npm run deploy",
+    "fresh-studio:deploy": "cd fresh_sanity_studio && npm run deploy:with-env",
     "type-check": "tsc --noEmit",
     "type-check:watch": "tsc --noEmit --watch",
     "dev:all:staging": "concurrently \"npm run dev:staging\" \"npm run fresh-studio:dev:staging\"",

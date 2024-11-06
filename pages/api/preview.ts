@@ -2,16 +2,17 @@ import { NextApiRequest, NextApiResponse } from 'next'
 
 export default async function preview(req: NextApiRequest, res: NextApiResponse) {
   const { secret, id, type } = req.query
+  const decodedSecret = decodeURIComponent(secret as string)
 
   console.log('Preview request:', {
-    secret: req.query.secret,
+    secret: decodedSecret,
     hasPreviewSecret: !!process.env.SANITY_PREVIEW_SECRET,
     hasPublicPreviewSecret: !!process.env.NEXT_PUBLIC_PREVIEW_SECRET,
     hasStudioPreviewSecret: !!process.env.SANITY_STUDIO_PREVIEW_SECRET,
     secretsMatch: {
-      preview: req.query.secret === process.env.SANITY_PREVIEW_SECRET,
-      public: req.query.secret === process.env.NEXT_PUBLIC_PREVIEW_SECRET,
-      studio: req.query.secret === process.env.SANITY_STUDIO_PREVIEW_SECRET,
+      preview: decodedSecret === process.env.SANITY_PREVIEW_SECRET,
+      public: decodedSecret === process.env.NEXT_PUBLIC_PREVIEW_SECRET,
+      studio: decodedSecret === process.env.SANITY_STUDIO_PREVIEW_SECRET,
     },
     secretLengths: {
       preview: process.env.SANITY_PREVIEW_SECRET?.length,
@@ -21,9 +22,9 @@ export default async function preview(req: NextApiRequest, res: NextApiResponse)
   })
 
   // Check if the preview secret matches
-  if (secret !== process.env.SANITY_PREVIEW_SECRET &&
-      secret !== process.env.NEXT_PUBLIC_PREVIEW_SECRET &&
-      secret !== process.env.SANITY_STUDIO_PREVIEW_SECRET) {
+  if (decodedSecret !== process.env.SANITY_PREVIEW_SECRET &&
+      decodedSecret !== process.env.NEXT_PUBLIC_PREVIEW_SECRET &&
+      decodedSecret !== process.env.SANITY_STUDIO_PREVIEW_SECRET) {
     return res.status(401).json({ message: 'Invalid secret' })
   }
 
