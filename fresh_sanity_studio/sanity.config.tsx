@@ -101,9 +101,7 @@ const workspaces: WorkspaceConfig[] = [
         const { document } = context
         const baseUrl = window.location.hostname === 'localhost'
           ? 'http://localhost:3000'
-          : window.location.pathname.includes('/staging')
-            ? 'https://staging--all7z.netlify.app'
-            : process.env.SANITY_STUDIO_PREVIEW_URL || 'https://all7z.com'
+          : 'https://all7z.com'
 
         if (document._type === 'home') {
           const secret = process.env.SANITY_STUDIO_PREVIEW_SECRET ||
