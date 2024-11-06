@@ -106,7 +106,8 @@ const workspaces: WorkspaceConfig[] = [
             : process.env.SANITY_STUDIO_PREVIEW_URL || 'https://all7z.com'
 
         if (document._type === 'home') {
-          const secret = process.env.SANITY_STUDIO_PREVIEW_SECRET
+          const secret = process.env.SANITY_STUDIO_PREVIEW_SECRET ||
+                        process.env.NEXT_PUBLIC_PREVIEW_SECRET
           return `${baseUrl}/api/preview?secret=${secret}&type=${document._type}&id=${document._id}`
         }
 
