@@ -196,7 +196,13 @@ const albumSchema = defineType({
                     accept: 'audio/*',
                     storeOriginalFilename: true,
                   },
-                  validation: (Rule) => Rule.required(),
+                  validation: (Rule) =>
+                    Rule.custom((value) => {
+                      if (!value && !value?.asset) {
+                        return 'Audio file is required';
+                      }
+                      return true;
+                    }),
                 }),
                 defineField({
                   name: 'duration',
