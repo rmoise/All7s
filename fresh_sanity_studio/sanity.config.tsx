@@ -1,45 +1,48 @@
-import { defineConfig, WorkspaceOptions } from 'sanity'
-import { deskTool } from 'sanity/desk'
-import { visionTool } from '@sanity/vision'
-import { media } from 'sanity-plugin-media'
-import { imageHotspotArrayPlugin } from 'sanity-plugin-hotspot-array'
-import { colorInput } from '@sanity/color-input'
-import { RobotIcon, RocketIcon } from '@sanity/icons'
-import { defaultDocumentNode } from './plugins/defaultDocumentNode'
-import { structure } from './deskStructure'
+import {defineConfig, WorkspaceOptions} from 'sanity'
+import {deskTool} from 'sanity/desk'
+import {visionTool} from '@sanity/vision'
+import {media} from 'sanity-plugin-media'
+import {imageHotspotArrayPlugin} from 'sanity-plugin-hotspot-array'
+import {colorInput} from '@sanity/color-input'
+import {RobotIcon, RocketIcon} from '@sanity/icons'
+import {defaultDocumentNode} from './plugins/defaultDocumentNode'
+import {structure} from './deskStructure'
 import schemaTypes from './schemas/schema'
-import type { SchemaTypeDefinition } from 'sanity'
+import type {SchemaTypeDefinition} from 'sanity'
 
 // Define types for context and prev
 interface DocumentContext {
   document: {
-    _type: string;
-    _id: string;
+    _type: string
+    _id: string
   }
 }
 
 interface WorkspaceConfig extends Omit<WorkspaceOptions, 'name' | 'title' | 'dataset' | 'icon'> {
-  name: string;
-  title: string;
-  dataset: string;
-  icon?: any;
+  name: string
+  title: string
+  dataset: string
+  icon?: any
   schema: {
-    types: SchemaTypeDefinition[];
-    templates?: (templates: any[]) => any[];
-  };
+    types: SchemaTypeDefinition[]
+    templates?: (templates: any[]) => any[]
+  }
   document?: {
-    actions?: (input: any[], context: any) => any[];
-    newDocumentOptions?: any;
-    productionUrl?: (prev: string | undefined, context: DocumentContext) => Promise<string | undefined>;
-  };
+    actions?: (input: any[], context: any) => any[]
+    newDocumentOptions?: any
+    productionUrl?: (
+      prev: string | undefined,
+      context: DocumentContext,
+    ) => Promise<string | undefined>
+  }
   form?: {
     file?: {
-      assetSources?: (prev: any[]) => any[];
-    };
+      assetSources?: (prev: any[]) => any[]
+    }
     image?: {
-      assetSources?: (prev: any[]) => any[];
-    };
-  };
+      assetSources?: (prev: any[]) => any[]
+    }
+  }
 }
 
 // Define singleton actions and types
@@ -51,38 +54,36 @@ const projectId = process.env.SANITY_STUDIO_PROJECT_ID || '1gxdk71x'
 
 const getCurrentDataset = () => {
   if (typeof window !== 'undefined') {
-    return window.location.pathname.includes('/staging') ? 'staging' : 'production';
+    return window.location.pathname.includes('/staging') ? 'staging' : 'production'
   }
-  return process.env.SANITY_STUDIO_DATASET || 'production';
-};
+  return process.env.SANITY_STUDIO_DATASET || 'production'
+}
 
 console.log('Sanity Config:', {
   env: process.env.NEXT_PUBLIC_ENVIRONMENT,
   NODE_ENV: process.env.NODE_ENV,
   hostname: typeof window !== 'undefined' ? window.location.hostname : 'server',
   dataset: getCurrentDataset(),
-  projectId
+  projectId,
 })
 
 // Define schema configuration
 const schemaConfig: WorkspaceConfig['schema'] = {
   types: schemaTypes as SchemaTypeDefinition[],
   templates: (templates: any[]) =>
-    templates.filter(({ schemaType }: { schemaType: string }) =>
-      !singletonTypes.has(schemaType)
-    ),
+    templates.filter(({schemaType}: {schemaType: string}) => !singletonTypes.has(schemaType)),
 }
 
 // Define plugins configuration
 const plugins = [
   deskTool({
     structure,
-    defaultDocumentNode
+    defaultDocumentNode,
   }),
   media(),
   visionTool(),
   imageHotspotArrayPlugin(),
-  colorInput()
+  colorInput(),
 ]
 
 // Define workspaces with specific configurations
@@ -98,8 +99,8 @@ const workspaces: WorkspaceConfig[] = [
     schema: schemaConfig,
     document: {
       productionUrl: async (prev: string | undefined, context: DocumentContext) => {
-        const { document } = context
-        const previewSecret = process.env.SANITY_PREVIEW_SECRET
+        const {document} = context
+        const previewSecret = process.env.SANITY_STUDIO_PREVIEW_SECRET
 
         if (!previewSecret) {
           console.error('No preview secret available in environment')
@@ -107,36 +108,34 @@ const workspaces: WorkspaceConfig[] = [
         }
 
         const secret = encodeURIComponent(previewSecret)
-        const baseUrl = window.location.hostname === 'localhost'
-          ? 'http://localhost:3000'
-          : 'https://all7z.com'
+        const baseUrl =
+          window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://all7z.com'
 
         console.log('Preview URL generation:', {
           baseUrl,
           documentType: document._type,
           hasSecret: !!secret,
-          secretLength: secret?.length
+          secretLength: secret?.length,
         })
 
         return `${baseUrl}/api/preview?secret=${secret}&type=${document._type}&id=${document._id}`
       },
       actions: (input: any[], context: any) =>
         singletonTypes.has(context.schemaType)
-          ? input.filter(({ action }: { action: string }) =>
-              action && singletonActions.has(action)
-            )
+          ? input.filter(({action}: {action: string}) => action && singletonActions.has(action))
           : input,
     },
     form: {
       file: {
-        assetSources: (prev: any[]) => prev.filter(source => source.name === 'sanity-default')
+        assetSources: (prev: any[]) => prev.filter((source) => source.name === 'sanity-default'),
       },
       image: {
-        assetSources: (prev: any[]) => prev.filter(source =>
-          source.name === 'media-library' || source.name === 'sanity-default'
-        )
-      }
-    }
+        assetSources: (prev: any[]) =>
+          prev.filter(
+            (source) => source.name === 'media-library' || source.name === 'sanity-default',
+          ),
+      },
+    },
   },
   {
     name: 'staging',
@@ -149,8 +148,8 @@ const workspaces: WorkspaceConfig[] = [
     schema: schemaConfig,
     document: {
       productionUrl: async (prev: string | undefined, context: DocumentContext) => {
-        const { document } = context
-        const previewSecret = process.env.SANITY_PREVIEW_SECRET
+        const {document} = context
+        const previewSecret = process.env.SANITY_STUDIO_PREVIEW_SECRET
 
         if (!previewSecret) {
           console.error('No preview secret available in environment')
@@ -158,37 +157,37 @@ const workspaces: WorkspaceConfig[] = [
         }
 
         const secret = encodeURIComponent(previewSecret)
-        const baseUrl = window.location.hostname === 'localhost'
-          ? 'http://localhost:3000'
-          : 'https://staging--all7z.netlify.app'
+        const baseUrl =
+          window.location.hostname === 'localhost'
+            ? 'http://localhost:3000'
+            : 'https://staging--all7z.netlify.app'
 
         console.log('Preview URL generation:', {
           baseUrl,
           documentType: document._type,
           hasSecret: !!secret,
-          secretLength: secret?.length
+          secretLength: secret?.length,
         })
 
         return `${baseUrl}/api/preview?secret=${secret}&type=${document._type}&id=${document._id}`
       },
       actions: (input: any[], context: any) =>
         singletonTypes.has(context.schemaType)
-          ? input.filter(({ action }: { action: string }) =>
-              action && singletonActions.has(action)
-            )
+          ? input.filter(({action}: {action: string}) => action && singletonActions.has(action))
           : input,
     },
     form: {
       file: {
-        assetSources: (prev: any[]) => prev.filter(source => source.name === 'sanity-default')
+        assetSources: (prev: any[]) => prev.filter((source) => source.name === 'sanity-default'),
       },
       image: {
-        assetSources: (prev: any[]) => prev.filter(source =>
-          source.name === 'media-library' || source.name === 'sanity-default'
-        )
-      }
-    }
-  }
+        assetSources: (prev: any[]) =>
+          prev.filter(
+            (source) => source.name === 'media-library' || source.name === 'sanity-default',
+          ),
+      },
+    },
+  },
 ]
 
 // Export the configuration
