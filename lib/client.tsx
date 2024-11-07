@@ -19,8 +19,14 @@ export const previewClient = createClient({
 })
 
 // Helper to get appropriate client
-export const getClient = (preview = false) =>
-  preview ? previewClient : client
+export const getClient = (preview = false) => {
+  const client = createClient({
+    ...sanityConfig,
+    useCdn: !preview,
+    token: preview ? process.env.SANITY_API_PREVIEW_TOKEN : process.env.SANITY_API_READ_TOKEN,
+  })
+  return client
+}
 
 // Image builder
 const builder = imageUrlBuilder(client)
@@ -31,32 +37,36 @@ export async function safeFetch<T>(
   query: string,
   preview = false
 ): Promise<T | null> {
-  const selectedClient = getClient(preview)
-  const maxRetries = 3
+  const client = getClient(preview)
+  console.log('Sanity Config Environment:', {
+    NODE_ENV: process.env.NODE_ENV,
+    NEXT_PUBLIC_ENVIRONMENT: process.env.NEXT_PUBLIC_ENVIRONMENT,
+    dataset: client.config().dataset,
+    workspace: 'server',
+  })
 
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+  let attempts = 0
+  const maxAttempts = 3
+
+  while (attempts < maxAttempts) {
+    attempts++
     try {
-      console.log(`Attempt ${attempt}/${maxRetries} - Fetching with config:`, {
-        projectId: selectedClient.config().projectId,
-        dataset: selectedClient.config().dataset,
-        apiVersion: selectedClient.config().apiVersion,
-        hasToken: !!selectedClient.config().token,
+      console.log(`Attempt ${attempts}/${maxAttempts} - Fetching with config:`, {
+        projectId: client.config().projectId,
+        dataset: client.config().dataset,
+        apiVersion: client.config().apiVersion,
+        hasToken: !!client.config().token,
         preview
       })
 
-      const result = await selectedClient.fetch<T>(query)
-      console.log('Fetch successful:', { hasData: !!result })
-      return result
-    } catch (error: any) {
-      console.error(`Attempt ${attempt} failed:`, {
-        message: error.message,
-        statusCode: error.statusCode,
-        details: error.details,
-        query
-      })
-
-      if (attempt === maxRetries) return null
-      await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt - 1) * 1000))
+      const data = await client.fetch(query)
+      console.log('Fetch successful:', { hasData: !!data })
+      return data
+    } catch (error) {
+      console.error(`Attempt ${attempts} failed:`, error)
+      if (attempts === maxAttempts) {
+        throw error
+      }
     }
   }
   return null
