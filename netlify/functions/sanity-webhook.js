@@ -5,6 +5,18 @@ const { createClient } = require('@sanity/client');
 
 const processedWebhooks = new Map();
 
+function hasContentChanged(document) {
+  if (document._type !== 'album' || document.albumSource !== 'custom') {
+    return false;
+  }
+
+  const songs = document.customAlbum?.songs || [];
+  return songs.some(song =>
+    song.file?.asset && // Has an audio file
+    song.duration === null // Duration needs to be extracted
+  );
+}
+
 exports.handler = async (event, context) => {
   console.log('Webhook received:', {
     method: event.httpMethod,
@@ -18,14 +30,6 @@ exports.handler = async (event, context) => {
 
   const token = process.env.SANITY_TOKEN || process.env.SANITY_STUDIO_API_TOKEN || process.env.SANITY_API_READ_TOKEN;
 
-  const client = createClient({
-    projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || '1gxdk71x',
-    dataset: process.env.SANITY_STUDIO_DATASET || 'production',
-    token: token,
-    useCdn: false,
-    apiVersion: '2023-10-01'
-  });
-
   if (!token) {
     return {
       statusCode: 500,
@@ -35,9 +39,18 @@ exports.handler = async (event, context) => {
 
   try {
     const body = JSON.parse(event.body);
+
+    // Skip if no meaningful content changes
+    if (!hasContentChanged(body)) {
+      console.log('Skipping webhook - no relevant changes detected');
+      return {
+        statusCode: 200,
+        body: JSON.stringify({ message: 'No processing needed' })
+      };
+    }
+
     const documentId = body._id;
     const rev = body._rev;
-
     const processingKey = `${documentId}:${rev}`;
     const now = Date.now();
 
@@ -51,6 +64,7 @@ exports.handler = async (event, context) => {
 
     processedWebhooks.set(processingKey, now);
 
+    // Cleanup old entries
     for (const [key, timestamp] of processedWebhooks.entries()) {
       if (now - timestamp > 30000) {
         processedWebhooks.delete(key);
