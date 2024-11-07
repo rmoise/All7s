@@ -103,20 +103,17 @@ const workspaces: WorkspaceConfig[] = [
         const previewSecret = process.env.SANITY_STUDIO_PREVIEW_SECRET
 
         if (!previewSecret) {
-          console.error('No preview secret available in environment')
           return prev
         }
 
         const secret = encodeURIComponent(previewSecret)
-        const baseUrl =
-          window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://all7z.com'
+        const baseUrl = window.location.hostname === 'localhost'
+          ? 'http://localhost:3000'
+          : 'https://all7z.com'
 
-        console.log('Preview URL generation:', {
-          baseUrl,
-          documentType: document._type,
-          hasSecret: !!secret,
-          secretLength: secret?.length,
-        })
+        if (process.env.NODE_ENV === 'development') {
+          console.debug('Preview URL:', `${baseUrl}/api/preview?type=${document._type}&id=${document._id}`)
+        }
 
         return `${baseUrl}/api/preview?secret=${secret}&type=${document._type}&id=${document._id}`
       },
@@ -152,7 +149,6 @@ const workspaces: WorkspaceConfig[] = [
         const previewSecret = process.env.SANITY_STUDIO_PREVIEW_SECRET
 
         if (!previewSecret) {
-          console.error('No preview secret available in environment')
           return prev
         }
 

@@ -85,7 +85,9 @@ const ReleaseInfoInput = (props: ObjectInputProps) => {
   const embedCode = value.embedCode as string | undefined
   const isMetadataFetchedRef = useRef(false)
 
-  const client = useClient()
+  const client = useClient({
+    apiVersion: '2024-03-19' // Use current date or your preferred API version
+  })
   const builder = imageUrlBuilder(client)
 
   const handleEmbedCodeChange = (embedInput: string) => {

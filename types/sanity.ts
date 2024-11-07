@@ -154,7 +154,7 @@ export interface Song {
   url: string;
   duration: number;
   _key?: string;
-  file?: {
+  file: {
     _type: 'file';
     asset: {
       _ref: string;

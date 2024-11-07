@@ -3,6 +3,8 @@ require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 const { extractAndUpdateDurations } = require('../../lib/extractDurations');
 const { createClient } = require('@sanity/client');
 
+const processedWebhooks = new Map(); // Using Map to store timestamps
+
 exports.handler = async (event, context) => {
   console.log('Webhook received:', {
     method: event.httpMethod,
@@ -71,6 +73,33 @@ exports.handler = async (event, context) => {
   }
 
   try {
+    const idempotencyKey = event.headers['idempotency-key'];
+    const now = Date.now();
+
+    // Check if we've processed this webhook recently (within last 5 minutes)
+    if (idempotencyKey) {
+      const lastProcessed = processedWebhooks.get(idempotencyKey);
+      if (lastProcessed && (now - lastProcessed) < 300000) { // 5 minutes in ms
+        console.log(`Skipping duplicate webhook with key: ${idempotencyKey}`);
+        return {
+          statusCode: 200,
+          body: JSON.stringify({ message: 'Webhook already processed' })
+        };
+      }
+    }
+
+    // Store the processing time
+    if (idempotencyKey) {
+      processedWebhooks.set(idempotencyKey, now);
+    }
+
+    // Clean up old entries (older than 5 minutes)
+    for (const [key, timestamp] of processedWebhooks.entries()) {
+      if (now - timestamp > 300000) {
+        processedWebhooks.delete(key);
+      }
+    }
+
     console.log('Received webhook, starting duration extraction...');
 
     await extractAndUpdateDurations({

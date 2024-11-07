@@ -192,17 +192,8 @@ const albumSchema = defineType({
                   name: 'file',
                   title: 'Audio File',
                   type: 'file',
-                  options: {
-                    accept: 'audio/*',
-                    storeOriginalFilename: true,
-                  },
-                  validation: (Rule) =>
-                    Rule.custom((value) => {
-                      if (!value && !value?.asset) {
-                        return 'Audio file is required';
-                      }
-                      return true;
-                    }),
+                  options: {accept: 'audio/*'},
+                  description: 'Upload the audio file for this track (if available).',
                 }),
                 defineField({
                   name: 'duration',
@@ -241,19 +232,13 @@ const albumSchema = defineType({
       } = selection
 
       const isEmbedded = albumSource === 'embedded'
-
       let imageUrl: string = ''
-
-      console.log('Embedded Image URL:', embeddedImageUrl)
-      console.log('Custom Image:', customImage)
 
       if (isEmbedded && embeddedImageUrl) {
         imageUrl = embeddedImageUrl
       } else if (customImage) {
         imageUrl = urlFor(customImage) as string
       }
-
-      console.log('Final Image URL:', imageUrl)
 
       return {
         title: isEmbedded ? embeddedTitle || 'Untitled Release' : customTitle || 'Untitled Release',
@@ -280,7 +265,6 @@ const albumSchema = defineType({
                 backgroundColor: '#f3f3f3'
               }}
               onError={(e) => {
-                console.error('Image failed to load:', imageUrl)
                 e.currentTarget.style.display = 'none'
               }}
             />
