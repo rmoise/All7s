@@ -153,46 +153,58 @@ export interface Song {
   trackTitle: string;
   url: string;
   duration: number;
+  _key?: string;
 }
 
 // Add CustomAlbum interface
 export interface CustomAlbum {
-  _type: 'customAlbum';
-  title?: string;
-  artist?: string;
+  title: string;
+  artist: string;
+  songs: Song[];
   customImage?: {
-    asset?: {
-      _ref: string;
-      url?: string;
+    asset: {
+      url: string;
     };
   };
-  songs?: Song[];
 }
 
 // Add EmbeddedAlbum interface
 export interface EmbeddedAlbum {
-  _type: 'embeddedAlbum';
-  embedCode: string;
   title: string;
   artist: string;
-  platform: 'spotify' | 'soundcloud' | '';
-  releaseType: 'album' | 'playlist' | 'track';
-  imageUrl: string;
+  platform?: string;
+  embedCode?: string;
+  embedUrl?: string;
+  imageUrl?: string;
   processedImageUrl?: string;
-  embedUrl: string;
-  isEmbedSupported: boolean;
-  customImage?: {
-    asset?: SanityImageAsset;
-  };
   songs?: Song[];
+  customImage?: {
+    asset: {
+      url: string;
+    };
+  };
 }
 
 // Add Album interface
 export interface Album {
   _id: string;
+  albumId: string;
   albumSource: 'embedded' | 'custom';
   embeddedAlbum?: EmbeddedAlbum;
   customAlbum?: CustomAlbum;
+}
+
+// For FlipCard component
+export interface FlipCardAlbum {
+  albumId: string;
+  title: string;
+  artist: string;
+  imageUrl: string;
+  songs: Song[];
+  embedUrl?: string;
+  albumSource: 'embedded' | 'custom';
+  customAlbum?: CustomAlbum;
+  embeddedAlbum?: EmbeddedAlbum;
 }
 
 // Add or update these interfaces

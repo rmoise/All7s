@@ -1,19 +1,26 @@
 // components/blocks/MusicBlock.tsx
 
-import React, { useState, useRef, useCallback, useEffect } from 'react';
-import FlipCard from '@components/Music/FlipCard';
-import Grid from '@components/common/Grid/Grid';
-import type { Album, Song, MusicBlock as MusicBlockType } from '../../types/sanity';
-import { urlFor } from '@/lib/client';
+import React, { useState, useRef, useCallback, useEffect } from 'react'
+import FlipCard from '@components/Music/FlipCard'
+import Grid from '@components/common/Grid/Grid'
+import type {
+  Album,
+  Song,
+  MusicBlock as MusicBlockType,
+} from '../../types/sanity'
+import { urlFor } from '@/lib/client'
 
 interface MusicBlockProps {
-  listenTitle?: string;
-  albums?: Album[];
+  listenTitle?: string
+  albums?: Album[]
 }
 
-const MusicBlock: React.FC<MusicBlockProps> = ({ listenTitle = 'LISTEN', albums = [] }) => {
-  const [flippedAlbums, setFlippedAlbums] = useState<Set<string>>(new Set());
-  const flipCardRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+const MusicBlock: React.FC<MusicBlockProps> = ({
+  listenTitle = 'LISTEN',
+  albums = [],
+}) => {
+  const [flippedAlbums, setFlippedAlbums] = useState<Set<string>>(new Set())
+  const flipCardRefs = useRef<{ [key: string]: HTMLDivElement | null }>({})
   const [loadedAlbums, setLoadedAlbums] = useState<Album[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -36,72 +43,82 @@ const MusicBlock: React.FC<MusicBlockProps> = ({ listenTitle = 'LISTEN', albums 
     });
   }, []);
 
-  const addFlipCardRef = useCallback((albumId: string, ref: HTMLDivElement | null) => {
-    if (ref) {
-      flipCardRefs.current[albumId] = ref;
-    }
-  }, []);
+  const addFlipCardRef = useCallback(
+    (albumId: string, ref: HTMLDivElement | null) => {
+      if (ref) {
+        flipCardRefs.current[albumId] = ref
+      }
+    },
+    []
+  )
 
   const handleOutsideClick = useCallback((e: MouseEvent) => {
-    let clickedInsideAnyCard = false;
+    const target = e.target as HTMLElement;
 
-    Object.values(flipCardRefs.current).forEach((cardRef) => {
-      if (cardRef && cardRef.contains(e.target as Node)) {
-        clickedInsideAnyCard = true;
-      }
-    });
+    // Check if click is inside any card or control
+    const isInsideCard = target.closest('.flip-back, .mobile-back, .flip-front, .mobile-front');
+    const isControl = target.closest('.track-item, .player-control, .music-embed');
 
-    if (!clickedInsideAnyCard) {
-      setFlippedAlbums(new Set());
+    if (isInsideCard || isControl) {
+      return; // Don't close if clicking inside any card or control
     }
+
+    // Only close if clicking completely outside
+    setFlippedAlbums(new Set());
   }, []);
 
   useEffect(() => {
     if (flippedAlbums.size > 0) {
-      document.addEventListener('mousedown', handleOutsideClick);
+      document.addEventListener('mousedown', handleOutsideClick)
     } else {
-      document.removeEventListener('mousedown', handleOutsideClick);
+      document.removeEventListener('mousedown', handleOutsideClick)
     }
 
-    return () => document.removeEventListener('mousedown', handleOutsideClick);
-  }, [flippedAlbums.size, handleOutsideClick]);
+    return () => document.removeEventListener('mousedown', handleOutsideClick)
+  }, [flippedAlbums.size, handleOutsideClick])
 
-  const listenId = listenTitle ? listenTitle.replace(/\s+/g, '-') : 'LISTEN';
+  const listenId = listenTitle ? listenTitle.replace(/\s+/g, '-') : 'LISTEN'
 
   const getSongs = (album: Album): Song[] => {
     if (album.albumSource === 'custom' && album.customAlbum?.songs) {
-      return album.customAlbum.songs;
+      return album.customAlbum.songs
     }
     if (album.albumSource === 'embedded' && album.embeddedAlbum?.songs) {
-      return album.embeddedAlbum.songs;
+      return album.embeddedAlbum.songs
     }
-    return [];
-  };
+    return []
+  }
 
-  const getEmbedUrl = (embedCode: string | undefined, platform: string | undefined): string => {
-    if (!embedCode) return '';
+  const getEmbedUrl = (
+    embedCode: string | undefined,
+    platform: string | undefined
+  ): string => {
+    if (!embedCode) return ''
 
     if (platform === 'soundcloud') {
-      const match = embedCode.match(/src="([^"]+)"/);
-      return match ? match[1] : '';
+      const match = embedCode.match(/src="([^"]+)"/)
+      return match ? match[1] : ''
     }
 
     if (platform === 'spotify') {
-      const match = embedCode.match(/src="([^"]+)"/);
-      return match ? match[1] : '';
+      const match = embedCode.match(/src="([^"]+)"/)
+      return match ? match[1] : ''
     }
 
-    return '';
-  };
+    return ''
+  }
 
   const getImageUrl = (album: Album): string => {
     if (!album) return '/images/placeholder.png'
 
     if (album.albumSource === 'embedded' && album.embeddedAlbum) {
-      return album.embeddedAlbum.processedImageUrl ||
-             album.embeddedAlbum.imageUrl ||
-             (album.embeddedAlbum.customImage?.asset && urlFor(album.embeddedAlbum.customImage).url()) ||
-             '/images/placeholder.png'
+      return (
+        album.embeddedAlbum.processedImageUrl ||
+        album.embeddedAlbum.imageUrl ||
+        (album.embeddedAlbum.customImage?.asset &&
+          urlFor(album.embeddedAlbum.customImage).url()) ||
+        '/images/placeholder.png'
+      )
     }
 
     if (album.customAlbum?.customImage?.asset) {
@@ -120,7 +137,10 @@ const MusicBlock: React.FC<MusicBlockProps> = ({ listenTitle = 'LISTEN', albums 
   }
 
   return (
-    <section id={listenId} className="w-full px-2 sm:px-4 md:px-8 lg:px-32 relative z-10">
+    <section
+      id={listenId}
+      className="w-full px-2 sm:px-4 md:px-8 lg:px-32 relative z-10"
+    >
       <div className="flex flex-col items-center space-y-8">
         <div className="mt-16 mb-8 sm:mb-12 rounded-lg flex items-center justify-center w-full sm:w-1/2">
           <p className="text-5xl md:text-6xl lg:text-7xl font-Headline text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-pink-600 to-purple-600 font-bold">
@@ -130,23 +150,32 @@ const MusicBlock: React.FC<MusicBlockProps> = ({ listenTitle = 'LISTEN', albums 
 
         <Grid columns={1} gap={32} className="w-full max-w-6xl mx-auto pb-32">
           {loadedAlbums.map((album, index) => {
-            if (!album) return null;
+            if (!album) return null
 
-            const albumId = album._id || `album-${index}`;
+            const albumId = album._id || `album-${index}`
             const embedUrl = getEmbedUrl(
               album.embeddedAlbum?.embedCode,
               album.embeddedAlbum?.platform
-            );
+            )
 
-            console.log('Extracted Embed URL:', embedUrl);
+            console.log('Extracted Embed URL:', embedUrl)
 
             return (
-              <div key={albumId} className="flex justify-center items-center w-full p-4 mx-auto">
+              <div
+                key={albumId}
+                className="flex justify-center items-center w-full p-4 mx-auto"
+              >
                 <FlipCard
                   album={{
                     albumId,
-                    title: album.embeddedAlbum?.title || album.customAlbum?.title || 'Untitled Album',
-                    artist: album.embeddedAlbum?.artist || album.customAlbum?.artist || 'Unknown Artist',
+                    title:
+                      album.embeddedAlbum?.title ||
+                      album.customAlbum?.title ||
+                      'Untitled Album',
+                    artist:
+                      album.embeddedAlbum?.artist ||
+                      album.customAlbum?.artist ||
+                      'Unknown Artist',
                     imageUrl: getImageUrl(album),
                     songs: getSongs(album),
                     embedUrl: embedUrl,
@@ -159,12 +188,12 @@ const MusicBlock: React.FC<MusicBlockProps> = ({ listenTitle = 'LISTEN', albums 
                   artistClass="text-lg md:text-xl lg:text-2xl whitespace-nowrap truncate"
                 />
               </div>
-            );
+            )
           })}
         </Grid>
       </div>
     </section>
-  );
-};
+  )
+}
 
-export default MusicBlock;
+export default MusicBlock

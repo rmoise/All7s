@@ -25,23 +25,63 @@ interface CustomImage {
 }
 
 interface Album {
-  albumId: string
-  title: string
-  artist?: string // Optional artist property
-  embedUrl?: string // Direct embedUrl property
+  albumId: string;
+  title: string;
+  artist?: string; // Optional artist property
+  embedUrl?: string; // Direct embedUrl property
   songs?: Song[] // For backward compatibility
   albumSource: 'embedded' | 'custom'
-  imageUrl?: string // Include imageUrl in Album
+  imageUrl?: string; // Include imageUrl in Album
   customImage?: CustomImage // Optional custom image
 }
 
+interface FlipCardAlbum {
+  albumId: string;
+  title: string;
+  artist?: string;
+  albumSource: 'embedded' | 'custom';
+  songs?: Song[];
+  embedUrl?: string;
+  imageUrl?: string;
+  customImage?: {
+    asset: {
+      url: string;
+    };
+  };
+  embeddedAlbum?: {
+    embedUrl: string;
+    title: string;
+    artist: string;
+    platform: 'spotify' | 'soundcloud';
+    releaseType: string;
+    imageUrl?: string;
+    processedImageUrl: string;
+    customImage?: {
+      asset: {
+        url: string;
+      };
+    };
+  };
+  customAlbum?: {
+    title: string;
+    artist: string;
+    releaseType: string;
+    customImage?: {
+      asset: {
+        url: string;
+      };
+    };
+    songs: Song[];
+  };
+}
+
 interface FlipCardProps {
-  album: Album
-  isFlipped: boolean
-  toggleFlip: (albumId: string) => void
-  addFlipCardRef: (albumId: string, ref: HTMLDivElement | null) => void
-  titleClass?: string
-  artistClass?: string
+  album: FlipCardAlbum;
+  isFlipped: boolean;
+  toggleFlip: (albumId: string) => void;
+  addFlipCardRef: (albumId: string, ref: HTMLDivElement | null) => void;
+  titleClass?: string;
+  artistClass?: string;
 }
 
 const FlipCard = forwardRef<HTMLDivElement, FlipCardProps>(
@@ -65,9 +105,6 @@ const FlipCard = forwardRef<HTMLDivElement, FlipCardProps>(
       {}
     )
     const [isMobile, setIsMobile] = useState(false)
-    const [imageError, setImageError] = useState(false)
-    const [retryCount, setRetryCount] = useState(0)
-    const maxRetries = 3
 
     // Handle window resize to set isMobile
     useEffect(() => {
@@ -81,20 +118,24 @@ const FlipCard = forwardRef<HTMLDivElement, FlipCardProps>(
     }, [])
 
     // Derived variables to handle data structures
-    const songs = album.songs || []
-    const embedUrl = album.embedUrl || '' // Set fallback if embedUrl is missing
-    const imageUrl =
-      album.customImage?.asset?.url ||
-      album.imageUrl ||
-      '/images/placeholder.png' // Fallback image
+    const songs = album.songs || [];
+    const embedUrl = album.embedUrl || '';
+
+    const imageUrl = useMemo(() => {
+      return (
+        album.customImage?.asset?.url ||
+        album.imageUrl ||
+        '/images/placeholder.png'
+      );
+    }, [album]);
 
     // Determine the platform based on the embedUrl
     const platform = useMemo(() => {
       if (!embedUrl) return null;
       const url = embedUrl.toLowerCase();
       if (url.includes('spotify.com')) return 'spotify';
-      if (url.includes('soundcloud.com')) return 'soundcloud';
-      if (url.includes('api.soundcloud.com')) return 'soundcloud';
+      if (url.includes('soundcloud.com') || url.includes('api.soundcloud.com')) return 'soundcloud';
+      console.log('No platform detected for URL:', url); // Add debugging
       return null;
     }, [embedUrl]);
 
@@ -138,21 +179,25 @@ const FlipCard = forwardRef<HTMLDivElement, FlipCardProps>(
     // Handle clicking on a track to play
     const handleTrackClick = useCallback(
       (e: React.MouseEvent, idx: number) => {
-        e.stopPropagation()
+        e.stopPropagation();
         if (songs && idx >= 0 && idx < songs.length) {
-          setCurrentTrackIndexLocal(idx)
-          const selectedTrack = songs[idx]
+          setCurrentTrackIndexLocal(idx);
+          const selectedTrack = songs[idx];
           if (selectedTrack && selectedTrack.url) {
-            playTrack(selectedTrack.url, album.albumId, idx)
+            console.log('Playing track:', {
+              url: selectedTrack.url,
+              albumId: album.albumId,
+              index: idx,
+              track: selectedTrack
+            });
+            playTrack(selectedTrack.url, album.albumId, idx);
           } else {
-            console.warn('Selected track is invalid or missing URL.')
+            console.warn('Selected track is invalid or missing URL:', selectedTrack);
           }
-        } else {
-          console.warn('Invalid track index.')
         }
       },
       [songs, playTrack, album.albumId]
-    )
+    );
 
     // Handle play/pause button click
     const handlePlayPause = useCallback(
@@ -230,17 +275,28 @@ const FlipCard = forwardRef<HTMLDivElement, FlipCardProps>(
     // Handle seek input change
     const handleSeek = useCallback(
       (e: React.ChangeEvent<HTMLInputElement>) => {
-        e.stopPropagation()
-        const seekPercent = Number(e.target.value) // Ensure this is a number
-        const seekTime =
-          (seekPercent / 100) *
-          (currentTrackIndexLocal !== null
-            ? songDurations[currentTrackIndexLocal]
-            : 0)
-        debouncedHandleSeek(seekTime)
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (currentTrackIndexLocal === null || !songDurations[currentTrackIndexLocal]) {
+          return;
+        }
+
+        const seekPercent = Number(e.target.value);
+        const duration = songDurations[currentTrackIndexLocal];
+        const seekTime = (seekPercent / 100) * duration;
+
+        console.log('Seeking to:', {
+          seekTime,
+          duration,
+          percent: seekPercent,
+          currentTrack: currentTrackIndexLocal
+        });
+
+        debouncedHandleSeek(seekTime);
       },
       [currentTrackIndexLocal, songDurations, debouncedHandleSeek]
-    )
+    );
 
     // Format time in mm:ss
     const formatTime = (time: number | null) => {
@@ -288,37 +344,32 @@ const FlipCard = forwardRef<HTMLDivElement, FlipCardProps>(
           <div className="mt-4 text-center text-gray-500">
             No tracks available
           </div>
-        )
+        );
       }
 
-      return (
-        <div className="mt-4 w-full max-h-60 overflow-y-auto custom-scrollbar">
-          {songs.map((song, idx) => (
-            <div
-              key={idx}
-              className={clsx(
-                'flex justify-between items-center cursor-pointer hover:bg-gray-300 rounded-md',
-                {
-                  'bg-gray-400':
-                    currentTrackIndexLocal === idx &&
-                    (isThisTrackPlaying || isThisTrackPaused),
-                }
-              )}
-              onClick={(e) => handleTrackClick(e, idx)}
-              style={{ padding: '10px', borderRadius: '5px' }}
-            >
-              <p className="text-black">
-                {song.trackTitle || `Track ${idx + 1}`}
-              </p>
-              <span className="text-sm text-gray-500">
-                {songDurations[idx] && !isNaN(songDurations[idx])
-                  ? formatTime(songDurations[idx])
-                  : 'Unknown'}
-              </span>
-            </div>
-          ))}
+      return songs.map((song, idx) => (
+        <div
+          key={idx}
+          className={clsx(
+            'track-item flex justify-between items-center cursor-pointer hover:bg-gray-300 rounded-md p-3',
+            {
+              'bg-gray-400':
+                currentTrackIndexLocal === idx &&
+                (isThisTrackPlaying || isThisTrackPaused),
+            }
+          )}
+          onClick={(e) => handleTrackClick(e, idx)}
+        >
+          <div className="flex items-center space-x-2">
+            <span className="text-black">
+              {song.trackTitle || `Track ${idx + 1}`}
+            </span>
+          </div>
+          <span className="text-sm text-gray-500">
+            {songDurations[idx] ? formatTime(songDurations[idx]) : '--:--'}
+          </span>
         </div>
-      )
+      ));
     }, [
       songs,
       currentTrackIndexLocal,
@@ -326,7 +377,7 @@ const FlipCard = forwardRef<HTMLDivElement, FlipCardProps>(
       isThisTrackPaused,
       songDurations,
       handleTrackClick,
-    ])
+    ]);
 
     // Handle mouse enter for non-mobile and not flipped
     const handleMouseEnter = useCallback(() => {
@@ -357,45 +408,15 @@ const FlipCard = forwardRef<HTMLDivElement, FlipCardProps>(
     }, [isMobile, isFlipped])
 
     // Prevent propagation when clicking on content
-    const handleContentClick = (e: React.MouseEvent) => {
-      e.stopPropagation() // Prevent flip on content click
-    }
+    const handleContentClick = useCallback((e: React.MouseEvent) => {
+      e.preventDefault()
+      e.stopPropagation()
+    }, [])
 
     // Define the handleFlip function
     const handleFlip = useCallback(() => {
       toggleFlip(album.albumId)
     }, [toggleFlip, album.albumId])
-
-    const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-      console.error('Image failed to load:', album.imageUrl);
-
-      if (retryCount < maxRetries) {
-        setRetryCount(prev => prev + 1);
-
-        // Try different variations of the URL
-        const img = e.currentTarget;
-        const currentSrc = img.src;
-
-        if (currentSrc.includes('sndcdn.com')) {
-          if (currentSrc.startsWith('https:')) {
-            // Try HTTP version
-            img.src = currentSrc.replace('https:', 'http:');
-          } else if (currentSrc.includes('-t500x500')) {
-            // Try large version
-            img.src = currentSrc.replace('-t500x500', '-large');
-          } else if (album.imageUrl) {
-            // Try original URL without modifications if it exists
-            img.src = album.imageUrl;
-          }
-        }
-      } else {
-        setImageError(true);
-        e.currentTarget.src = '/images/placeholder.png';
-      }
-    };
-
-    // Get the image URL with fallback
-    const displayImageUrl = album.imageUrl || '/images/placeholder.png';
 
     return (
       <div
@@ -428,8 +449,8 @@ const FlipCard = forwardRef<HTMLDivElement, FlipCardProps>(
                 <div className="w-full h-0 pb-[100%] relative">
                   <Image
                     ref={imgRef}
-                    src={displayImageUrl}
-                    alt={album.title || 'Album Image'}
+                    src={imageUrl}
+                    alt={album.title}
                     fill
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     quality={100}
@@ -457,17 +478,30 @@ const FlipCard = forwardRef<HTMLDivElement, FlipCardProps>(
               } rounded-lg ${
                 isMobile ? '' : 'backface-hidden overflow-hidden'
               }`}
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+              }}
             >
-              <div className="w-full h-full" onClick={handleContentClick}>
+              <div
+                className="w-full h-full"
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                }}
+              >
                 {songs && songs.length > 0 ? (
                   <div
                     className="custom-player md:h-[500px] bg-white w-full p-4 rounded-lg"
-                    onClick={(e) => e.stopPropagation()} // Prevents flipping when clicking inside the player
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                    }}
                   >
                     {/* Player UI */}
                     <div className="flex items-center space-x-4 mb-4">
                       <Image
-                        src={displayImageUrl}
+                        src={imageUrl}
                         alt={album.title}
                         width={64}
                         height={64}
@@ -555,7 +589,7 @@ const FlipCard = forwardRef<HTMLDivElement, FlipCardProps>(
                   </div>
                 ) : (
                   // Embed Music (e.g., Spotify, SoundCloud)
-                  <div className="music-embed">
+                  <div className="music-embed h-full">
                     {embedUrl && platform ? (
                       <MusicEmbed
                         embedUrl={embedUrl}
@@ -684,21 +718,13 @@ const FlipCard = forwardRef<HTMLDivElement, FlipCardProps>(
             position: relative;
           }
 
-          .music-embed {
-            width: 100%;
-            height: 100%;
-            min-height: 352px;
-            position: relative;
-            background-color: transparent;
-            border-radius: 12px;
-            overflow: hidden;
-          }
-
           .music-embed iframe {
             width: 100%;
             height: 100%;
             border: none;
             border-radius: 12px;
+            opacity: 0;
+            transition: opacity 0.3s ease-in;
           }
 
           .music-embed iframe.loaded {
