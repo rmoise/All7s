@@ -1,7 +1,8 @@
 // api/testSanity.js
-import { client } from '../../lib/client';
+import { getClient } from '../../lib/client';
 
 export default async function handler(req, res) {
+  const client = getClient();
   try {
     const data = await client.fetch('*[_type == "settings"][0]');
     res.status(200).json({ data });

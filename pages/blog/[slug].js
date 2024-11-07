@@ -1,4 +1,4 @@
-import { client, urlFor } from '../../lib/client';
+import { getClient } from '../../lib/client';
 import { PortableText } from '@portabletext/react';
 import { useState, useEffect } from 'react';
 import imageUrlBuilder from '@sanity/image-url';
@@ -70,7 +70,7 @@ export const getServerSideProps = async (pageContext) => {
     }
   }`;
 
-  const post = await client.fetch(query);
+  const post = await getClient().fetch(query);
 
   if (!post) {
     return {

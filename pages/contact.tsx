@@ -1,6 +1,6 @@
 import { Contact } from "../components/Contact";
 import CustomP5Canvas from "../components/media/CustomP5Canvas";
-import { client } from '@lib/client';
+import { getClient } from '@lib/client';
 import SEO from '../components/common/SEO';
 import { useEffect, useState } from 'react';
 
@@ -113,7 +113,7 @@ export const getServerSideProps = async () => {
 
   try {
     const query = "*[_type == 'contactPage'][0]{title}";
-    const contactData = await client.fetch(query);
+    const contactData = await getClient().fetch(query);
 
     console.log("Fetched data:", contactData);
 

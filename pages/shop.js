@@ -2,11 +2,11 @@ import Link from "next/link";
 import HeroBanner from "../components/home/HeroBanner";
 import Product from "../components/shop/Product";
 import FooterBanner from "../components/common/FooterBanner";
-import { client } from "../lib/client";
+import { getClient } from '../lib/client';
 import imageUrlBuilder from '@sanity/image-url';
 import SEO from '../components/common/SEO'; // Import your reusable SEO component
 
-const builder = imageUrlBuilder(client);
+const builder = imageUrlBuilder(getClient());
 
 function urlFor(source) {
   if (!source) {
@@ -52,6 +52,7 @@ const Shop = ({ products, bannerData, seo }) => {
 export default Shop;
 
 export const getServerSideProps = async () => {
+  const client = getClient();
   try {
     const productsQuery = '*[_type == "product"]{..., "image": image.asset->url}';
     const bannerQuery = '*[_type == "banner"]{..., "image": image.asset->url}';

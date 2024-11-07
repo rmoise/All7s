@@ -1,5 +1,5 @@
 import AllPosts from '../../components/Blog';
-import { client } from '../../lib/client';
+import { getClient } from '../../lib/client';
 import SEO from '../../components/common/SEO'; // Import the reusable SEO component
 
 export default function Blog({ allPosts }) {
@@ -16,7 +16,8 @@ export default function Blog({ allPosts }) {
   );
 }
 
-export const getServerSideProps = async () => {
+export async function getStaticProps({ preview = false }) {
+  const client = getClient(preview);
   const query = '*[_type == "post"]';
 
   const allPosts = await client.fetch(query);
@@ -26,4 +27,4 @@ export const getServerSideProps = async () => {
       allPosts,
     },
   };
-};
+}

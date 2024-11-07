@@ -1,7 +1,7 @@
 // components/blocks/BackgroundVideoBlock.tsx
 
 import React from 'react';
-import { client } from '@/lib/client';
+import { getClient } from '@/lib/client';
 
 interface BackgroundVideoBlockProps {
   backgroundVideoUrl?: string;
@@ -24,6 +24,8 @@ const BackgroundVideoBlock: React.FC<BackgroundVideoBlockProps> = ({
   backgroundVideoFile,
   posterImage,
 }) => {
+  const client = getClient();
+
   // Get the video source
   const videoSrc = React.useMemo(() => {
     // First try to get direct URL
