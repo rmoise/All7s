@@ -4,27 +4,32 @@ export default async function preview(req: NextApiRequest, res: NextApiResponse)
   const { secret, id, type } = req.query
   const decodedSecret = decodeURIComponent(secret as string)
 
-  console.log('Preview Environment:', {
-    NODE_ENV: process.env.NODE_ENV,
-    NEXT_PUBLIC_ENVIRONMENT: process.env.NEXT_PUBLIC_ENVIRONMENT,
-    hostname: req.headers.host,
-    secret: decodedSecret?.slice(0, 4) + '...',
-    secretLength: decodedSecret?.length
+  console.log('Preview Request Details:', {
+    environment: process.env.NODE_ENV,
+    host: req.headers.host,
+    providedSecret: decodedSecret?.slice(0, 4) + '...',
+    secretLength: decodedSecret?.length,
+    availableSecrets: {
+      SANITY_PREVIEW_SECRET: !!process.env.SANITY_PREVIEW_SECRET,
+      NEXT_PUBLIC_PREVIEW_SECRET: !!process.env.NEXT_PUBLIC_PREVIEW_SECRET,
+      SANITY_STUDIO_PREVIEW_SECRET: !!process.env.SANITY_STUDIO_PREVIEW_SECRET
+    }
   })
 
-  if (!decodedSecret || (
-    decodedSecret !== process.env.SANITY_PREVIEW_SECRET &&
-    decodedSecret !== process.env.NEXT_PUBLIC_PREVIEW_SECRET &&
-    decodedSecret !== process.env.SANITY_STUDIO_PREVIEW_SECRET
-  )) {
-    console.log('Secret validation failed:', {
-      provided: decodedSecret?.slice(0, 4) + '...',
-      matches: {
-        SANITY_PREVIEW_SECRET: decodedSecret === process.env.SANITY_PREVIEW_SECRET,
-        NEXT_PUBLIC_PREVIEW_SECRET: decodedSecret === process.env.NEXT_PUBLIC_PREVIEW_SECRET,
-        SANITY_STUDIO_PREVIEW_SECRET: decodedSecret === process.env.SANITY_STUDIO_PREVIEW_SECRET
-      }
-    });
+  if (!process.env.SANITY_PREVIEW_SECRET &&
+      !process.env.NEXT_PUBLIC_PREVIEW_SECRET &&
+      !process.env.SANITY_STUDIO_PREVIEW_SECRET) {
+    console.error('No preview secrets configured in environment');
+    return res.status(500).json({ message: 'Preview not configured' });
+  }
+
+  const isValidSecret = [
+    process.env.SANITY_PREVIEW_SECRET,
+    process.env.NEXT_PUBLIC_PREVIEW_SECRET,
+    process.env.SANITY_STUDIO_PREVIEW_SECRET
+  ].some(envSecret => envSecret && decodedSecret === envSecret);
+
+  if (!isValidSecret) {
     return res.status(401).json({ message: 'Invalid secret' });
   }
 
