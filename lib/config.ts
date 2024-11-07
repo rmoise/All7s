@@ -17,7 +17,7 @@ console.log('Sanity Config Environment:', {
   workspace: typeof window !== 'undefined' ? window.location.pathname : 'server'
 });
 
-const apiToken = process.env.SANITY_API_READ_TOKEN || process.env.SANITY_TOKEN
+const apiToken = process.env.SANITY_STUDIO_API_TOKEN || process.env.SANITY_API_READ_TOKEN || process.env.SANITY_TOKEN;
 
 if (!projectId) throw new Error('Missing NEXT_PUBLIC_SANITY_PROJECT_ID')
 

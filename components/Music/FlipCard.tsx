@@ -131,17 +131,19 @@ function getSongUrl(song: SanityRawSong | Song): string | undefined {
 
   // For Sanity file-based songs
   if (song.file?.asset) {
-    if ('_ref' in song.file.asset && typeof song.file.asset._ref === 'string') {
+    // Check for direct URL first
+    if ('url' in song.file.asset && song.file.asset.url) {
+      console.log('Found direct URL:', song.file.asset.url);
+      return song.file.asset.url;
+    }
+
+    // Then check for _ref
+    if ('_ref' in song.file.asset && song.file.asset._ref) {
       const ref = song.file.asset._ref;
       const [_file, id, extension] = ref.split('-');
       const fileUrl = `https://cdn.sanity.io/files/${process.env.NEXT_PUBLIC_SANITY_PROJECT_ID}/production/${id}.${extension}`;
       console.log('Constructed file URL:', fileUrl);
       return fileUrl;
-    }
-
-    if ('url' in song.file.asset) {
-      console.log('Found direct URL:', song.file.asset.url);
-      return song.file.asset.url;
     }
   }
 

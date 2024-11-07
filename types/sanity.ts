@@ -235,7 +235,9 @@ export interface SanityRawSong {
   file: {
     _type: 'file';
     asset: {
-      url: string;
+      _ref: string;
+      _type: 'reference';
+      url?: string;
     };
   };
 }
