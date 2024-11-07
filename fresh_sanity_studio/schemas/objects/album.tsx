@@ -192,8 +192,11 @@ const albumSchema = defineType({
                   name: 'file',
                   title: 'Audio File',
                   type: 'file',
-                  options: {accept: 'audio/*'},
-                  description: 'Upload the audio file for this track (if available).',
+                  options: {
+                    accept: 'audio/*',
+                    storeOriginalFilename: true,
+                  },
+                  validation: (Rule) => Rule.required(),
                 }),
                 defineField({
                   name: 'duration',

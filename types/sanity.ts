@@ -157,6 +157,8 @@ export interface Song {
   file?: {
     _type: 'file';
     asset: {
+      _ref: string;
+      _type: 'reference';
       url: string;
     };
   };
