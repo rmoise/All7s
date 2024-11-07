@@ -13,7 +13,7 @@ exports.handler = async (event, context) => {
   // Debug log
   console.log('Environment variables:', {
     projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || '1gxdk71x',
-    hasToken: !!(process.env.SANITY_STUDIO_API_TOKEN || process.env.SANITY_API_READ_TOKEN || process.env.SANITY_TOKEN),
+    hasToken: !!(process.env.SANITY_TOKEN || process.env.SANITY_STUDIO_API_TOKEN || process.env.SANITY_API_READ_TOKEN),
     dataset: process.env.SANITY_STUDIO_DATASET || 'production'
   });
 
@@ -21,13 +21,14 @@ exports.handler = async (event, context) => {
     return { statusCode: 405, body: 'Method Not Allowed' };
   }
 
-  const token = process.env.SANITY_STUDIO_API_TOKEN || process.env.SANITY_API_READ_TOKEN || process.env.SANITY_TOKEN;
+  // Changed order of token priority here
+  const token = process.env.SANITY_TOKEN || process.env.SANITY_STUDIO_API_TOKEN || process.env.SANITY_API_READ_TOKEN;
   console.log('Token debug:', {
     length: token?.length,
     prefix: token?.substring(0, 5) + '...',
-    source: process.env.SANITY_STUDIO_API_TOKEN ? 'STUDIO' :
-            process.env.SANITY_API_READ_TOKEN ? 'READ' :
-            process.env.SANITY_TOKEN ? 'TOKEN' : 'NONE'
+    source: process.env.SANITY_TOKEN ? 'TOKEN' :
+            process.env.SANITY_STUDIO_API_TOKEN ? 'STUDIO' :
+            process.env.SANITY_API_READ_TOKEN ? 'READ' : 'NONE'
   });
 
   const testClient = createClient({
