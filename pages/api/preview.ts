@@ -8,35 +8,28 @@ export default async function preview(req: NextApiRequest, res: NextApiResponse)
     return res.status(401).json({ message: 'No secret provided' });
   }
 
+  // Decode the secret from the URL
   const decodedSecret = decodeURIComponent(secret as string)
+
+  // Get the configured preview secret
+  const configuredSecret = process.env.SANITY_PREVIEW_SECRET
 
   console.log('Preview Request Details:', {
     environment: process.env.NODE_ENV,
     host: req.headers.host,
     secretProvided: !!decodedSecret,
     secretLength: decodedSecret?.length,
-    envSecrets: {
-      hasPreviewSecret: !!process.env.SANITY_PREVIEW_SECRET,
-      hasPublicSecret: !!process.env.NEXT_PUBLIC_PREVIEW_SECRET,
-      hasStudioSecret: !!process.env.SANITY_STUDIO_PREVIEW_SECRET,
-      previewSecretLength: process.env.SANITY_PREVIEW_SECRET?.length
-    }
+    configuredSecretLength: configuredSecret?.length,
+    secretsMatch: decodedSecret === configuredSecret
   })
 
-  if (!process.env.SANITY_PREVIEW_SECRET &&
-      !process.env.NEXT_PUBLIC_PREVIEW_SECRET &&
-      !process.env.SANITY_STUDIO_PREVIEW_SECRET) {
-    console.error('No preview secrets configured in environment');
+  if (!configuredSecret) {
+    console.error('No preview secret configured in environment');
     return res.status(500).json({ message: 'Preview not configured' });
   }
 
-  const isValidSecret = [
-    process.env.SANITY_PREVIEW_SECRET,
-    process.env.NEXT_PUBLIC_PREVIEW_SECRET,
-    process.env.SANITY_STUDIO_PREVIEW_SECRET
-  ].some(envSecret => envSecret && decodedSecret === envSecret);
-
-  if (!isValidSecret) {
+  if (decodedSecret !== configuredSecret) {
+    console.error('Invalid preview secret provided');
     return res.status(401).json({ message: 'Invalid secret' });
   }
 

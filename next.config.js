@@ -26,10 +26,7 @@ const nextConfig = {
     NEXT_PUBLIC_NETLIFY: process.env.NEXT_PUBLIC_NETLIFY || process.env.NETLIFY || 'false',
     SANITY_API_READ_TOKEN: process.env.SANITY_API_READ_TOKEN,
     SANITY_STUDIO_PATH: 'fresh_sanity_studio',
-    SANITY_PREVIEW_SECRET: process.env.SANITY_PREVIEW_SECRET || '',
-    NEXT_PUBLIC_PREVIEW_SECRET: process.env.SANITY_PREVIEW_SECRET || '',
-    SANITY_STUDIO_PREVIEW_SECRET: process.env.SANITY_PREVIEW_SECRET || '',
-    SANITY_STUDIO_DATASET: dataset,
+    SANITY_PREVIEW_SECRET: process.env.SANITY_PREVIEW_SECRET || ''
   },
 
   images: {
@@ -132,9 +129,7 @@ const nextConfig = {
   },
 
   publicRuntimeConfig: {
-    SANITY_PREVIEW_SECRET: process.env.SANITY_PREVIEW_SECRET,
-    NEXT_PUBLIC_PREVIEW_SECRET: process.env.NEXT_PUBLIC_PREVIEW_SECRET,
-    SANITY_STUDIO_PREVIEW_SECRET: process.env.SANITY_STUDIO_PREVIEW_SECRET
+    SANITY_PREVIEW_SECRET: process.env.SANITY_PREVIEW_SECRET
   }
 };
 

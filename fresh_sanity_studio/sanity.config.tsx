@@ -104,9 +104,7 @@ const workspaces: WorkspaceConfig[] = [
           : 'https://all7z.com'
 
         if (document._type === 'home') {
-          const previewSecret = process.env.SANITY_STUDIO_PREVIEW_SECRET ||
-                               process.env.NEXT_PUBLIC_PREVIEW_SECRET ||
-                               process.env.SANITY_PREVIEW_SECRET
+          const previewSecret = process.env.SANITY_PREVIEW_SECRET
 
           if (!previewSecret) {
             console.error('No preview secret available in environment')
@@ -119,12 +117,7 @@ const workspaces: WorkspaceConfig[] = [
             baseUrl,
             documentType: document._type,
             hasSecret: !!secret,
-            secretLength: secret?.length,
-            envVars: {
-              hasStudioSecret: !!process.env.SANITY_STUDIO_PREVIEW_SECRET,
-              hasPublicSecret: !!process.env.NEXT_PUBLIC_PREVIEW_SECRET,
-              hasPreviewSecret: !!process.env.SANITY_PREVIEW_SECRET
-            }
+            secretLength: secret?.length
           })
 
           return `${baseUrl}/api/preview?secret=${secret}&type=${document._type}&id=${document._id}`
@@ -167,9 +160,7 @@ const workspaces: WorkspaceConfig[] = [
           : 'https://staging--all7z.netlify.app'
 
         if (document._type === 'home') {
-          const previewSecret = process.env.SANITY_STUDIO_PREVIEW_SECRET ||
-                               process.env.NEXT_PUBLIC_PREVIEW_SECRET ||
-                               process.env.SANITY_PREVIEW_SECRET
+          const previewSecret = process.env.SANITY_PREVIEW_SECRET
 
           if (!previewSecret) {
             console.error('No preview secret available in environment')
@@ -182,11 +173,7 @@ const workspaces: WorkspaceConfig[] = [
             baseUrl,
             documentType: document._type,
             hasSecret: !!secret,
-            secretLength: secret?.length,
-            envVars: {
-              hasStudioSecret: !!process.env.SANITY_STUDIO_PREVIEW_SECRET,
-              hasPublicSecret: !!process.env.NEXT_PUBLIC_PREVIEW_SECRET
-            }
+            secretLength: secret?.length
           })
 
           return `${baseUrl}/api/preview?secret=${secret}&type=${document._type}&id=${document._id}`
