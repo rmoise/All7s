@@ -14,6 +14,7 @@ export const previewClient = createClient({
   ...sanityConfig,
   useCdn: false,
   withCredentials: false,
+  token: process.env.SANITY_PREVIEW_TOKEN || process.env.SANITY_TOKEN,
   perspective: 'previewDrafts'
 })
 

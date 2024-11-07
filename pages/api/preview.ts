@@ -12,8 +12,20 @@ export default async function preview(req: NextApiRequest, res: NextApiResponse)
     secretLength: decodedSecret?.length
   })
 
-  if (!decodedSecret || decodedSecret !== process.env.SANITY_PREVIEW_SECRET) {
-    return res.status(401).json({ message: 'Invalid secret' })
+  if (!decodedSecret || (
+    decodedSecret !== process.env.SANITY_PREVIEW_SECRET &&
+    decodedSecret !== process.env.NEXT_PUBLIC_PREVIEW_SECRET &&
+    decodedSecret !== process.env.SANITY_STUDIO_PREVIEW_SECRET
+  )) {
+    console.log('Secret validation failed:', {
+      provided: decodedSecret?.slice(0, 4) + '...',
+      matches: {
+        SANITY_PREVIEW_SECRET: decodedSecret === process.env.SANITY_PREVIEW_SECRET,
+        NEXT_PUBLIC_PREVIEW_SECRET: decodedSecret === process.env.NEXT_PUBLIC_PREVIEW_SECRET,
+        SANITY_STUDIO_PREVIEW_SECRET: decodedSecret === process.env.SANITY_STUDIO_PREVIEW_SECRET
+      }
+    });
+    return res.status(401).json({ message: 'Invalid secret' });
   }
 
   if (!id || !type) {
