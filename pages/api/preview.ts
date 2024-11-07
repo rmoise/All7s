@@ -23,6 +23,8 @@ export default async function preview(req: NextApiRequest, res: NextApiResponse)
     secretsMatch: decodedSecret === configuredSecret
   })
 
+  console.log('Configured Secret:', configuredSecret);
+
   if (!configuredSecret) {
     console.error('No preview secret configured in environment');
     return res.status(500).json({ message: 'Preview not configured' });
