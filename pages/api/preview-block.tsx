@@ -6,8 +6,7 @@ export default async function handler(
   res: NextApiResponse
 ) {
   // Check for secret to confirm this is a valid request
-  if (req.query.secret !== process.env.SANITY_PREVIEW_SECRET &&
-      req.query.secret !== process.env.NEXT_PUBLIC_PREVIEW_SECRET) {
+  if (req.query.secret !== process.env.SANITY_PREVIEW_SECRET) {
     return res.status(401).json({ message: 'Invalid token' })
   }
 

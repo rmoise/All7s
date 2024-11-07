@@ -26,8 +26,6 @@
     NEXT_PUBLIC_SANITY_STUDIO_URL = "https://all7z.sanity.studio"
     NEXT_PUBLIC_SITE_URL = "https://all7z.com"
     SANITY_PREVIEW_SECRET = "${SANITY_PREVIEW_SECRET}"
-    NEXT_PUBLIC_PREVIEW_SECRET = "${SANITY_PREVIEW_SECRET}"
-    SANITY_STUDIO_PREVIEW_SECRET = "${SANITY_PREVIEW_SECRET}"
 
 # Staging-specific settings
 [context.staging]
@@ -40,8 +38,7 @@
     NEXT_PUBLIC_NETLIFY = "true"
     NEXT_PUBLIC_SANITY_STUDIO_URL = "https://all7z.sanity.studio"
     NEXT_PUBLIC_SITE_URL = "https://staging.all7z.com"
-    NEXT_PUBLIC_PREVIEW_SECRET = "${SANITY_PREVIEW_SECRET}"
-    SANITY_STUDIO_PREVIEW_SECRET = "${SANITY_PREVIEW_SECRET}"
+    SANITY_PREVIEW_SECRET = "${SANITY_PREVIEW_SECRET}"
 
 # Deploy previews
 [context.deploy-preview]
