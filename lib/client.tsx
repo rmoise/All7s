@@ -4,69 +4,52 @@ import { sanityConfig } from './config'
 import type { SiteSettings } from '@/types/sanity'
 
 // Create client with proper config
-export const client = createClient({
+const defaultClient = createClient({
   ...sanityConfig,
-  useCdn: false,
-  withCredentials: false
+  useCdn: true,
+  token: process.env.SANITY_API_READ_TOKEN
 })
 
 export const previewClient = createClient({
   ...sanityConfig,
   useCdn: false,
-  withCredentials: false,
-  token: process.env.SANITY_PREVIEW_TOKEN || process.env.SANITY_TOKEN,
+  token: process.env.SANITY_API_PREVIEW_TOKEN,
   perspective: 'previewDrafts'
 })
 
-// Helper to get appropriate client
-export const getClient = (preview = false) => {
-  const client = createClient({
-    ...sanityConfig,
-    useCdn: !preview,
-    token: preview ? process.env.SANITY_API_PREVIEW_TOKEN : process.env.SANITY_API_READ_TOKEN,
-  })
-  return client
-}
+export const getClient = (preview = false) =>
+  preview ? previewClient : defaultClient
 
-// Image builder
-const builder = imageUrlBuilder(client)
+const builder = imageUrlBuilder(defaultClient)
 export const urlFor = (source: any) => builder.image(source)
 
-// Enhanced fetch with retries and logging
 export async function safeFetch<T>(
   query: string,
   preview = false
 ): Promise<T | null> {
   const client = getClient(preview)
-  console.log('Sanity Config Environment:', {
-    NODE_ENV: process.env.NODE_ENV,
-    NEXT_PUBLIC_ENVIRONMENT: process.env.NEXT_PUBLIC_ENVIRONMENT,
-    dataset: client.config().dataset,
-    workspace: 'server',
-  })
-
   let attempts = 0
   const maxAttempts = 3
 
   while (attempts < maxAttempts) {
     attempts++
     try {
-      console.log(`Attempt ${attempts}/${maxAttempts} - Fetching with config:`, {
-        projectId: client.config().projectId,
-        dataset: client.config().dataset,
-        apiVersion: client.config().apiVersion,
-        hasToken: !!client.config().token,
-        preview
-      })
-
       const data = await client.fetch(query)
       console.log('Fetch successful:', { hasData: !!data })
       return data
-    } catch (error) {
-      console.error(`Attempt ${attempts} failed:`, error)
+    } catch (error: any) {
+      console.error(`Attempt ${attempts} failed:`, {
+        message: error.message,
+        statusCode: error.statusCode,
+        preview,
+        hasToken: !!client.config().token,
+        tokenLength: client.config().token?.length
+      })
+
       if (attempts === maxAttempts) {
         throw error
       }
+      await new Promise(resolve => setTimeout(resolve, 1000 * attempts))
     }
   }
   return null

@@ -1,15 +1,21 @@
-import { client } from './client'
+import { getClient } from './client'
 
-async function fetchWithRetry<T>(query: string, maxRetries = 3): Promise<T | null> {
+const client = getClient()
+
+async function fetchWithRetry<T>(query: string, preview = false, maxRetries = 3): Promise<T | null> {
+  const sanityClient = getClient(preview)
+
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      const result = await client.fetch<T>(query)
+      const result = await sanityClient.fetch<T>(query)
       return result
     } catch (error: any) {
       console.error(`Attempt ${attempt} failed:`, {
         message: error.message,
         statusCode: error.statusCode,
-        details: error.details
+        details: error.details,
+        preview,
+        hasToken: !!sanityClient.config().token
       })
 
       if (attempt === maxRetries) return null
@@ -19,7 +25,7 @@ async function fetchWithRetry<T>(query: string, maxRetries = 3): Promise<T | nul
   return null
 }
 
-export async function getSettings() {
+export async function getSettings(preview = false) {
   try {
     const settings = await fetchWithRetry(`
       *[_type == "settings" && _id == "singleton-settings"][0]{
@@ -30,7 +36,7 @@ export async function getSettings() {
           isTransparent
         }
       }
-    `)
+    `, preview)
     return settings
   } catch (error) {
     console.error('Error fetching settings:', error)
@@ -38,10 +44,10 @@ export async function getSettings() {
   }
 }
 
-export async function getHome() {
+export async function getHome(preview = false) {
   try {
     return await fetchWithRetry(`
-      *[_type == "home" && _id == "singleton-home"][0]{
+      *[_type == "home" && _id == ${preview ? '"drafts.singleton-home"' : '"singleton-home"'}][0]{
         contentBlocks[]{
           ...,
           _type == 'musicBlock' => {
@@ -95,7 +101,7 @@ export async function getHome() {
           },
         }
       }
-    `)
+    `, preview)
   } catch (error) {
     console.error('Error fetching home:', error)
     return null
