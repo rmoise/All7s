@@ -167,11 +167,16 @@ const workspaces: WorkspaceConfig[] = [
           : 'https://staging--all7z.netlify.app'
 
         if (document._type === 'home') {
-          const secret = encodeURIComponent(
-            process.env.SANITY_STUDIO_PREVIEW_SECRET ||
-            process.env.NEXT_PUBLIC_PREVIEW_SECRET ||
-            ''
-          )
+          const previewSecret = process.env.SANITY_STUDIO_PREVIEW_SECRET ||
+                               process.env.NEXT_PUBLIC_PREVIEW_SECRET ||
+                               process.env.SANITY_PREVIEW_SECRET
+
+          if (!previewSecret) {
+            console.error('No preview secret available in environment')
+            return prev
+          }
+
+          const secret = encodeURIComponent(previewSecret)
 
           console.log('Preview URL generation:', {
             baseUrl,

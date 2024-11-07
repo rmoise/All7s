@@ -130,6 +130,12 @@ const nextConfig = {
   compiler: {
     styledComponents: true,
   },
+
+  publicRuntimeConfig: {
+    SANITY_PREVIEW_SECRET: process.env.SANITY_PREVIEW_SECRET,
+    NEXT_PUBLIC_PREVIEW_SECRET: process.env.NEXT_PUBLIC_PREVIEW_SECRET,
+    SANITY_STUDIO_PREVIEW_SECRET: process.env.SANITY_STUDIO_PREVIEW_SECRET
+  }
 };
 
 module.exports = nextConfig;
