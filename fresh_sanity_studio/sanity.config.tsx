@@ -104,11 +104,16 @@ const workspaces: WorkspaceConfig[] = [
           : 'https://all7z.com'
 
         if (document._type === 'home') {
-          const secret = encodeURIComponent(
-            process.env.SANITY_STUDIO_PREVIEW_SECRET ||
-            process.env.NEXT_PUBLIC_PREVIEW_SECRET ||
-            ''
-          )
+          const previewSecret = process.env.SANITY_STUDIO_PREVIEW_SECRET ||
+                               process.env.NEXT_PUBLIC_PREVIEW_SECRET ||
+                               process.env.SANITY_PREVIEW_SECRET
+
+          if (!previewSecret) {
+            console.error('No preview secret available in environment')
+            return prev
+          }
+
+          const secret = encodeURIComponent(previewSecret)
 
           console.log('Preview URL generation:', {
             baseUrl,
@@ -117,7 +122,8 @@ const workspaces: WorkspaceConfig[] = [
             secretLength: secret?.length,
             envVars: {
               hasStudioSecret: !!process.env.SANITY_STUDIO_PREVIEW_SECRET,
-              hasPublicSecret: !!process.env.NEXT_PUBLIC_PREVIEW_SECRET
+              hasPublicSecret: !!process.env.NEXT_PUBLIC_PREVIEW_SECRET,
+              hasPreviewSecret: !!process.env.SANITY_PREVIEW_SECRET
             }
           })
 
