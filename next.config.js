@@ -86,7 +86,7 @@ const nextConfig = {
               // Images
               "img-src 'self' data: blob: https: http:",
               // Media
-              "media-src 'self' https://*.scdn.co https://*.spotify.com https://*.ytimg.com https://*.imagekit.io blob:",
+              "media-src 'self' https://*.scdn.co https://*.spotify.com https://*.ytimg.com https://*.imagekit.io https://*.sanity.io blob:",
               // Fonts
               "font-src 'self' data: https://fonts.gstatic.com https://*.typekit.net",
               // Connect

@@ -16,7 +16,8 @@ import { useAudio } from '@/context/AudioContext' // Adjust the path as needed
 import MusicEmbed from '@components/MusicEmbed' // Ensure correct path
 import { debounce } from 'lodash'
 import Image from 'next/image'
-import type { Song } from '@/types/sanity'  // Import the Song type
+import type { Song } from '@/types/sanity';
+import type { SanityRawSong } from '@/types/sanity';
 
 interface CustomImage {
   asset: {
@@ -27,12 +28,12 @@ interface CustomImage {
 interface Album {
   albumId: string;
   title: string;
-  artist?: string; // Optional artist property
-  embedUrl?: string; // Direct embedUrl property
-  songs?: Song[] // For backward compatibility
-  albumSource: 'embedded' | 'custom'
-  imageUrl?: string; // Include imageUrl in Album
-  customImage?: CustomImage // Optional custom image
+  artist?: string;
+  embedUrl?: string;
+  songs?: Song[];
+  albumSource: 'embedded' | 'custom';
+  imageUrl?: string;
+  customImage?: CustomImage;
 }
 
 interface FlipCardAlbum {
@@ -49,6 +50,7 @@ interface FlipCardAlbum {
     };
   };
   embeddedAlbum?: {
+    songs?: Song[];
     embedUrl: string;
     title: string;
     artist: string;
@@ -75,13 +77,82 @@ interface FlipCardAlbum {
   };
 }
 
+// Define the FlipCardProps interface
 interface FlipCardProps {
-  album: FlipCardAlbum;
+  album: {
+    albumId: string;
+    title: string;
+    artist?: string;
+    embedUrl?: string;
+    imageUrl?: string;
+    customImage?: {
+      asset: {
+        url: string;
+      };
+    };
+    albumSource: 'embedded' | 'custom';
+    songs?: Song[];
+    customAlbum?: {
+      songs: Song[];
+      title: string;
+      artist: string;
+    };
+    embeddedAlbum?: {
+      songs?: Song[];
+      embedUrl: string;
+      title: string;
+      artist: string;
+      platform: 'spotify' | 'soundcloud';
+      releaseType: string;
+      imageUrl?: string;
+      processedImageUrl: string;
+    };
+  };
   isFlipped: boolean;
   toggleFlip: (albumId: string) => void;
   addFlipCardRef: (albumId: string, ref: HTMLDivElement | null) => void;
   titleClass?: string;
   artistClass?: string;
+}
+
+interface SanityFileAsset {
+  _type: 'file';
+  asset: {
+    _ref: string;
+    _type: 'reference';
+  } | {
+    url: string;
+  };
+}
+
+// Helper function to get URL from any song format
+function getSongUrl(song: SanityRawSong | Song): string | undefined {
+  console.log('Getting URL for song:', JSON.stringify(song, null, 2));
+
+  // For Sanity file-based songs
+  if (song.file?.asset) {
+    if ('_ref' in song.file.asset && typeof song.file.asset._ref === 'string') {
+      const ref = song.file.asset._ref;
+      const [_file, id, extension] = ref.split('-');
+      const fileUrl = `https://cdn.sanity.io/files/${process.env.NEXT_PUBLIC_SANITY_PROJECT_ID}/production/${id}.${extension}`;
+      console.log('Constructed file URL:', fileUrl);
+      return fileUrl;
+    }
+
+    if ('url' in song.file.asset) {
+      console.log('Found direct URL:', song.file.asset.url);
+      return song.file.asset.url;
+    }
+  }
+
+  // For direct URL songs
+  if ('url' in song && song.url) {
+    console.log('Found direct URL:', song.url);
+    return song.url;
+  }
+
+  console.log('No URL found for song:', song);
+  return undefined;
 }
 
 const FlipCard = forwardRef<HTMLDivElement, FlipCardProps>(
@@ -118,13 +189,23 @@ const FlipCard = forwardRef<HTMLDivElement, FlipCardProps>(
     }, [])
 
     // Derived variables to handle data structures
-    const songs = album.songs || [];
-    const embedUrl = album.embedUrl || '';
+    const songs = useMemo(() => {
+      if (album.albumSource === 'custom' && album.customAlbum?.songs) {
+        return album.customAlbum.songs;
+      }
+      if (album.embeddedAlbum?.songs) {
+        return album.embeddedAlbum.songs;
+      }
+      return album.songs || [] as Song[];
+    }, [album]);
+    const embedUrl = album.embedUrl || album.embeddedAlbum?.embedUrl || '';
 
     const imageUrl = useMemo(() => {
       return (
         album.customImage?.asset?.url ||
         album.imageUrl ||
+        album.embeddedAlbum?.imageUrl ||
+        album.embeddedAlbum?.processedImageUrl ||
         '/images/placeholder.png'
       );
     }, [album]);
@@ -180,19 +261,19 @@ const FlipCard = forwardRef<HTMLDivElement, FlipCardProps>(
     const handleTrackClick = useCallback(
       (e: React.MouseEvent, idx: number) => {
         e.stopPropagation();
+        console.log('Track clicked:', { idx, song: songs[idx] });
+
         if (songs && idx >= 0 && idx < songs.length) {
-          setCurrentTrackIndexLocal(idx);
           const selectedTrack = songs[idx];
-          if (selectedTrack && selectedTrack.url) {
-            console.log('Playing track:', {
-              url: selectedTrack.url,
-              albumId: album.albumId,
-              index: idx,
-              track: selectedTrack
-            });
-            playTrack(selectedTrack.url, album.albumId, idx);
+          const trackUrl = getSongUrl(selectedTrack);
+
+          console.log('Track URL:', trackUrl);
+
+          if (trackUrl) {
+            setCurrentTrackIndexLocal(idx);
+            playTrack(trackUrl, album.albumId, idx);
           } else {
-            console.warn('Selected track is invalid or missing URL:', selectedTrack);
+            console.warn('No valid URL found for track:', selectedTrack);
           }
         }
       },
@@ -202,26 +283,46 @@ const FlipCard = forwardRef<HTMLDivElement, FlipCardProps>(
     // Handle play/pause button click
     const handlePlayPause = useCallback(
       (e: React.MouseEvent) => {
-        e.stopPropagation()
+        e.stopPropagation();
+        console.log('Play/Pause clicked:', {
+          currentTrackIndexLocal,
+          songs,
+          isThisTrackPlaying,
+          isThisTrackPaused
+        });
+
         if (currentTrackIndexLocal === null) {
           if (songs && songs.length > 0) {
-            handleTrackClick(e, 0)
-          } else {
-            console.warn('No tracks available.')
+            const firstTrack = songs[0];
+            console.log('Playing first track:', firstTrack);
+
+            // Use getSongUrl helper instead of direct property access
+            const trackUrl = getSongUrl(firstTrack);
+            console.log('Track URL:', trackUrl);
+
+            if (trackUrl) {
+              setCurrentTrackIndexLocal(0);
+              playTrack(trackUrl, album.albumId, 0);
+            } else {
+              console.warn('Track URL is missing:', firstTrack);
+            }
           }
-          return
+          return;
         }
 
         if (isThisTrackPlaying) {
-          pauseTrack()
+          pauseTrack();
         } else if (isThisTrackPaused) {
-          currentHowl?.play()
+          currentHowl?.play();
         } else {
-          const currentSong = songs[currentTrackIndexLocal]
-          if (currentSong && currentSong.url) {
-            playTrack(currentSong.url, album.albumId, currentTrackIndexLocal)
+          const currentSong = songs[currentTrackIndexLocal];
+          // Use getSongUrl helper here as well
+          const trackUrl = getSongUrl(currentSong);
+
+          if (trackUrl) {
+            playTrack(trackUrl, album.albumId, currentTrackIndexLocal);
           } else {
-            console.warn('Invalid track or missing URL.')
+            console.warn('No valid URL found for track:', currentSong);
           }
         }
       },
@@ -233,10 +334,9 @@ const FlipCard = forwardRef<HTMLDivElement, FlipCardProps>(
         pauseTrack,
         currentHowl,
         playTrack,
-        album.albumId,
-        handleTrackClick,
+        album.albumId
       ]
-    )
+    );
 
     // Set song durations when album changes
     useEffect(() => {
@@ -339,17 +439,9 @@ const FlipCard = forwardRef<HTMLDivElement, FlipCardProps>(
 
     // Render the list of tracks
     const renderTrackList = useMemo(() => {
-      if (!songs || songs.length === 0) {
-        return (
-          <div className="mt-4 text-center text-gray-500">
-            No tracks available
-          </div>
-        );
-      }
-
-      return songs.map((song, idx) => (
+      return songs.map((song: Song, idx: number) => (
         <div
-          key={idx}
+          key={'_key' in song ? song._key : `track-${idx}`}
           className={clsx(
             'track-item flex justify-between items-center cursor-pointer hover:bg-gray-300 rounded-md p-3',
             {
@@ -362,7 +454,7 @@ const FlipCard = forwardRef<HTMLDivElement, FlipCardProps>(
         >
           <div className="flex items-center space-x-2">
             <span className="text-black">
-              {song.trackTitle || `Track ${idx + 1}`}
+              {song.trackTitle}
             </span>
           </div>
           <span className="text-sm text-gray-500">
@@ -370,14 +462,7 @@ const FlipCard = forwardRef<HTMLDivElement, FlipCardProps>(
           </span>
         </div>
       ));
-    }, [
-      songs,
-      currentTrackIndexLocal,
-      isThisTrackPlaying,
-      isThisTrackPaused,
-      songDurations,
-      handleTrackClick,
-    ]);
+    }, [songs, currentTrackIndexLocal, isThisTrackPlaying, isThisTrackPaused, songDurations, handleTrackClick]);
 
     // Handle mouse enter for non-mobile and not flipped
     const handleMouseEnter = useCallback(() => {
@@ -522,14 +607,14 @@ const FlipCard = forwardRef<HTMLDivElement, FlipCardProps>(
                     <div className="flex justify-center items-center mt-4">
                       <button
                         className="text-black bg-gray-300 hover:bg-gray-400 rounded-full p-4"
-                        onClick={(e) => handlePlayPause(e)}
-                        aria-label={
-                          isThisTrackPlaying ? 'Pause Track' : 'Play Track'
-                        }
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handlePlayPause(e);
+                        }}
+                        aria-label={isThisTrackPlaying ? 'Pause Track' : 'Play Track'}
                         style={{
-                          backgroundColor: isThisTrackPlaying
-                            ? '#ff4d4d'
-                            : '#4CAF50',
+                          backgroundColor: isThisTrackPlaying ? '#ff4d4d' : '#4CAF50',
                           width: '60px',
                           height: '60px',
                           fontSize: '24px',
@@ -588,7 +673,7 @@ const FlipCard = forwardRef<HTMLDivElement, FlipCardProps>(
                     </div>
                   </div>
                 ) : (
-                  // Embed Music (e.g., Spotify, SoundCloud)
+                  // Only show embed if there are no songs AND there's an embed URL
                   <div className="music-embed h-full">
                     {embedUrl && platform ? (
                       <MusicEmbed
@@ -735,5 +820,7 @@ const FlipCard = forwardRef<HTMLDivElement, FlipCardProps>(
     )
   }
 )
+
+FlipCard.displayName = 'FlipCard';
 
 export default FlipCard

@@ -154,6 +154,12 @@ export interface Song {
   url: string;
   duration: number;
   _key?: string;
+  file?: {
+    _type: 'file';
+    asset: {
+      url: string;
+    };
+  };
 }
 
 // Add CustomAlbum interface
@@ -216,6 +222,20 @@ export interface SanityImageAsset {
       width: number;
       height: number;
       aspectRatio: number;
+    };
+  };
+}
+
+// Add this interface for the raw song format from Sanity
+export interface SanityRawSong {
+  _type: 'song';
+  _key: string;
+  trackTitle: string;
+  duration: number;
+  file: {
+    _type: 'file';
+    asset: {
+      url: string;
     };
   };
 }
