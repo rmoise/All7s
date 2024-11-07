@@ -99,31 +99,26 @@ const workspaces: WorkspaceConfig[] = [
     document: {
       productionUrl: async (prev: string | undefined, context: DocumentContext) => {
         const { document } = context
+        const previewSecret = process.env.SANITY_PREVIEW_SECRET
+
+        if (!previewSecret) {
+          console.error('No preview secret available in environment')
+          return prev
+        }
+
+        const secret = encodeURIComponent(previewSecret)
         const baseUrl = window.location.hostname === 'localhost'
           ? 'http://localhost:3000'
           : 'https://all7z.com'
 
-        if (document._type === 'home') {
-          const previewSecret = process.env.SANITY_PREVIEW_SECRET
+        console.log('Preview URL generation:', {
+          baseUrl,
+          documentType: document._type,
+          hasSecret: !!secret,
+          secretLength: secret?.length
+        })
 
-          if (!previewSecret) {
-            console.error('No preview secret available in environment')
-            return prev
-          }
-
-          const secret = encodeURIComponent(previewSecret)
-
-          console.log('Preview URL generation:', {
-            baseUrl,
-            documentType: document._type,
-            hasSecret: !!secret,
-            secretLength: secret?.length
-          })
-
-          return `${baseUrl}/api/preview?secret=${secret}&type=${document._type}&id=${document._id}`
-        }
-
-        return prev
+        return `${baseUrl}/api/preview?secret=${secret}&type=${document._type}&id=${document._id}`
       },
       actions: (input: any[], context: any) =>
         singletonTypes.has(context.schemaType)
@@ -155,31 +150,26 @@ const workspaces: WorkspaceConfig[] = [
     document: {
       productionUrl: async (prev: string | undefined, context: DocumentContext) => {
         const { document } = context
+        const previewSecret = process.env.SANITY_PREVIEW_SECRET
+
+        if (!previewSecret) {
+          console.error('No preview secret available in environment')
+          return prev
+        }
+
+        const secret = encodeURIComponent(previewSecret)
         const baseUrl = window.location.hostname === 'localhost'
           ? 'http://localhost:3000'
           : 'https://staging--all7z.netlify.app'
 
-        if (document._type === 'home') {
-          const previewSecret = process.env.SANITY_PREVIEW_SECRET
+        console.log('Preview URL generation:', {
+          baseUrl,
+          documentType: document._type,
+          hasSecret: !!secret,
+          secretLength: secret?.length
+        })
 
-          if (!previewSecret) {
-            console.error('No preview secret available in environment')
-            return prev
-          }
-
-          const secret = encodeURIComponent(previewSecret)
-
-          console.log('Preview URL generation:', {
-            baseUrl,
-            documentType: document._type,
-            hasSecret: !!secret,
-            secretLength: secret?.length
-          })
-
-          return `${baseUrl}/api/preview?secret=${secret}&type=${document._type}&id=${document._id}`
-        }
-
-        return prev
+        return `${baseUrl}/api/preview?secret=${secret}&type=${document._type}&id=${document._id}`
       },
       actions: (input: any[], context: any) =>
         singletonTypes.has(context.schemaType)
