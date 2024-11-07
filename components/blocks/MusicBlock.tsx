@@ -14,6 +14,15 @@ interface MusicBlockProps {
 const MusicBlock: React.FC<MusicBlockProps> = ({ listenTitle = 'LISTEN', albums = [] }) => {
   const [flippedAlbums, setFlippedAlbums] = useState<Set<string>>(new Set());
   const flipCardRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+  const [loadedAlbums, setLoadedAlbums] = useState<Album[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    if (albums?.length) {
+      setLoadedAlbums(albums)
+    }
+    setIsLoading(false)
+  }, [albums])
 
   const handleFlip = useCallback((albumId: string) => {
     setFlippedAlbums((prev) => {
@@ -86,29 +95,29 @@ const MusicBlock: React.FC<MusicBlockProps> = ({ listenTitle = 'LISTEN', albums 
   };
 
   const getImageUrl = (album: Album): string => {
-    console.log('Getting image URL for album:', album);
+    if (!album) return '/images/placeholder.png'
 
     if (album.albumSource === 'embedded' && album.embeddedAlbum) {
-      if (album.embeddedAlbum.processedImageUrl) {
-        console.log('Using processed image URL:', album.embeddedAlbum.processedImageUrl);
-        return album.embeddedAlbum.processedImageUrl;
-      }
-
-      if (album.embeddedAlbum.imageUrl) {
-        console.log('Using embedded album imageUrl:', album.embeddedAlbum.imageUrl);
-        return album.embeddedAlbum.imageUrl;
-      }
+      return album.embeddedAlbum.processedImageUrl ||
+             album.embeddedAlbum.imageUrl ||
+             (album.embeddedAlbum.customImage?.asset && urlFor(album.embeddedAlbum.customImage).url()) ||
+             '/images/placeholder.png'
     }
 
-    if (album.customAlbum?.customImage?.asset || album.embeddedAlbum?.customImage?.asset) {
-      const image = album.customAlbum?.customImage || album.embeddedAlbum?.customImage;
-      console.log('Using custom image:', image);
-      return urlFor(image).url();
+    if (album.customAlbum?.customImage?.asset) {
+      return urlFor(album.customAlbum.customImage).url()
     }
 
-    console.log('Using placeholder image');
-    return '/images/placeholder.png';
-  };
+    return '/images/placeholder.png'
+  }
+
+  if (isLoading) {
+    return <div>Loading albums...</div>
+  }
+
+  if (!loadedAlbums?.length) {
+    return <div>No albums available</div>
+  }
 
   return (
     <section id={listenId} className="w-full px-2 sm:px-4 md:px-8 lg:px-32 relative z-10">
@@ -120,7 +129,7 @@ const MusicBlock: React.FC<MusicBlockProps> = ({ listenTitle = 'LISTEN', albums 
         </div>
 
         <Grid columns={1} gap={32} className="w-full max-w-6xl mx-auto pb-32">
-          {albums.map((album, index) => {
+          {loadedAlbums.map((album, index) => {
             if (!album) return null;
 
             const albumId = album._id || `album-${index}`;

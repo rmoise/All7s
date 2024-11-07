@@ -130,6 +130,21 @@ const nextConfig = {
 
   publicRuntimeConfig: {
     SANITY_PREVIEW_SECRET: process.env.SANITY_PREVIEW_SECRET
+  },
+
+  async redirects() {
+    return [
+      {
+        source: '/blog',
+        destination: '/blog/posts',
+        permanent: true,
+      },
+      {
+        source: '/store',
+        destination: '/shop',
+        permanent: true,
+      },
+    ]
   }
 };
 

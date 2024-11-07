@@ -1,5 +1,59 @@
 import { getClient } from './client'
 
+// Define types for the home data structure
+interface ContentBlock {
+  _type: string;
+  listenTitle?: string;
+  albums?: Album[];
+  lookTitle?: string;
+  heroVideoLink?: string;
+  additionalVideos?: any;
+}
+
+interface Album {
+  _id: string;
+  albumSource: 'embedded' | 'custom';
+  embeddedAlbum?: {
+    embedUrl: string;
+    title: string;
+    artist: string;
+    platform: string;
+    releaseType: string;
+    imageUrl?: string;
+    processedImageUrl: string;
+    customImage?: {
+      asset: {
+        url: string;
+        metadata: {
+          dimensions: {
+            width: number;
+            height: number;
+          };
+        };
+      };
+    };
+  };
+  customAlbum?: {
+    title: string;
+    artist: string;
+    releaseType: string;
+    customImage?: {
+      asset: {
+        url: string;
+      };
+    };
+    songs: Array<{
+      trackTitle: string;
+      url: string;
+      duration: number;
+    }>;
+  };
+}
+
+interface HomeData {
+  contentBlocks: ContentBlock[];
+}
+
 const client = getClient()
 
 async function fetchWithRetry<T>(query: string, preview = false, maxRetries = 3): Promise<T | null> {
@@ -25,28 +79,9 @@ async function fetchWithRetry<T>(query: string, preview = false, maxRetries = 3)
   return null
 }
 
-export async function getSettings(preview = false) {
+export async function getHome(preview = false): Promise<HomeData | null> {
   try {
-    const settings = await fetchWithRetry(`
-      *[_type == "settings" && _id == "singleton-settings"][0]{
-        navbar{
-          logo,
-          navigationLinks[]{name, href},
-          backgroundColor,
-          isTransparent
-        }
-      }
-    `, preview)
-    return settings
-  } catch (error) {
-    console.error('Error fetching settings:', error)
-    return null
-  }
-}
-
-export async function getHome(preview = false) {
-  try {
-    return await fetchWithRetry(`
+    const result = await fetchWithRetry<HomeData>(`
       *[_type == "home" && _id == ${preview ? '"drafts.singleton-home"' : '"singleton-home"'}][0]{
         contentBlocks[]{
           ...,
@@ -102,8 +137,30 @@ export async function getHome(preview = false) {
         }
       }
     `, preview)
+
+    if (!result) {
+      console.error('No home data found')
+      return null
+    }
+
+    if (!result.contentBlocks?.length) {
+      console.warn('Home data found but no content blocks present')
+    }
+
+    // Log successful data fetch with content block count
+    console.log('Home data fetched successfully:', {
+      hasData: !!result,
+      contentBlocksCount: result.contentBlocks?.length || 0,
+      musicBlocksCount: result.contentBlocks?.filter((block: ContentBlock) => block._type === 'musicBlock').length || 0
+    })
+
+    return result
   } catch (error) {
-    console.error('Error fetching home:', error)
+    console.error('Error fetching home data:', {
+      error,
+      preview,
+      timestamp: new Date().toISOString()
+    })
     return null
   }
 }
