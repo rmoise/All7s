@@ -28,6 +28,19 @@ const WEBHOOK_EXPIRY = 30000; // 30 seconds
 const MAX_RETRIES = 3; // Maximum number of retries per document
 const RETRY_WINDOW = 300000; // 5 minutes window for retry counting
 
+// At the top of the file
+const processedDocs = new Map();
+const CACHE_TTL = 60 * 1000; // 1 minute
+
+// Initialize Sanity client
+const client = createClient({
+  projectId: process.env.SANITY_STUDIO_PROJECT_ID,
+  dataset: process.env.SANITY_STUDIO_DATASET,
+  token: process.env.SANITY_TOKEN, // Make sure this is set in your .env
+  apiVersion: '2023-05-03', // Use current date in YYYY-MM-DD format
+  useCdn: false
+});
+
 function hasContentChanged(document, headers) {
   console.log('Checking document for changes:', {
     id: document._id,
@@ -348,119 +361,145 @@ async function processWebhook(event, debugLog) {
   }
 }
 
+function canProcessDocument(docId, rev) {
+  const now = Date.now();
+  const cacheKey = `${docId}_${rev}`;
+  const lastProcessed = processedDocs.get(cacheKey);
+
+  // Clean up old cache entries
+  for (const [key, timestamp] of processedDocs.entries()) {
+    if (now - timestamp > CACHE_TTL) {
+      processedDocs.delete(key);
+    }
+  }
+
+  if (lastProcessed && now - lastProcessed < CACHE_TTL) {
+    return false;
+  }
+
+  processedDocs.set(cacheKey, now);
+  return true;
+}
+
+async function getFileAssetUrl(fileAsset) {
+  // If we already have a URL, return it
+  if (fileAsset?.asset?.url) {
+    return fileAsset.asset.url;
+  }
+
+  // If we have a reference, fetch the asset
+  if (fileAsset?.asset?._ref) {
+    const asset = await client.fetch(`*[_id == $ref][0]`, {
+      ref: fileAsset.asset._ref
+    });
+    return asset?.url;
+  }
+
+  return null;
+}
+
 async function handler(event) {
   try {
-    // Parse headers and body
-    const projectId = event.headers['sanity-project-id'];
-    const dataset = event.headers['sanity-dataset'];
-    const operation = event.headers['sanity-operation'];
     const body = JSON.parse(event.body);
-
     console.log('Webhook payload:', JSON.stringify(body, null, 2));
 
-    // Only process create/update operations for albums
-    if (!['create', 'update'].includes(operation) || body._type !== 'album') {
+    let albumsToProcess = [];
+
+    if (body.albums) {
+      albumsToProcess = body.albums;
+    } else if (body._type === 'album') {
+      albumsToProcess = [body];
+    } else {
       console.log('Skipping webhook: not a create/update album operation');
       return { statusCode: 200 };
     }
 
-    // Check if there are songs with files to process
-    const songs = body.customAlbum?.songs || [];
-    const hasFiles = songs.some(song => song.file?.asset);
+    for (const album of albumsToProcess) {
+      if (!canProcessDocument(album._id, album._rev)) {
+        console.log(`Document ${album._id} rev ${album._rev} was recently processed, skipping`);
+        continue;
+      }
 
-    if (!hasFiles) {
-      console.log('No files to process in webhook payload');
-      return { statusCode: 200 };
-    }
+      console.log('Processing Album:', album.customAlbum?.title);
 
-    const client = createClient({
-      projectId,
-      dataset,
-      token: process.env.SANITY_TOKEN,
-      apiVersion: '2024-03-19',
-      useCdn: false
-    });
-
-    // Verify document still exists and revision matches
-    try {
-      const doc = await client.getDocument(body._id);
+      const doc = await client.getDocument(album._id);
       if (!doc) {
-        console.log(`Document ${body._id} no longer exists, skipping update`);
-        return { statusCode: 200 };
-      }
-      if (doc._rev !== body._rev) {
-        console.log(`Document revision mismatch (${doc._rev} !== ${body._rev}), skipping update`);
-        return { statusCode: 200 };
-      }
-    } catch (error) {
-      if (error.statusCode === 404) {
-        console.log(`Document ${body._id} not found, skipping update`);
-        return { statusCode: 200 };
-      }
-      throw error;
-    }
-
-    console.log(`Processing album: ${body.customAlbum.title || body._id}`);
-
-    // Process songs from webhook payload
-    const updatedSongs = await Promise.all(songs.map(async (song) => {
-      // Skip if no file or asset
-      if (!song.file?.asset) {
-        console.log(`Song "${song.trackTitle}" has no file. Skipping.`);
-        return song;
+        console.log(`Document ${album._id} no longer exists, skipping`);
+        continue;
       }
 
-      try {
-        // Get the file URL either directly or via reference
-        let fileUrl = song.file.asset.url;
-        if (!fileUrl && song.file.asset._ref) {
-          console.log(`Fetching file asset: ${song.file.asset._ref}`);
-          const fileAsset = await client.fetch(`*[_id == $ref][0]`, {
-            ref: song.file.asset._ref
-          });
-          fileUrl = fileAsset?.url;
-        }
-
-        if (!fileUrl) {
-          console.log(`No URL found for song "${song.trackTitle}"`);
-          return song;
-        }
-
-        console.log(`Processing file for "${song.trackTitle}":`, fileUrl);
-        const duration = await getAudioDuration(fileUrl);
-        console.log(`Got duration for "${song.trackTitle}":`, duration);
-
-        return {
-          ...song,
-          duration: duration,
+      // Process the songs
+      const updatedSongs = await Promise.all((album.customAlbum?.songs || []).map(async (song) => {
+        const baseSong = {
+          _type: 'song',
+          _key: song._key || `song-${Date.now()}`,
+          trackTitle: song.trackTitle,
+          duration: song.duration,
           file: {
             _type: 'file',
-            asset: song.file.asset._ref ? {
-              _type: 'reference',
-              _ref: song.file.asset._ref
-            } : song.file.asset
+            asset: song.file?.asset
           }
         };
-      } catch (error) {
-        console.error(`Error processing "${song.trackTitle}":`, error);
-        return song;
-      }
-    }));
 
-    // Update the album
-    const mutation = [{
-      patch: {
-        id: body._id,
-        set: {
-          'customAlbum.songs': updatedSongs
+        // Skip if song already has a duration
+        if (typeof song.duration === 'number') {
+          console.log(`Skipping song "${song.trackTitle}": already has duration ${song.duration}`);
+          return baseSong;
         }
+
+        if (!song.file?.asset) {
+          console.log(`Skipping song "${song.trackTitle}": no file asset`);
+          return baseSong;
+        }
+
+        try {
+          const fileUrl = await getFileAssetUrl(song.file);
+          if (!fileUrl) {
+            console.log(`Could not get file URL for "${song.trackTitle}"`);
+            return baseSong;
+          }
+
+          console.log(`Processing file for "${song.trackTitle}":`, fileUrl);
+          const duration = await getAudioDuration(fileUrl);
+          console.log(`Got duration for "${song.trackTitle}":`, duration);
+
+          return {
+            ...baseSong,
+            duration: duration
+          };
+        } catch (error) {
+          console.error(`Error processing "${song.trackTitle}":`, error);
+          return baseSong;
+        }
+      }));
+
+      // Only update if any songs actually need duration updates
+      const needsUpdate = updatedSongs.some((song, i) =>
+        song.duration !== album.customAlbum.songs[i].duration
+      );
+
+      if (!needsUpdate) {
+        console.log(`No duration updates needed for album ${album.customAlbum?.title}`);
+        continue;
       }
-    }];
 
-    console.log('Attempting mutation:', JSON.stringify({ mutations: mutation }, null, 2));
+      // Update the album
+      const mutation = [{
+        patch: {
+          id: album._id,
+          set: {
+            'customAlbum.songs': updatedSongs
+          }
+        }
+      }];
 
-    const result = await client.mutate(mutation);
-    console.log(`Successfully updated album:`, result);
+      try {
+        const result = await client.mutate(mutation);
+        console.log(`Successfully updated album ${album.customAlbum?.title}:`, result);
+      } catch (error) {
+        console.error(`Failed to update album ${album.customAlbum?.title}:`, error);
+      }
+    }
 
     return { statusCode: 200 };
   } catch (error) {
