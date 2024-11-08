@@ -124,56 +124,102 @@ async function extractAndUpdateDurations(config) {
     projectId: config.projectId,
     dataset: config.dataset,
     token: config.token,
-    apiVersion: config.apiVersion
+    apiVersion: config.apiVersion,
+    useCdn: false
   });
 
-  console.log('Starting duration extraction with config:', {
-    projectId: config.projectId,
-    dataset: config.dataset,
-    hasToken: Boolean(config.token)
-  });
+  // Helper function to wait
+  const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-  // Query for albums that need duration updates
-  const query = `*[_type == "album" && albumSource == "custom" && defined(customAlbum.songs) && count(customAlbum.songs[defined(file.asset) && !defined(duration)]) > 0]`;
+  // Helper function to retry getting file asset
+  async function getFileAssetWithRetry(ref, maxRetries = 3, delay = 2000) {
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        const asset = await client.fetch(`*[_id == $ref][0]`, { ref });
+        if (asset?.url) {
+          return asset;
+        }
+        console.log(`Attempt ${i + 1}: No URL found for ${ref}, waiting ${delay}ms...`);
+        await wait(delay);
+      } catch (error) {
+        console.error(`Attempt ${i + 1} failed:`, error);
+        if (i < maxRetries - 1) await wait(delay);
+      }
+    }
+    return null;
+  }
+
+  // Query to get albums with songs
+  const query = `*[_type == "album" && albumSource == "custom"] {
+    _id,
+    customAlbum {
+      title,
+      songs[] {
+        _key,
+        trackTitle,
+        duration,
+        file {
+          _type,
+          asset
+        }
+      }
+    }
+  }`;
+
+  // Wait a bit for file processing
+  await wait(2000);
+
   const albums = await client.fetch(query);
-
-  console.log('Found', albums.length, 'albums to process:', albums);
+  console.log('Found albums to process:', JSON.stringify(albums, null, 2));
 
   for (const album of albums) {
     console.log('Processing Album:', album.customAlbum.title);
 
-    const updatedSongs = await Promise.all(album.customAlbum.songs.map(async (song, index) => {
-      console.log(`Processing song ${index + 1}/${album.customAlbum.songs.length}:`, {
-        title: song.trackTitle,
-        fileRef: song.file?.asset?._ref,
-        currentDuration: song.duration
-      });
-
-      // Get the file URL from Sanity
-      if (song.file?.asset?._ref) {
-        const fileUrl = await client.getDocument(song.file.asset._ref)
-          .then(asset => asset?.url);
-
-        if (!fileUrl) {
-          console.log(`    Song "${song.trackTitle}" has no audio URL. Skipping.`);
-          return song;
+    const updatedSongs = await Promise.all(album.customAlbum.songs.map(async (song) => {
+      const baseSong = {
+        _key: song._key,
+        trackTitle: song.trackTitle,
+        duration: song.duration,
+        file: {
+          _type: 'file',
+          asset: null
         }
+      };
 
-        try {
-          const duration = await getAudioDurationInSeconds(fileUrl);
-          return {
-            ...song,
-            duration
-          };
-        } catch (error) {
-          console.error(`    Error getting duration for "${song.trackTitle}":`, error);
-          return song;
-        }
+      if (!song.file?.asset?._ref) {
+        console.log(`Song "${song.trackTitle}" has no file reference. Skipping.`);
+        return baseSong;
       }
-      return song;
+
+      console.log(`Getting file asset for "${song.trackTitle}":`, song.file.asset._ref);
+
+      const fileAsset = await getFileAssetWithRetry(song.file.asset._ref);
+      if (!fileAsset) {
+        console.log(`Could not get file asset for "${song.trackTitle}" after retries`);
+        return baseSong;
+      }
+
+      try {
+        const duration = await getAudioDuration(fileAsset.url);
+        console.log(`Got duration for "${song.trackTitle}":`, duration);
+
+        return {
+          ...baseSong,
+          duration: duration,
+          file: {
+            _type: 'file',
+            asset: {
+              _type: 'reference',
+              _ref: song.file.asset._ref
+            }
+          }
+        };
+      } catch (error) {
+        console.error(`Error processing "${song.trackTitle}":`, error);
+        return baseSong;
+      }
     }));
 
-    // Update album with new durations
     const mutation = [{
       patch: {
         id: album._id,
@@ -183,14 +229,72 @@ async function extractAndUpdateDurations(config) {
       }
     }];
 
-    console.log('Attempting mutation:', JSON.stringify({ mutations: mutation }, null, 2));
-
     try {
       const result = await client.mutate(mutation);
       console.log(`Successfully updated album ${album.customAlbum.title}:`, result);
     } catch (error) {
       console.error(`Failed to update album ${album.customAlbum.title}:`, error);
     }
+  }
+}
+
+// Helper function to get audio duration
+async function getAudioDuration(url) {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const buffer = await response.arrayBuffer();
+
+    // Look for ID3v2 header
+    const view = new DataView(buffer);
+    let offset = 0;
+
+    // Check for ID3v2 header
+    if (buffer.byteLength > 10 &&
+        view.getUint8(0) === 0x49 && // 'I'
+        view.getUint8(1) === 0x44 && // 'D'
+        view.getUint8(2) === 0x33) { // '3'
+
+      // Skip ID3v2 tag
+      const size = ((view.getUint8(6) & 0x7f) << 21) |
+                   ((view.getUint8(7) & 0x7f) << 14) |
+                   ((view.getUint8(8) & 0x7f) << 7) |
+                   (view.getUint8(9) & 0x7f);
+      offset = 10 + size;
+    }
+
+    // Find first MPEG frame header
+    while (offset < buffer.byteLength - 4) {
+      if (view.getUint8(offset) === 0xff && (view.getUint8(offset + 1) & 0xe0) === 0xe0) {
+        // Found frame header
+        const version = (view.getUint8(offset + 1) & 0x18) >> 3;
+        const layer = (view.getUint8(offset + 1) & 0x06) >> 1;
+        const bitRateIndex = (view.getUint8(offset + 2) & 0xf0) >> 4;
+        const sampleRateIndex = (view.getUint8(offset + 2) & 0x0c) >> 2;
+
+        // Lookup tables for MPEG1 Layer III
+        const bitRates = [0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320];
+        const sampleRates = [44100, 48000, 32000];
+
+        const bitRate = bitRates[bitRateIndex] * 1000;
+        const sampleRate = sampleRates[sampleRateIndex];
+
+        if (bitRate && sampleRate) {
+          const duration = Math.floor((buffer.byteLength * 8) / bitRate);
+          console.log(`Calculated duration: ${duration} seconds`);
+          return duration;
+        }
+        break;
+      }
+      offset++;
+    }
+
+    throw new Error('Could not find valid MPEG frame header');
+  } catch (error) {
+    console.error('Error getting audio duration:', error);
+    return null;
   }
 }
 
@@ -244,27 +348,107 @@ async function processWebhook(event, debugLog) {
   }
 }
 
-exports.handler = async (event, context) => {
-  const debugLog = createDebugLogger();
-
+async function handler(event) {
   try {
-    debugLog('Webhook received', event);
-    await processWebhook(event, debugLog);
-    return {
-      statusCode: 200,
-      body: JSON.stringify({ message: 'Success' }),
-      headers: { 'Content-Type': 'application/json' }
-    };
+    // Parse headers and body
+    const projectId = event.headers['sanity-project-id'];
+    const dataset = event.headers['sanity-dataset'];
+    const operation = event.headers['sanity-operation'];
+    const body = JSON.parse(event.body);
+
+    console.log('Webhook payload:', JSON.stringify(body, null, 2));
+
+    // Only process create/update operations for albums
+    if (!['create', 'update'].includes(operation) || body._type !== 'album') {
+      console.log('Skipping webhook: not a create/update album operation');
+      return { statusCode: 200 };
+    }
+
+    // Check if there are songs with files to process
+    const songs = body.customAlbum?.songs || [];
+    const hasFiles = songs.some(song => song.file?.asset);
+
+    if (!hasFiles) {
+      console.log('No files to process in webhook payload');
+      return { statusCode: 200 };
+    }
+
+    const client = createClient({
+      projectId,
+      dataset,
+      token: process.env.SANITY_TOKEN,
+      apiVersion: '2024-03-19',
+      useCdn: false
+    });
+
+    console.log(`Processing album: ${body.customAlbum.title || body._id}`);
+
+    // Process songs from webhook payload
+    const updatedSongs = await Promise.all(songs.map(async (song) => {
+      // Skip if no file or asset
+      if (!song.file?.asset) {
+        console.log(`Song "${song.trackTitle}" has no file. Skipping.`);
+        return song;
+      }
+
+      try {
+        // Get the file URL either directly or via reference
+        let fileUrl = song.file.asset.url;
+        if (!fileUrl && song.file.asset._ref) {
+          console.log(`Fetching file asset: ${song.file.asset._ref}`);
+          const fileAsset = await client.fetch(`*[_id == $ref][0]`, {
+            ref: song.file.asset._ref
+          });
+          fileUrl = fileAsset?.url;
+        }
+
+        if (!fileUrl) {
+          console.log(`No URL found for song "${song.trackTitle}"`);
+          return song;
+        }
+
+        console.log(`Processing file for "${song.trackTitle}":`, fileUrl);
+        const duration = await getAudioDuration(fileUrl);
+        console.log(`Got duration for "${song.trackTitle}":`, duration);
+
+        return {
+          ...song,
+          duration: duration,
+          file: {
+            _type: 'file',
+            asset: song.file.asset._ref ? {
+              _type: 'reference',
+              _ref: song.file.asset._ref
+            } : song.file.asset
+          }
+        };
+      } catch (error) {
+        console.error(`Error processing "${song.trackTitle}":`, error);
+        return song;
+      }
+    }));
+
+    // Update the album
+    const mutation = [{
+      patch: {
+        id: body._id,
+        set: {
+          'customAlbum.songs': updatedSongs
+        }
+      }
+    }];
+
+    console.log('Attempting mutation:', JSON.stringify({ mutations: mutation }, null, 2));
+
+    const result = await client.mutate(mutation);
+    console.log(`Successfully updated album:`, result);
+
+    return { statusCode: 200 };
   } catch (error) {
-    return {
-      statusCode: 500,
-      body: JSON.stringify({
-        error: 'Internal server error',
-        message: error.message,
-        debug_logs: debugLog.getLogs()
-      }),
-      headers: { 'Content-Type': 'application/json' }
-    };
+    console.error('Error processing webhook:', error);
+    return { statusCode: 500, body: JSON.stringify({ error: error.message }) };
   }
-};
+}
+
+exports.handler = handler;
 
