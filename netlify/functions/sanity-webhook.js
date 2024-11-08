@@ -15,6 +15,11 @@ function hasContentChanged(document, headers) {
     return false;
   }
 
+  // Skip draft documents
+  if (document._id.startsWith('drafts.')) {
+    return false;
+  }
+
   // Only process custom albums
   if (document._type !== 'album' || document.albumSource !== 'custom') {
     return false;
@@ -24,7 +29,7 @@ function hasContentChanged(document, headers) {
 
   // Check for actual file changes that need duration updates
   return songs.some(song => {
-    const hasAudioFile = Boolean(song.file?.asset);
+    const hasAudioFile = Boolean(song.file?.asset?.url);
     const needsDuration = !song.duration;
     return hasAudioFile && needsDuration;
   });
