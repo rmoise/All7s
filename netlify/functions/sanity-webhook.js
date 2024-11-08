@@ -1,7 +1,15 @@
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
+const { createClient } = require('@sanity/client');
+const { getAudioDurationInSeconds } = require('get-audio-duration');
+const fetch = require('node-fetch');
+const fs = require('fs');
+const os = require('os');
+
 // Create a debug logging function that stores logs in memory
 function createDebugLogger() {
   const logs = [];
-  
+
   const logger = (message, data) => {
     const timestamp = new Date().toISOString();
     const logMessage = `${timestamp} - ${message}: ${JSON.stringify(data, null, 2)}`;
@@ -10,28 +18,9 @@ function createDebugLogger() {
   };
 
   logger.getLogs = () => logs.join('\n');
-  
+
   return logger;
 }
-
-exports.handler = async (event, context) => {
-  const debugLog = createDebugLogger();
-  
-  try {
-    debugLog('Webhook received', {
-      method: event.httpMethod,
-      headers: event.headers,
-      body: event.body
-    });
-
-    // ... rest of the handler code ...
-require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
-const { createClient } = require('@sanity/client');
-const { getAudioDurationInSeconds } = require('get-audio-duration');
-const fetch = require('node-fetch');
-const fs = require('fs');
-const path = require('path');
-const os = require('os');
 
 // Track processed webhooks with more metadata
 const processedWebhooks = new Map();
@@ -131,146 +120,150 @@ async function fetchAlbumsToProcess(client) {
 }
 
 async function extractAndUpdateDurations(config) {
+  const client = createClient({
+    projectId: config.projectId,
+    dataset: config.dataset,
+    token: config.token,
+    apiVersion: config.apiVersion
+  });
+
   console.log('Starting duration extraction with config:', {
     projectId: config.projectId,
     dataset: config.dataset,
     hasToken: Boolean(config.token)
   });
 
-  const client = createClient(config);
-  const albums = await fetchAlbumsToProcess(client);
+  // Query for albums that need duration updates
+  const query = `*[_type == "album" && albumSource == "custom" && defined(customAlbum.songs) && count(customAlbum.songs[defined(file.asset) && !defined(duration)]) > 0]`;
+  const albums = await client.fetch(query);
 
   console.log('Found', albums.length, 'albums to process:', albums);
 
   for (const album of albums) {
-    const { _id: albumId, customAlbum } = album;
-    console.log('Processing Album:', customAlbum.title);
+    console.log('Processing Album:', album.customAlbum.title);
 
-    if (!customAlbum.songs) {
-      console.log(`Skipping album ${albumId}: No songs found`);
-      continue;
-    }
-
-    const updatedSongs = await Promise.all(customAlbum.songs.map(async (song, index) => {
-      const songTitle = song.trackTitle || `Track ${index + 1}`;
-      const url = song.file?.asset?.url;
-      console.log('Processing song', `${index + 1}/${customAlbum.songs.length}:`, {
-        title: songTitle,
-        url,
+    const updatedSongs = await Promise.all(album.customAlbum.songs.map(async (song, index) => {
+      console.log(`Processing song ${index + 1}/${album.customAlbum.songs.length}:`, {
+        title: song.trackTitle,
+        fileRef: song.file?.asset?._ref,
         currentDuration: song.duration
       });
 
-      if (!url) {
-        console.log(`    Song "${songTitle}" has no audio URL. Skipping.`);
-        return song;
+      // Get the file URL from Sanity
+      if (song.file?.asset?._ref) {
+        const fileUrl = await client.getDocument(song.file.asset._ref)
+          .then(asset => asset?.url);
+
+        if (!fileUrl) {
+          console.log(`    Song "${song.trackTitle}" has no audio URL. Skipping.`);
+          return song;
+        }
+
+        try {
+          const duration = await getAudioDurationInSeconds(fileUrl);
+          return {
+            ...song,
+            duration
+          };
+        } catch (error) {
+          console.error(`    Error getting duration for "${song.trackTitle}":`, error);
+          return song;
+        }
       }
-
-      try {
-        // Create temp file path
-        const tempFile = path.join(os.tmpdir(), `temp_${Date.now()}.mp3`);
-
-        // Download file
-        const response = await fetch(url);
-        const buffer = await response.arrayBuffer();
-        await fs.promises.writeFile(tempFile, Buffer.from(buffer));
-
-        // Get duration
-        const duration = await getAudioDurationInSeconds(tempFile);
-        console.log(`    Duration extracted: ${duration} seconds`);
-
-        // Cleanup
-        await fs.promises.unlink(tempFile);
-
-        return {
-          ...song,
-          duration: Math.round(duration)
-        };
-      } catch (error) {
-        console.error(`    Error processing song "${songTitle}":`, error);
-        return song;
-      }
+      return song;
     }));
 
     // Update album with new durations
-    const mutation = {
-      mutations: [{
-        patch: {
-          id: albumId,
-          set: {
-            'customAlbum.songs': updatedSongs
-          }
+    const mutation = [{
+      patch: {
+        id: album._id,
+        set: {
+          'customAlbum.songs': updatedSongs
         }
-      }]
-    };
+      }
+    }];
 
-    console.log('Attempting mutation:', JSON.stringify(mutation, null, 2));
+    console.log('Attempting mutation:', JSON.stringify({ mutations: mutation }, null, 2));
 
     try {
       const result = await client.mutate(mutation);
-      console.log(`Successfully updated album ${customAlbum.title}:`, result);
+      console.log(`Successfully updated album ${album.customAlbum.title}:`, result);
     } catch (error) {
-      console.error(`Failed to update album ${customAlbum.title}:`, error);
+      console.error(`Failed to update album ${album.customAlbum.title}:`, error);
     }
   }
-
-  console.log('Duration extraction and update completed.');
 }
 
-exports.handler = async (event, context) => {
-  console.log('INFO  ', 'Webhook received:', {
-    method: event.httpMethod,
-    body: event.body,
-    headers: event.headers
-  });
-
-  if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, body: 'Method Not Allowed' };
-  }
-
+async function processWebhook(event, debugLog) {
   try {
-    const body = JSON.parse(event.body);
-    const headers = event.headers;
+    const { headers } = event;
+    const body = typeof event.body === 'string' ? JSON.parse(event.body) : event.body;
 
-    if (!hasContentChanged(body, headers)) {
-      console.log('INFO  ', 'Skipping webhook - no relevant changes detected');
-      return { statusCode: 200, body: 'No processing needed' };
-    }
-
-    // Get project ID from webhook headers as fallback
-    const projectId = process.env.SANITY_PROJECT_ID || headers['sanity-project-id'];
-
-    if (!projectId) {
-      throw new Error('Missing Sanity project ID');
-    }
-
+    // Get Sanity config
     const config = {
-      projectId,
-      dataset: process.env.SANITY_DATASET || 'production',
+      projectId: headers['sanity-project-id'],
+      dataset: 'production',
       token: process.env.SANITY_TOKEN,
-      useCdn: false
+      apiVersion: '2024-03-19'
     };
 
-    console.log('INFO  ', 'Starting duration extraction with config:', {
+    // Check for token
+    if (!config.token) {
+      debugLog('Error: Missing SANITY_TOKEN', {
+        error: 'SANITY_TOKEN environment variable is not set'
+      });
+      return {
+        statusCode: 500,
+        body: JSON.stringify({
+          error: 'Configuration error',
+          message: 'Missing Sanity token'
+        })
+      };
+    }
+
+    debugLog('Starting processing with config', {
       projectId: config.projectId,
       dataset: config.dataset,
-      hasToken: Boolean(config.token)
+      hasToken: Boolean(config.token),
+      apiVersion: config.apiVersion
     });
 
     await extractAndUpdateDurations(config);
 
     return {
       statusCode: 200,
-      body: JSON.stringify({ message: 'Duration update completed' })
+      body: JSON.stringify({ message: 'Success' })
     };
 
   } catch (error) {
-    console.error('ERROR ', error);
+    debugLog('Error in processWebhook', {
+      error: error.message,
+      stack: error.stack
+    });
+    throw error;
+  }
+}
+
+exports.handler = async (event, context) => {
+  const debugLog = createDebugLogger();
+
+  try {
+    debugLog('Webhook received', event);
+    await processWebhook(event, debugLog);
+    return {
+      statusCode: 200,
+      body: JSON.stringify({ message: 'Success' }),
+      headers: { 'Content-Type': 'application/json' }
+    };
+  } catch (error) {
     return {
       statusCode: 500,
       body: JSON.stringify({
         error: 'Internal server error',
-        message: error.message
-      })
+        message: error.message,
+        debug_logs: debugLog.getLogs()
+      }),
+      headers: { 'Content-Type': 'application/json' }
     };
   }
 };
