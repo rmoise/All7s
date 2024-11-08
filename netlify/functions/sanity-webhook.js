@@ -32,14 +32,41 @@ const RETRY_WINDOW = 300000; // 5 minutes window for retry counting
 const processedDocs = new Map();
 const CACHE_TTL = 60 * 1000; // 1 minute
 
-// Initialize Sanity client
-const client = createClient({
-  projectId: process.env.SANITY_STUDIO_PROJECT_ID,
-  dataset: process.env.SANITY_STUDIO_DATASET,
-  token: process.env.SANITY_TOKEN, // Make sure this is set in your .env
-  apiVersion: '2023-05-03', // Use current date in YYYY-MM-DD format
-  useCdn: false
-});
+// Add environment variable validation
+function validateEnvironment() {
+  const required = {
+    SANITY_STUDIO_PROJECT_ID: process.env.SANITY_STUDIO_PROJECT_ID,
+    SANITY_STUDIO_DATASET: process.env.SANITY_STUDIO_DATASET,
+    SANITY_TOKEN: process.env.SANITY_TOKEN
+  };
+
+  const missing = Object.entries(required)
+    .filter(([_, value]) => !value)
+    .map(([key]) => key);
+
+  if (missing.length > 0) {
+    throw new Error(`Missing required environment variables: ${missing.join(', ')}`);
+  }
+}
+
+// Initialize Sanity client with validation
+let client;
+try {
+  validateEnvironment();
+
+  client = createClient({
+    projectId: process.env.SANITY_STUDIO_PROJECT_ID,
+    dataset: process.env.SANITY_STUDIO_DATASET,
+    token: process.env.SANITY_TOKEN,
+    apiVersion: '2023-05-03',
+    useCdn: false
+  });
+
+  console.log('Sanity client initialized successfully');
+} catch (error) {
+  console.error('Failed to initialize Sanity client:', error);
+  throw error;
+}
 
 function hasContentChanged(document, headers) {
   console.log('Checking document for changes:', {

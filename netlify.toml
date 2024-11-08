@@ -10,6 +10,8 @@
   SANITY_STUDIO_PATH = "fresh_sanity_studio"
   NETLIFY_NEXT_PLUGIN_SKIP = "true"
   NODE_VERSION = "18"
+  SANITY_STUDIO_PROJECT_ID = "1gxdk71x"
+  SANITY_STUDIO_DATASET = "production"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
@@ -85,6 +87,9 @@
 
 [functions.fetchBatchSpotifyMetadata]
   included_files = ["lib/spotify.js"]
+
+[functions.sanity-webhook]
+  included_files = ["lib/**"]
 
 # Redirects
 [[redirects]]
