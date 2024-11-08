@@ -2,6 +2,10 @@ const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 const { extractAndUpdateDurations } = require('../../lib/extractDurations');
 const { createClient } = require('@sanity/client');
+const { getAudioDurationInSeconds } = require('get-audio-duration');
+const fetch = require('node-fetch');
+const fs = require('fs');
+const os = require('os');
 
 // Track processed webhooks with more metadata
 const processedWebhooks = new Map();
@@ -93,6 +97,92 @@ function cleanupProcessedWebhooks() {
       processedWebhooks.delete(key);
     }
   }
+}
+
+async function extractAndUpdateDurations(config) {
+  console.log('Starting duration extraction with config:', {
+    projectId: config.projectId,
+    dataset: config.dataset,
+    hasToken: Boolean(config.token)
+  });
+
+  const client = createClient(config);
+  const albums = await fetchAlbumsToProcess(client);
+
+  console.log('Found', albums.length, 'albums to process:', albums);
+
+  for (const album of albums) {
+    const { _id: albumId, customAlbum } = album;
+    console.log('Processing Album:', customAlbum.title);
+
+    if (!customAlbum.songs) {
+      console.log(`Skipping album ${albumId}: No songs found`);
+      continue;
+    }
+
+    const updatedSongs = await Promise.all(customAlbum.songs.map(async (song, index) => {
+      const songTitle = song.trackTitle || `Track ${index + 1}`;
+      const url = song.file?.asset?.url;
+      console.log('Processing song', `${index + 1}/${customAlbum.songs.length}:`, {
+        title: songTitle,
+        url,
+        currentDuration: song.duration
+      });
+
+      if (!url) {
+        console.log(`    Song "${songTitle}" has no audio URL. Skipping.`);
+        return song;
+      }
+
+      try {
+        // Create temp file path
+        const tempFile = path.join(os.tmpdir(), `temp_${Date.now()}.mp3`);
+
+        // Download file
+        const response = await fetch(url);
+        const buffer = await response.arrayBuffer();
+        await fs.promises.writeFile(tempFile, Buffer.from(buffer));
+
+        // Get duration
+        const duration = await getAudioDurationInSeconds(tempFile);
+        console.log(`    Duration extracted: ${duration} seconds`);
+
+        // Cleanup
+        await fs.promises.unlink(tempFile);
+
+        return {
+          ...song,
+          duration: Math.round(duration)
+        };
+      } catch (error) {
+        console.error(`    Error processing song "${songTitle}":`, error);
+        return song;
+      }
+    }));
+
+    // Update album with new durations
+    const mutation = {
+      mutations: [{
+        patch: {
+          id: albumId,
+          set: {
+            'customAlbum.songs': updatedSongs
+          }
+        }
+      }]
+    };
+
+    console.log('Attempting mutation:', JSON.stringify(mutation, null, 2));
+
+    try {
+      const result = await client.mutate(mutation);
+      console.log(`Successfully updated album ${customAlbum.title}:`, result);
+    } catch (error) {
+      console.error(`Failed to update album ${customAlbum.title}:`, error);
+    }
+  }
+
+  console.log('Duration extraction and update completed.');
 }
 
 exports.handler = async (event, context) => {
