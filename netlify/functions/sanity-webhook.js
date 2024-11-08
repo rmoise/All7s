@@ -34,6 +34,12 @@ const CACHE_TTL = 60 * 1000; // 1 minute
 
 // Add environment variable validation
 function validateEnvironment() {
+  console.log('Environment state:', {
+    projectId: process.env.SANITY_STUDIO_PROJECT_ID,
+    dataset: process.env.SANITY_STUDIO_DATASET,
+    hasToken: !!process.env.SANITY_TOKEN
+  });
+
   const required = {
     SANITY_STUDIO_PROJECT_ID: process.env.SANITY_STUDIO_PROJECT_ID,
     SANITY_STUDIO_DATASET: process.env.SANITY_STUDIO_DATASET,
@@ -52,6 +58,7 @@ function validateEnvironment() {
 // Initialize Sanity client with validation
 let client;
 try {
+  console.log('Initializing Sanity client...');
   validateEnvironment();
 
   client = createClient({
