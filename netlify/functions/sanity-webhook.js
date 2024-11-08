@@ -10,6 +10,17 @@ const MAX_RETRIES = 3; // Maximum number of retries per document
 const RETRY_WINDOW = 300000; // 5 minutes window for retry counting
 
 function hasContentChanged(document, headers) {
+  console.log('Checking document for changes:', {
+    id: document._id,
+    operation: headers['sanity-operation'],
+    hasAudio: Boolean(document.customAlbum?.songs?.[0]?.file?.asset?._ref)
+  });
+
+  // Always process new documents
+  if (headers['sanity-operation'] === 'create') {
+    return true;
+  }
+
   // Skip if this is a revision-only update
   if (headers['sanity-operation'] === 'update' && document._rev?.startsWith('D6CCqayP')) {
     return false;
@@ -28,11 +39,22 @@ function hasContentChanged(document, headers) {
   const songs = document.customAlbum?.songs || [];
 
   // Check for actual file changes that need duration updates
-  return songs.some(song => {
-    const hasAudioFile = Boolean(song.file?.asset?.url);
+  const needsUpdate = songs.some(song => {
+    const hasAudioFile = Boolean(song.file?.asset?._ref);  // Check for asset reference
     const needsDuration = !song.duration;
-    return hasAudioFile && needsDuration;
+    const shouldProcess = hasAudioFile && needsDuration;
+
+    console.log('Checking song:', {
+      hasAudioFile,
+      needsDuration,
+      shouldProcess,
+      songKey: song._key
+    });
+
+    return shouldProcess;
   });
+
+  return needsUpdate;
 }
 
 function getProcessingKey(document, headers) {
