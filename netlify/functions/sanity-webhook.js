@@ -3,22 +3,73 @@ require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 const { extractAndUpdateDurations } = require('../../lib/extractDurations');
 const { createClient } = require('@sanity/client');
 
+// Track processed webhooks with more metadata
 const processedWebhooks = new Map();
+const WEBHOOK_EXPIRY = 30000; // 30 seconds
+const MAX_RETRIES = 3; // Maximum number of retries per document
+const RETRY_WINDOW = 300000; // 5 minutes window for retry counting
 
-function hasContentChanged(document) {
+function hasContentChanged(document, headers) {
+  // Skip if this is a revision-only update
+  if (headers['sanity-operation'] === 'update' && document._rev?.startsWith('D6CCqayP')) {
+    return false;
+  }
+
+  // Only process custom albums
   if (document._type !== 'album' || document.albumSource !== 'custom') {
     return false;
   }
 
   const songs = document.customAlbum?.songs || [];
-  return songs.some(song =>
-    song.file?.asset && // Has an audio file
-    song.duration === null // Duration needs to be extracted
-  );
+
+  // Check for actual file changes that need duration updates
+  return songs.some(song => {
+    const hasAudioFile = Boolean(song.file?.asset);
+    const needsDuration = !song.duration;
+    return hasAudioFile && needsDuration;
+  });
+}
+
+function getProcessingKey(document, headers) {
+  return `${document._id}:${headers['sanity-transaction-id']}`;
+}
+
+function canProcessWebhook(document, headers) {
+  const documentId = document._id;
+  const now = Date.now();
+
+  // Get all attempts for this document
+  const attempts = Array.from(processedWebhooks.entries())
+    .filter(([key]) => key.startsWith(documentId))
+    .filter(([, metadata]) => now - metadata.timestamp < RETRY_WINDOW);
+
+  // Count recent attempts
+  if (attempts.length >= MAX_RETRIES) {
+    console.log(`Maximum retries (${MAX_RETRIES}) reached for document: ${documentId}`);
+    return false;
+  }
+
+  // Check if this exact transaction was already processed
+  const processingKey = getProcessingKey(document, headers);
+  if (processedWebhooks.has(processingKey)) {
+    console.log(`Duplicate webhook detected: ${processingKey}`);
+    return false;
+  }
+
+  return true;
+}
+
+function cleanupProcessedWebhooks() {
+  const now = Date.now();
+  for (const [key, metadata] of processedWebhooks.entries()) {
+    if (now - metadata.timestamp > WEBHOOK_EXPIRY) {
+      processedWebhooks.delete(key);
+    }
+  }
 }
 
 exports.handler = async (event, context) => {
-  console.log('Webhook received:', {
+  console.log('INFO  ', 'Webhook received:', {
     method: event.httpMethod,
     body: event.body,
     headers: event.headers
@@ -28,66 +79,33 @@ exports.handler = async (event, context) => {
     return { statusCode: 405, body: 'Method Not Allowed' };
   }
 
-  const token = process.env.SANITY_TOKEN || process.env.SANITY_STUDIO_API_TOKEN || process.env.SANITY_API_READ_TOKEN;
-
-  if (!token) {
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ error: 'Missing token' })
-    };
-  }
-
   try {
     const body = JSON.parse(event.body);
+    const headers = event.headers;
 
-    // Skip if no meaningful content changes
-    if (!hasContentChanged(body)) {
-      console.log('Skipping webhook - no relevant changes detected');
-      return {
-        statusCode: 200,
-        body: JSON.stringify({ message: 'No processing needed' })
-      };
+    if (!hasContentChanged(body, headers)) {
+      console.log('INFO  ', 'Skipping webhook - no relevant changes detected');
+      return { statusCode: 200, body: 'No processing needed' };
     }
 
-    const documentId = body._id;
-    const rev = body._rev;
-    const processingKey = `${documentId}:${rev}`;
-    const now = Date.now();
+    const config = {
+      projectId: process.env.SANITY_PROJECT_ID,
+      dataset: process.env.SANITY_DATASET || 'production',
+      token: process.env.SANITY_TOKEN
+    };
 
-    if (processedWebhooks.has(processingKey)) {
-      console.log(`Skipping duplicate update for ${processingKey}`);
-      return {
-        statusCode: 200,
-        body: JSON.stringify({ message: 'Already processed' })
-      };
-    }
-
-    processedWebhooks.set(processingKey, now);
-
-    // Cleanup old entries
-    for (const [key, timestamp] of processedWebhooks.entries()) {
-      if (now - timestamp > 30000) {
-        processedWebhooks.delete(key);
-      }
-    }
-
-    console.log('Received webhook, starting duration extraction...');
-
-    await extractAndUpdateDurations({
-      projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || '1gxdk71x',
-      dataset: process.env.SANITY_STUDIO_DATASET || 'production',
-      token: token
-    });
+    await extractAndUpdateDurations(config);
 
     return {
       statusCode: 200,
-      body: JSON.stringify({ message: 'Success' })
+      body: JSON.stringify({ message: 'Duration update completed' })
     };
+
   } catch (error) {
-    console.error('Error processing webhook:', error);
+    console.error('ERROR ', error);
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: error.message })
+      body: JSON.stringify({ error: 'Internal server error' })
     };
   }
 };
