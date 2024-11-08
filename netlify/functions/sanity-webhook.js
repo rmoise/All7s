@@ -88,11 +88,25 @@ exports.handler = async (event, context) => {
       return { statusCode: 200, body: 'No processing needed' };
     }
 
+    // Get project ID from webhook headers as fallback
+    const projectId = process.env.SANITY_PROJECT_ID || headers['sanity-project-id'];
+
+    if (!projectId) {
+      throw new Error('Missing Sanity project ID');
+    }
+
     const config = {
-      projectId: process.env.SANITY_PROJECT_ID,
+      projectId,
       dataset: process.env.SANITY_DATASET || 'production',
-      token: process.env.SANITY_TOKEN
+      token: process.env.SANITY_TOKEN,
+      useCdn: false
     };
+
+    console.log('INFO  ', 'Starting duration extraction with config:', {
+      projectId: config.projectId,
+      dataset: config.dataset,
+      hasToken: Boolean(config.token)
+    });
 
     await extractAndUpdateDurations(config);
 
@@ -105,7 +119,10 @@ exports.handler = async (event, context) => {
     console.error('ERROR ', error);
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: 'Internal server error' })
+      body: JSON.stringify({
+        error: 'Internal server error',
+        message: error.message
+      })
     };
   }
 };
