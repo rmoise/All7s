@@ -1,3 +1,30 @@
+// Create a debug logging function that stores logs in memory
+function createDebugLogger() {
+  const logs = [];
+  
+  const logger = (message, data) => {
+    const timestamp = new Date().toISOString();
+    const logMessage = `${timestamp} - ${message}: ${JSON.stringify(data, null, 2)}`;
+    logs.push(logMessage);
+    console.log(logMessage); // Also log to console for local development
+  };
+
+  logger.getLogs = () => logs.join('\n');
+  
+  return logger;
+}
+
+exports.handler = async (event, context) => {
+  const debugLog = createDebugLogger();
+  
+  try {
+    debugLog('Webhook received', {
+      method: event.httpMethod,
+      headers: event.headers,
+      body: event.body
+    });
+
+    // ... rest of the handler code ...
 require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 const { createClient } = require('@sanity/client');
 const { getAudioDurationInSeconds } = require('get-audio-duration');
