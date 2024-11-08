@@ -1,10 +1,9 @@
-const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
-const { extractAndUpdateDurations } = require('../../lib/extractDurations');
 const { createClient } = require('@sanity/client');
 const { getAudioDurationInSeconds } = require('get-audio-duration');
 const fetch = require('node-fetch');
 const fs = require('fs');
+const path = require('path');
 const os = require('os');
 
 // Track processed webhooks with more metadata
@@ -97,6 +96,11 @@ function cleanupProcessedWebhooks() {
       processedWebhooks.delete(key);
     }
   }
+}
+
+async function fetchAlbumsToProcess(client) {
+  const query = `*[_type == "album" && albumSource == "custom" && defined(customAlbum.songs) && count(customAlbum.songs[defined(file.asset) && !defined(duration)]) > 0]`;
+  return await client.fetch(query);
 }
 
 async function extractAndUpdateDurations(config) {
