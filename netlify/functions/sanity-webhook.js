@@ -381,6 +381,25 @@ async function handler(event) {
       useCdn: false
     });
 
+    // Verify document still exists and revision matches
+    try {
+      const doc = await client.getDocument(body._id);
+      if (!doc) {
+        console.log(`Document ${body._id} no longer exists, skipping update`);
+        return { statusCode: 200 };
+      }
+      if (doc._rev !== body._rev) {
+        console.log(`Document revision mismatch (${doc._rev} !== ${body._rev}), skipping update`);
+        return { statusCode: 200 };
+      }
+    } catch (error) {
+      if (error.statusCode === 404) {
+        console.log(`Document ${body._id} not found, skipping update`);
+        return { statusCode: 200 };
+      }
+      throw error;
+    }
+
     console.log(`Processing album: ${body.customAlbum.title || body._id}`);
 
     // Process songs from webhook payload
