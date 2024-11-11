@@ -2,23 +2,19 @@ import React from 'react';
 import { FooterSettings, FooterLink, SocialLink, SanityColor } from '../../types/sanity';
 
 interface FooterProps {
-  footer?: FooterSettings;
+  footer: FooterSettings;
 }
 
 const Footer: React.FC<FooterProps> = ({ footer }) => {
   console.log('Footer props:', footer);
 
-  if (!footer) {
-    console.log('No footer data provided');
-    return null;
-  }
+  const alignment = footer.alignment || 'center';
 
   const {
     copyrightText,
     footerLinks = [],
     socialLinks = [],
     fontColor,
-    alignment
   } = footer;
 
   console.log('Processed footer data:', {
@@ -31,7 +27,7 @@ const Footer: React.FC<FooterProps> = ({ footer }) => {
 
   const footerStyle = {
     color: fontColor?.hex || '#FFFFFF',
-    textAlign: alignment || 'center',
+    textAlign: alignment,
   } as React.CSSProperties;
 
   const justifyClass = alignment === 'left'

@@ -58,11 +58,11 @@ export interface FooterSettings {
   socialLinks?: Array<{
     platform: string;
     url: string;
-    iconUrl: string;
+    iconUrl?: string;
     _key: string;
   }>;
   fontColor: SanityColor;
-  alignment: 'left' | 'center' | 'right';
+  alignment?: 'left' | 'center' | 'right';
 }
 
 export interface SiteSettings {
@@ -102,7 +102,7 @@ export interface SiteSettings {
       url: string;
       iconUrl?: string;
     }>;
-    fontColor?: string;
+    fontColor: SanityColor;
     alignment?: 'left' | 'center' | 'right';
   };
 }
