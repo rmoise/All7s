@@ -18,48 +18,60 @@ const MusicEmbed: React.FC<MusicEmbedProps> = ({
   const { ref, inView } = useInView({ threshold: 0.1, triggerOnce: true })
 
   const formattedEmbedUrl = useMemo(() => {
+    if (platform === 'spotify') {
+      const url = new URL(embedUrl)
+      url.searchParams.set('theme', '0')
+      return url.toString()
+    }
     if (platform === 'soundcloud') {
       try {
-        // Extract the original URL from the player URL
-        const url = new URL(embedUrl);
-        const originalUrl = url.searchParams.get('url');
-
-        if (!originalUrl) return embedUrl;
-
-        // Create new player URL with clean parameters
-        return `https://w.soundcloud.com/player/?url=${originalUrl}&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true`;
+        const url = new URL(embedUrl)
+        const originalUrl = url.searchParams.get('url')
+        if (!originalUrl) return embedUrl
+        return `https://w.soundcloud.com/player/?url=${originalUrl}&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true`
       } catch (error) {
-        console.error('Error formatting SoundCloud URL:', error);
-        return embedUrl;
+        console.error('Error formatting SoundCloud URL:', error)
+        return embedUrl
       }
     }
-    return embedUrl; // For Spotify, use as is
-  }, [embedUrl, platform]);
+    return embedUrl
+  }, [embedUrl, platform])
 
   useEffect(() => {
     if (inView) {
-      const timer = setTimeout(() => setIsLoaded(true), 1000) // Delay for iframe loading
+      const timer = setTimeout(() => setIsLoaded(true), 1000)
       return () => clearTimeout(timer)
     }
   }, [inView])
 
-  console.log('Platform:', platform);
-  console.log('Original Embed URL:', embedUrl);
-  console.log('Formatted Embed URL:', formattedEmbedUrl);
+  if (platform === 'spotify') {
+    return (
+      <div ref={ref} className="w-full h-[480px] sm:h-[500px]">
+        <div className="w-full h-full relative">
+          <iframe
+            className="absolute top-0 left-0 w-full h-full"
+            src={formattedEmbedUrl}
+            title={title}
+            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+            loading="lazy"
+            style={{ border: 0 }}
+          />
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <div ref={ref} className={`w-full h-full ${
-      platform === 'soundcloud' ? 'soundcloud-embed-container' : 'spotify-embed-container'
-    }`}>
+    <div ref={ref} className="w-full h-full soundcloud-embed-container">
       <iframe
-        className={platform === 'soundcloud' ? 'soundcloud-iframe' : 'w-full h-full'}
+        className="soundcloud-iframe"
         src={formattedEmbedUrl}
         title={title}
         allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
         loading="lazy"
       />
     </div>
-  );
+  )
 }
 
 export default MusicEmbed
