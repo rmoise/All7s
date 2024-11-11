@@ -10,14 +10,18 @@ export type { SanityColor };
 
 // Define SanityImage since it's not exported from sanity.types.ts
 export interface SanityImage {
-  _type: 'image';
+  _type: string;
   asset: {
-    _ref: string;
-    _type: 'reference';
+    _ref?: string;
     url?: string;
+    metadata?: {
+      dimensions?: {
+        width: number;
+        height: number;
+        aspectRatio: number;
+      };
+    };
   };
-  hotspot?: SanityImageHotspot;
-  crop?: SanityImageCrop;
 }
 
 export interface FooterLink {
@@ -66,11 +70,41 @@ export interface SiteSettings {
   seo?: {
     metaTitle?: string;
     metaDescription?: string;
-    openGraphImage?: SanityImage | null;
+    openGraphImage?: {
+      asset: {
+        url: string;
+      };
+    };
   };
-  favicon?: SanityImage | null;
-  footer: FooterSettings;
-  navbar: NavbarData;
+  favicon?: SanityImage;
+  navbar?: {
+    logo?: SanityImage;
+    navigationLinks: Array<{
+      name: string;
+      href: string;
+      _key?: string;
+    }>;
+    backgroundColor?: {
+      hex: string;
+    };
+    isTransparent?: boolean;
+  };
+  footer: {
+    copyrightText: string;
+    footerLinks?: Array<{
+      _key: string;
+      text: string;
+      url: string;
+    }>;
+    socialLinks?: Array<{
+      _key: string;
+      platform: string;
+      url: string;
+      iconUrl?: string;
+    }>;
+    fontColor?: string;
+    alignment?: 'left' | 'center' | 'right';
+  };
 }
 
 export interface LayoutProps {

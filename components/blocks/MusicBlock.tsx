@@ -138,7 +138,7 @@ const MusicBlock: React.FC<MusicBlockProps> = ({
   }
 
   // Create a URL-safe ID by removing spaces and special characters
-  const sectionId = listenTitle.replace(/[^a-zA-Z0-9]/g, '')
+  const sectionId = (listenTitle || 'listen').replace(/[^a-zA-Z0-9]/g, '')
 
   return (
     <section

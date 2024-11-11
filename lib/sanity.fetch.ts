@@ -61,7 +61,11 @@ async function fetchWithRetry<T>(query: string, preview = false, maxRetries = 3)
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      const result = await sanityClient.fetch<T>(query)
+      console.log(`Attempt ${attempt} to fetch data...`)
+      const result = await sanityClient.fetch<T>(query, {}, {
+        cache: 'no-store' // Disable caching for troubleshooting
+      })
+      console.log('Fetch successful:', !!result)
       return result
     } catch (error: any) {
       console.error(`Attempt ${attempt} failed:`, {
@@ -69,11 +73,19 @@ async function fetchWithRetry<T>(query: string, preview = false, maxRetries = 3)
         statusCode: error.statusCode,
         details: error.details,
         preview,
-        hasToken: !!sanityClient.config().token
+        hasToken: !!sanityClient.config().token,
+        query
       })
 
-      if (attempt === maxRetries) return null
-      await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt - 1) * 1000))
+      if (attempt === maxRetries) {
+        console.error('Max retries reached, returning null')
+        return null
+      }
+
+      // Exponential backoff
+      const delay = Math.min(1000 * Math.pow(2, attempt - 1), 10000)
+      console.log(`Waiting ${delay}ms before retry...`)
+      await new Promise(resolve => setTimeout(resolve, delay))
     }
   }
   return null
@@ -84,10 +96,11 @@ export async function getHome(preview = false): Promise<HomeData | null> {
     const result = await fetchWithRetry<HomeData>(`
       *[_type == "home" && _id == ${preview ? '"drafts.singleton-home"' : '"singleton-home"'}][0]{
         contentBlocks[]{
+          _type,
           ...,
           _type == 'musicBlock' => {
-            "listenTitle": listenTitle,
-            albums[]-> {
+            listenTitle,
+            "albums": albums[]-> {
               _id,
               albumSource,
               embeddedAlbum {
@@ -99,7 +112,7 @@ export async function getHome(preview = false): Promise<HomeData | null> {
                 imageUrl,
                 "processedImageUrl": select(
                   platform == 'soundcloud' && defined(imageUrl) =>
-                    imageUrl,  // Return original URL, let Next.js handle optimization
+                    imageUrl,
                   defined(imageUrl) => imageUrl,
                   '/images/placeholder.png'
                 ),
@@ -133,7 +146,7 @@ export async function getHome(preview = false): Promise<HomeData | null> {
             lookTitle,
             heroVideoLink,
             additionalVideos,
-          },
+          }
         }
       }
     `, preview)

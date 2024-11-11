@@ -81,7 +81,7 @@ export const useNavbar = () => {
 const getWriteClient = () => {
   const token = process.env.NEXT_PUBLIC_SANITY_TOKEN || process.env.SANITY_TOKEN
   if (!token) {
-    throw new Error('Sanity token is missing')
+    console.warn('Sanity token is missing')
   }
 
   return createClient({
@@ -89,8 +89,9 @@ const getWriteClient = () => {
     dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || 'production',
     token: token,
     apiVersion: '2024-03-19',
-    useCdn: false,
+    useCdn: true,
     perspective: 'published',
+    withCredentials: true,
   })
 }
 
@@ -117,34 +118,56 @@ export const NavbarProvider: React.FC<NavbarProviderProps> = ({ children }) => {
   const fetchInitialData = useCallback(async () => {
     console.log('Fetching initial data...')
     try {
+      const client = getClient()
+      console.log('Client config:', {
+        hasToken: !!client.config().token,
+        tokenLength: client.config().token?.length,
+        projectId: client.config().projectId,
+        dataset: client.config().dataset
+      })
+
       const [settings, home] = await Promise.all([
-        getClient().fetch(`*[_type == "settings" && _id == "singleton-settings"][0]{
-          navbar{
-            navigationLinks[]{
-              _key,
-              name,
-              href
-            },
-            backgroundColor,
-            isTransparent,
-            logo
+        client.fetch(
+          `*[_type == "settings" && _id == "singleton-settings"][0]{
+            navbar{
+              navigationLinks[]{
+                _key,
+                name,
+                href
+              },
+              backgroundColor,
+              isTransparent,
+              logo
+            }
+          }`,
+          {},
+          {
+            cache: 'no-store'
           }
-        }`),
-        getClient().fetch(`*[_type == "home" && _id == "singleton-home"][0]{
-          contentBlocks[]{
-            _type,
-            listenTitle,
-            lookTitle
+        ),
+        client.fetch(
+          `*[_type == "home" && _id == "singleton-home"][0]{
+            contentBlocks[]{
+              _type,
+              listenTitle,
+              lookTitle
+            }
+          }`,
+          {},
+          {
+            cache: 'no-store'
           }
-        }`)
+        )
       ])
 
-      // Only update if we have new data
+      if (!settings?.navbar) {
+        console.warn('No navbar data found in settings')
+      }
+
       if (settings?.navbar) {
         setNavbarData(settings.navbar)
       }
 
-      // Only update block titles if we have new data
       if (home?.contentBlocks) {
         const musicBlock = home.contentBlocks.find((block: any) => block._type === 'musicBlock')
         const videoBlock = home.contentBlocks.find((block: any) => block._type === 'videoBlock')
@@ -157,7 +180,10 @@ export const NavbarProvider: React.FC<NavbarProviderProps> = ({ children }) => {
         }
       }
     } catch (error) {
-      console.error('Error fetching initial data:', error)
+      console.error('Error fetching initial data:', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined
+      })
       setError(error instanceof Error ? error : new Error('Failed to fetch data'))
     } finally {
       setLoading(false)

@@ -14,6 +14,7 @@ import '@fortawesome/fontawesome-svg-core/styles.css';
 import { faUser, faShoppingCart } from '@fortawesome/free-solid-svg-icons';
 import { SiteSettings, SanityImage } from '../types/sanity';
 import { urlFor } from '../lib/client';
+import Head from 'next/head';
 
 FontAwesome.config.autoAddCss = false;
 FontAwesome.library.add(faUser, faShoppingCart);
@@ -24,6 +25,23 @@ interface PageProps {
   metaDescription?: string;
   preview?: boolean;
   canonicalUrl?: string;
+}
+
+interface SanityAsset {
+  _ref?: string;
+  url?: string;
+  metadata?: {
+    dimensions?: {
+      width: number;
+      height: number;
+      aspectRatio: number;
+    };
+  };
+}
+
+interface SanityImageWithAsset {
+  _type: string;
+  asset: SanityAsset;
 }
 
 function MyApp({ Component, pageProps }: AppProps<PageProps>) {
@@ -40,22 +58,45 @@ function MyApp({ Component, pageProps }: AppProps<PageProps>) {
 
   const settings = pageProps.siteSettings;
 
-  // Helper function to get image URL
-  const getImageUrl = (image: SanityImage | null | undefined): string => {
-    if (!image?.asset?._ref) return '';
-    return urlFor(image).url() || '';
+  // Helper function to safely get image URL
+  const getImageUrl = (image: any): string => {
+    if (!image) return '';
+    if (typeof image === 'string') return image;
+    if (image.asset?.url) return image.asset.url;
+    return '';
+  };
+
+  // Create properly typed image objects with required _type
+  const faviconImage: SanityImageWithAsset = {
+    _type: 'image',
+    asset: {
+      url: settings?.favicon?.asset?.url || '/favicon.ico'
+    }
+  };
+
+  const logoImage: SanityImageWithAsset = {
+    _type: 'image',
+    asset: {
+      url: settings?.navbar?.logo?.asset?.url || '/logo.png'
+    }
   };
 
   return (
     <>
-      <SEO
-        title={pageProps?.metaTitle || pageProps?.siteSettings?.seo?.metaTitle}
-        description={pageProps?.metaDescription || pageProps?.siteSettings?.seo?.metaDescription}
-        faviconUrl={getImageUrl(settings?.favicon)}
-        openGraphImageUrl={getImageUrl(settings?.seo?.openGraphImage)}
-        siteName={pageProps?.siteSettings?.title}
-        canonicalUrl={pageProps.canonicalUrl || process.env.NEXT_PUBLIC_SITE_URL || 'https://all7z.com'}
-      />
+      <Head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link
+          rel="icon"
+          type="image/x-icon"
+          href={getImageUrl(faviconImage)}
+        />
+        <title>{settings?.seo?.metaTitle || 'All7s'}</title>
+        <meta
+          name="description"
+          content={settings?.seo?.metaDescription || ''}
+        />
+      </Head>
 
       <StateContext>
         <NavbarProvider>

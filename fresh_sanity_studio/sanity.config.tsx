@@ -43,6 +43,10 @@ interface WorkspaceConfig extends Omit<WorkspaceOptions, 'name' | 'title' | 'dat
       assetSources?: (prev: any[]) => any[]
     }
   }
+  cors: {
+    origin: string[]
+    credentials: boolean
+  }
 }
 
 // Define singleton actions and types
@@ -135,6 +139,15 @@ const workspaces: WorkspaceConfig[] = [
           ),
       },
     },
+    cors: {
+      origin: [
+        'https://all7z.com',
+        'http://localhost:3000',
+        'http://localhost:3002',
+        'https://staging--all7z.netlify.app'
+      ],
+      credentials: true
+    }
   },
   {
     name: 'staging',
@@ -185,6 +198,10 @@ const workspaces: WorkspaceConfig[] = [
           ),
       },
     },
+    cors: {
+      origin: ['https://all7z.com', 'http://localhost:3000'],
+      credentials: true
+    }
   },
 ]
 
