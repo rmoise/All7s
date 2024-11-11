@@ -28,7 +28,7 @@ const config: ClientConfig = {
   useCdn: false,
   token: getToken(),
   perspective: 'published',
-  withCredentials: true
+  withCredentials: false
 }
 
 // Create clients with proper error handling
