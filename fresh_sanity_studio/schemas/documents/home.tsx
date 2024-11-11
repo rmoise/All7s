@@ -57,14 +57,36 @@ export default defineType({
       name: 'contentBlocks',
       title: 'Content Blocks',
       type: 'array',
+      validation: (Rule) => Rule.required(),
       of: [
-        {type: 'splash'},
-        {type: 'about'},
-        {type: 'musicBlock'},
-        {type: 'videoBlock'},
-        {type: 'backgroundVideoBlock'},
-        {type: 'newsletter'},
-        {type: 'heroBanner'},
+        {
+          type: 'splash',
+          title: 'Splash'
+        },
+        {
+          type: 'about',
+          title: 'About'
+        },
+        {
+          type: 'musicBlock',
+          title: 'Music Block'
+        },
+        {
+          type: 'videoBlock',
+          title: 'Video Block'
+        },
+        {
+          type: 'backgroundVideoBlock',
+          title: 'Background Video Block'
+        },
+        {
+          type: 'newsletter',
+          title: 'Newsletter'
+        },
+        {
+          type: 'heroBanner',
+          title: 'Hero Banner'
+        }
       ],
     }),
   ],
@@ -90,14 +112,21 @@ export default defineType({
           throw new Error('Home document not found')
         }
 
-        // Preserve existing content blocks and ensure LOOK section is properly handled
+        // Preserve existing content blocks and ensure both LISTEN and LOOK sections are properly handled
         const preservedData = {
           contentBlocks: currentDoc.contentBlocks?.map((block: any) => {
             if (block._type === 'videoBlock') {
               return {
                 ...block,
-                lookTitle: block.lookTitle || 'LOOK', // Ensure LOOK title exists
-                _key: block._key // Preserve keys
+                lookTitle: block.lookTitle || 'LOOK',
+                _key: block._key
+              }
+            }
+            if (block._type === 'musicBlock') {
+              return {
+                ...block,
+                listenTitle: block.listenTitle || 'LISTEN',
+                _key: block._key
               }
             }
             return block
@@ -116,6 +145,14 @@ export default defineType({
                 lookTitle: block.lookTitle || preservedData.contentBlocks.find(
                   (b: any) => b._type === 'videoBlock'
                 )?.lookTitle || 'LOOK'
+              }
+            }
+            if (block._type === 'musicBlock') {
+              return {
+                ...block,
+                listenTitle: block.listenTitle || preservedData.contentBlocks.find(
+                  (b: any) => b._type === 'musicBlock'
+                )?.listenTitle || 'LISTEN'
               }
             }
             return block

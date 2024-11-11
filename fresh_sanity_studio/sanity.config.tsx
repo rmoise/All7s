@@ -47,6 +47,14 @@ interface WorkspaceConfig extends Omit<WorkspaceOptions, 'name' | 'title' | 'dat
     origin: string[]
     credentials: boolean
   }
+  api: {
+    cors: {
+      origin: string[]
+      credentials: boolean
+      headers: string[]
+      maxAge: number
+    }
+  }
 }
 
 // Define singleton actions and types
@@ -147,6 +155,19 @@ const workspaces: WorkspaceConfig[] = [
         'https://staging--all7z.netlify.app'
       ],
       credentials: true
+    },
+    api: {
+      cors: {
+        origin: [
+          'https://all7z.com',
+          'http://localhost:3000',
+          'http://localhost:3002',
+          'https://staging--all7z.netlify.app'
+        ],
+        credentials: true,
+        headers: ['X-Sanity-Token'],
+        maxAge: 3600
+      }
     }
   },
   {
@@ -201,6 +222,14 @@ const workspaces: WorkspaceConfig[] = [
     cors: {
       origin: ['https://all7z.com', 'http://localhost:3000'],
       credentials: true
+    },
+    api: {
+      cors: {
+        origin: ['https://all7z.com', 'http://localhost:3000'],
+        credentials: true,
+        headers: ['X-Sanity-Token'],
+        maxAge: 3600
+      }
     }
   },
 ]
