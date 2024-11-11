@@ -10,10 +10,11 @@ export default defineType({
   icon: MdMusicNote,
   fields: [
     defineField({
-      name: 'title',
-      title: 'Title',
+      name: 'listenTitle',
+      title: 'Listen Title',
       type: 'string',
       validation: Rule => Rule.required(),
+      initialValue: 'LISTEN'
     }),
     defineField({
       name: 'description',
@@ -28,18 +29,11 @@ export default defineType({
         type: 'reference',
         to: [{ type: 'album' }],
       }],
-      description: 'List of music albums to display',
-      validation: Rule =>
-        Rule.required().custom((albums) => {
-          if (!albums?.length) return 'At least one album is required'
-          if (albums.length > 10) return 'Maximum of 10 albums allowed'
-          return true
-        }),
     }),
   ],
   preview: {
     select: {
-      title: 'title',
+      title: 'listenTitle',
       albumsRaw: 'albums',
     },
     prepare(selection: Record<string, any>) {

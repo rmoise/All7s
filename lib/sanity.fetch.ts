@@ -86,7 +86,7 @@ export async function getHome(preview = false): Promise<HomeData | null> {
         contentBlocks[]{
           ...,
           _type == 'musicBlock' => {
-            listenTitle,
+            "listenTitle": listenTitle,
             albums[]-> {
               _id,
               albumSource,

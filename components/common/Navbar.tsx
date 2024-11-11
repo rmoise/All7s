@@ -1,4 +1,4 @@
-import { Fragment, useState, useEffect, useCallback } from 'react';
+import { Fragment, useState, useEffect, useCallback, useRef } from 'react';
 import { Disclosure } from '@headlessui/react';
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 import { AiOutlineShopping } from 'react-icons/ai';
@@ -12,8 +12,9 @@ import { urlFor as urlForImage } from '../../lib/client';
 import { SanityImage, NavigationLink, NavbarData } from '../../types/sanity';
 
 // Utility functions
-const generateKey = (item: NavigationLink, index: number): string =>
-  `${item.name}-${index}-${item.href}`;
+const generateKey = (item: NavigationLink, index: number): string => {
+  return `nav-${item.name}-${index}-${item.href}`;
+};
 
 const classNames = (...classes: string[]): string =>
   classes.filter(Boolean).join(' ');
@@ -22,7 +23,8 @@ const DEFAULT_LOGO = '/images/logo.png';
 
 const Navbar: React.FC<{ navbarData?: NavbarData }> = ({ navbarData: externalNavbarData }) => {
   const router = useRouter();
-  const { navbarData: contextNavbarData, loading } = useNavbar();
+  const { navbarData: contextNavbarData, loading, blockTitles, refs } = useNavbar();
+  const { lookRef, listenRef } = refs;
   const { showCart, setShowCart, totalQuantities } = useStateContext();
   const [hydrated, setHydrated] = useState<boolean>(false);
   const [isMobile, setIsMobile] = useState<boolean>(false);
@@ -63,29 +65,70 @@ const Navbar: React.FC<{ navbarData?: NavbarData }> = ({ navbarData: externalNav
     }
   }, [isMobile]);
 
-  // Smooth scroll handler
+  // Updated smooth scroll handler
   const handleSmoothScroll = useCallback((e: React.MouseEvent, href: string) => {
     e.preventDefault();
-    if (href.startsWith('/#')) {
-      const targetId = href.substring(2);
-      const targetElement = document.getElementById(targetId);
 
-      if (targetElement) {
-        targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        window.history.pushState(null, '', href);
-      } else {
-        const fallbackElement = Array.from(document.querySelectorAll('[id]')).find(
-          el => el.id.toLowerCase() === targetId.toLowerCase()
-        );
-        if (fallbackElement) {
-          fallbackElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          window.history.pushState(null, '', href);
-        }
+    if (href.startsWith('/#')) {
+      const sectionType = href.substring(2).toLowerCase();
+
+      if (sectionType === 'look' && refs.lookRef?.current) {
+        refs.lookRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        window.history.pushState({}, '', `/#${blockTitles.look}`);
+      } else if (sectionType === 'listen' && refs.listenRef?.current) {
+        refs.listenRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        window.history.pushState({}, '', `/#${blockTitles.listen}`);
       }
     } else {
       router.push(href);
     }
-  }, [router]);
+  }, [router, refs, blockTitles]);
+
+  // Move renderNavLinks before any conditional returns
+  const renderNavLinks = useCallback((mobile = false) => {
+    if (!finalNavbarData?.navigationLinks) return null;
+
+    return finalNavbarData.navigationLinks.map((item: NavigationLink, index: number) => {
+      const key = generateKey(item, index);
+      const isLookLink = item.href?.toLowerCase().includes('look') || item.href?.toLowerCase().includes('/#look');
+      const isListenLink = item.href?.toLowerCase().includes('listen') || item.href?.toLowerCase().includes('/#listen');
+
+      // Always update section links when blockTitles change
+      let linkText = item.name;
+      if (isLookLink && blockTitles?.look) {
+        linkText = blockTitles.look;
+      } else if (isListenLink && blockTitles?.listen) {
+        linkText = blockTitles.listen;
+      }
+
+      const linkProps = {
+        href: item.href,
+        className: classNames(
+          item.name === 'BUY' ? 'text-green-400' : 'text-white',
+          'px-2 py-2 rounded-md text-sm font-medium hover:text-green-400'
+        ),
+        onClick: (e: React.MouseEvent) => handleSmoothScroll(e, item.href)
+      };
+
+      if (mobile) {
+        return (
+          <Disclosure.Button
+            key={key}
+            as="a"
+            {...linkProps}
+            className={classNames(
+              'bg-gray-500/50 text-white hover:bg-black hover:text-white',
+              'block px-3 py-2 rounded-md text-base font-medium'
+            )}
+          >
+            {linkText}
+          </Disclosure.Button>
+        );
+      }
+
+      return <Link key={key} {...linkProps}>{linkText}</Link>;
+    });
+  }, [finalNavbarData?.navigationLinks, blockTitles, handleSmoothScroll]);
 
   if (loading || !finalNavbarData || !hydrated) {
     return null;
@@ -100,40 +143,6 @@ const Navbar: React.FC<{ navbarData?: NavbarData }> = ({ navbarData: externalNav
 
   const logoUrl = !logoError ? getLogo(finalNavbarData.logo) : DEFAULT_LOGO;
   const navbarBgColor = finalNavbarData.isTransparent ? 'transparent' : finalNavbarData.backgroundColor?.hex || 'black';
-
-  const renderNavLinks = (isMobile = false) => {
-    return finalNavbarData.navigationLinks?.map((item: NavigationLink, index: number) => {
-      const key = generateKey(item, index);
-      const linkProps = {
-        href: item.href,
-        className: classNames(
-          item.name === 'BUY' ? 'text-green-400' : 'text-white',
-          'px-2 py-2 rounded-md text-sm font-medium hover:text-green-400'
-        ),
-        onClick: (e: React.MouseEvent) => handleSmoothScroll(e, item.href)
-      };
-
-      const linkContent = item.name;
-
-      if (isMobile) {
-        return (
-          <Disclosure.Button
-            key={key}
-            as="a"
-            {...linkProps}
-            className={classNames(
-              item.current ? 'bg-gray-900 text-white' : 'bg-gray-500/50 text-white hover:bg-black hover:text-white',
-              'block px-3 py-2 rounded-md text-base font-medium'
-            )}
-          >
-            {linkContent}
-          </Disclosure.Button>
-        );
-      }
-
-      return <Link key={key} {...linkProps}>{linkContent}</Link>;
-    });
-  };
 
   return (
     <Disclosure as="nav" id="nav" className={`fixed top-0 w-full h-auto px-8 z-50 font-Headline text-white`} style={{ backgroundColor: navbarBgColor }}>

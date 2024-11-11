@@ -24,21 +24,17 @@ export default defineType({
             {
               name: 'name',
               type: 'string',
-              title: 'Link Name',
-              hidden: ({ document }) =>
-                document?.name === 'LOOK' || document?.name === 'LISTEN', // Hide editable fields for LOOK and LISTEN
+              title: 'Link Name'
             },
             {
               name: 'href',
               type: 'string',
               title: 'URL',
-              description: 'Enter a relative URL or anchor link like /#LOOK',
-              hidden: ({ document }) =>
-                document?.href === '/#LOOK' || document?.href === '/#LISTEN', // Hide URL fields for LOOK and LISTEN
-            },
-          ],
-        },
-      ],
+              description: 'Enter a relative URL or anchor link like /#LOOK'
+            }
+          ]
+        }
+      ]
     },
     {
       name: 'backgroundColor',

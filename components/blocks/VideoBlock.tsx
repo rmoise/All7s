@@ -1,14 +1,10 @@
 // components/blocks/VideoBlock.tsx
 
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import YouTubeEmbed from '@components/media/YouTubeEmbed';
 import Grid from '@components/common/Grid/Grid';
 import { extractYouTubeID } from '@utils/extractYouTubeID';
-
-interface Video {
-  _key: string;
-  url: string;
-}
+import { useNavbar } from '@/context/NavbarContext';
 
 interface VideoBlockProps {
   lookTitle: string;
@@ -20,9 +16,9 @@ interface VideoBlockProps {
 }
 
 const VideoBlock: React.FC<VideoBlockProps> = ({
-  lookTitle = '',
-  heroVideoLink = '',
-  additionalVideos = [],
+  lookTitle,
+  heroVideoLink,
+  additionalVideos
 }) => {
   if (!lookTitle || !heroVideoLink) {
     console.warn('VideoBlock: Missing required props');
@@ -32,8 +28,14 @@ const VideoBlock: React.FC<VideoBlockProps> = ({
   const heroVideoID = extractYouTubeID(heroVideoLink);
   const lookId = lookTitle.replace(/\s+/g, '-');
 
+  const sectionId = lookTitle.replace(/[^a-zA-Z0-9]/g, '')
+
   return (
-    <section id={lookId} className="relative z-10 w-full py-16">
+    <section
+      id="look-section"
+      className="relative z-10 w-full py-16"
+      data-section-type="look"
+    >
       <div className="container mx-auto px-4 md:px-8 lg:px-16">
         <h2 className="mb-16 text-center text-6xl font-Headline bg-clip-text bg-gradient-to-r from-blue-300 via-pink-600 to-purple-600 text-transparent font-bold">
           {lookTitle}

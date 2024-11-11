@@ -358,16 +358,16 @@ export type VideoBlock = {
 }
 
 export type MusicBlock = {
-  _type: 'musicBlock'
-  title?: string
-  description?: string
+  _type: 'musicBlock';
+  _key: string;
+  listenTitle: string;
+  description?: string;
   albums?: Array<{
-    _ref: string
-    _type: 'reference'
-    _weak?: boolean
-    _key: string
-    [internalGroqTypeReferenceTo]?: 'album'
-  }>
+    _ref: string;
+    _type: 'reference';
+    _key: string;
+    [internalGroqTypeReferenceTo]?: 'album';
+  }>;
 }
 
 export type Splash = {

@@ -107,12 +107,14 @@ const workspaces: WorkspaceConfig[] = [
         }
 
         const secret = encodeURIComponent(previewSecret)
-        const baseUrl = window.location.hostname === 'localhost'
-          ? 'http://localhost:3000'
-          : 'https://all7z.com'
+        const baseUrl =
+          window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://all7z.com'
 
         if (process.env.NODE_ENV === 'development') {
-          console.debug('Preview URL:', `${baseUrl}/api/preview?type=${document._type}&id=${document._id}`)
+          console.debug(
+            'Preview URL:',
+            `${baseUrl}/api/preview?type=${document._type}&id=${document._id}`,
+          )
         }
 
         return `${baseUrl}/api/preview?secret=${secret}&type=${document._type}&id=${document._id}`

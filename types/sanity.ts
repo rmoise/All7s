@@ -32,17 +32,16 @@ export interface SocialLink {
 }
 
 export interface NavigationLink {
+  name: string;
   href: string;
-  label: string;
-  name?: string;
-  current?: boolean;
+  _key?: string;
 }
 
 export interface NavbarData {
-  logo?: SanityImage | null;
-  navigationLinks?: NavigationLink[];
-  backgroundColor: SanityColor;
-  isTransparent: boolean;
+  logo?: string | SanityImage;
+  navigationLinks: NavigationLink[];
+  backgroundColor?: { hex: string };
+  isTransparent?: boolean;
 }
 
 export interface FooterSettings {
@@ -130,7 +129,7 @@ export interface VideoBlock {
 
 export interface MusicBlock {
   _type: 'musicBlock';
-  listenTitle?: string;
+  listenTitle: string;
   albums?: Album[];
 }
 
@@ -242,4 +241,19 @@ export interface SanityRawSong {
       url?: string;
     };
   };
+}
+
+// Add BlockTitles interface
+export interface BlockTitles {
+  listen: string;
+  look: string;
+}
+
+// Update NavbarContextType
+export interface NavbarContextType {
+  navbarData: NavbarData | null;
+  blockTitles: BlockTitles;
+  updateBlockTitle: (type: 'listen' | 'look', newTitle: string) => Promise<void>;
+  loading: boolean;
+  error: Error | null;
 }

@@ -1,5 +1,5 @@
 // pages/index.tsx
-import React from 'react';
+import React, { useEffect, useCallback, useRef } from 'react';
 import { GetServerSideProps } from 'next';
 import Head from 'next/head';
 import { getClient, getSanitySettings } from '@/lib/client';
@@ -10,6 +10,7 @@ import BackgroundVideoBlock from '@/components/blocks/BackgroundVideoBlock';
 import HeroBanner from '@/components/home/HeroBanner';
 import About from '@/components/home/About';
 import Newsletter from '@/components/common/Newsletter';
+import { useNavbar } from '@/context/NavbarContext';
 
 interface HomeProps {
   siteSettings: SiteSettings | null;
@@ -20,24 +21,38 @@ interface HomeProps {
 }
 
 export default function Home({ siteSettings, contentBlocks, metaTitle, metaDescription, preview }: HomeProps) {
-  const renderContentBlock = (block: any) => {
+  const { updateBlockTitle, refs } = useNavbar();
+  const { lookRef, listenRef } = refs;
+
+  useEffect(() => {
+    console.log('Content blocks:', contentBlocks);
+    const sections = document.querySelectorAll('section[id]');
+    console.log('Available sections:', Array.from(sections).map(s => s.id));
+  }, [contentBlocks]);
+
+  const renderContentBlock = useCallback((block: any) => {
     switch (block._type) {
       case 'musicBlock':
         return (
-          <MusicBlock
+          <section
+            ref={refs.listenRef}
             key={block._key}
-            listenTitle={block.title}
-            albums={block.albums}
-          />
+            id="listen-section"
+            className="scroll-mt-20"
+          >
+            <MusicBlock {...block} />
+          </section>
         );
       case 'videoBlock':
         return (
-          <VideoBlock
+          <section
+            ref={refs.lookRef}
             key={block._key}
-            lookTitle={block.lookTitle}
-            heroVideoLink={block.heroVideoLink}
-            additionalVideos={block.additionalVideos}
-          />
+            id="look-section"
+            className="scroll-mt-20"
+          >
+            <VideoBlock {...block} />
+          </section>
         );
       case 'backgroundVideoBlock':
         return (
@@ -80,7 +95,7 @@ export default function Home({ siteSettings, contentBlocks, metaTitle, metaDescr
         console.warn(`Unknown block type: ${block._type}`);
         return null;
     }
-  };
+  }, []);
 
   return (
     <>
@@ -119,7 +134,7 @@ export const getServerSideProps: GetServerSideProps<HomeProps> = async (context)
             _type,
             ...select(
               _type == 'musicBlock' => {
-                title,
+                listenTitle,
                 description,
                 "albums": albums[]->
               },

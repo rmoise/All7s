@@ -9,14 +9,15 @@ import type {
   MusicBlock as MusicBlockType,
 } from '../../types/sanity'
 import { urlFor } from '@/lib/client'
+import { useNavbar } from '@/context/NavbarContext'
 
 interface MusicBlockProps {
-  listenTitle?: string
-  albums?: Album[]
+  listenTitle: string;
+  albums?: Album[];
 }
 
 const MusicBlock: React.FC<MusicBlockProps> = ({
-  listenTitle = 'LISTEN',
+  listenTitle,
   albums = [],
 }) => {
   const [flippedAlbums, setFlippedAlbums] = useState<Set<string>>(new Set())
@@ -136,17 +137,19 @@ const MusicBlock: React.FC<MusicBlockProps> = ({
     return <div>No albums available</div>
   }
 
+  // Create a URL-safe ID by removing spaces and special characters
+  const sectionId = listenTitle.replace(/[^a-zA-Z0-9]/g, '')
+
   return (
     <section
-      id={listenId}
-      className="w-full px-2 sm:px-4 md:px-8 lg:px-32 relative z-10"
+      id="listen-section"
+      className="relative z-10 w-full py-16"
+      data-section-type="listen"
     >
-      <div className="flex flex-col items-center space-y-8">
-        <div className="mt-16 mb-8 sm:mb-12 rounded-lg flex items-center justify-center w-full sm:w-1/2">
-          <p className="text-5xl md:text-6xl lg:text-7xl font-Headline text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-pink-600 to-purple-600 font-bold">
-            {listenTitle}
-          </p>
-        </div>
+      <div className="container mx-auto px-4 md:px-8 lg:px-16">
+        <h2 className="mb-16 text-center text-6xl font-Headline bg-clip-text bg-gradient-to-r from-blue-300 via-pink-600 to-purple-600 text-transparent font-bold">
+          {listenTitle}
+        </h2>
 
         <Grid columns={1} gap={32} className="w-full max-w-6xl mx-auto pb-32">
           {loadedAlbums.map((album, index) => {

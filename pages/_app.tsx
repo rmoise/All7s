@@ -6,7 +6,7 @@ import Layout from '../components/layout/Layout';
 import { StateContext } from '../context/StateContext';
 import { Toaster } from 'react-hot-toast';
 import SEO from '../components/common/SEO';
-import { NavbarProvider } from '../context/NavbarContext';
+import { NavbarProvider } from '@/context/NavbarContext';
 import { AudioProvider } from '../context/AudioContext';
 import { YouTubeAPIProvider } from '../components/media/YouTubeAPIProvider';
 import * as FontAwesome from '@fortawesome/fontawesome-svg-core';

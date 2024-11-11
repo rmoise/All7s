@@ -1,28 +1,28 @@
-import { defineType, defineField } from 'sanity';
+import {defineType, defineField} from 'sanity'
 
 interface PreviewSelection {
-  title?: string;
-  media?: any;
+  title?: string
+  media?: any
 }
 
 interface SettingsSchema {
-  name: string;
-  title: string;
-  type: 'document';
-  __experimental_actions: Array<'update' | 'publish'>;
-  fields: any[];
+  name: string
+  title: string
+  type: 'document'
+  __experimental_actions: Array<'update' | 'publish'>
+  fields: any[]
   preview: {
     select: {
-      title: string;
-      media: string;
-    };
-    prepare(selection: PreviewSelection): { title: string; media?: any };
-  };
+      title: string
+      media: string
+    }
+    prepare(selection: PreviewSelection): {title: string; media?: any}
+  }
   hooks?: {
-    onPublish?: (props: any) => Promise<any>;
-    onCreate?: (props: any) => Promise<any>;
-    onDelete?: (props: any) => Promise<any>;
-  };
+    onPublish?: (props: any) => Promise<any>
+    onCreate?: (props: any) => Promise<any>
+    onDelete?: (props: any) => Promise<any>
+  }
 }
 
 const settings = defineType({
@@ -91,18 +91,23 @@ const settings = defineType({
           name: 'navigationLinks',
           title: 'Navigation Links',
           type: 'array',
-          of: [{ type: 'object', fields: [
-            defineField({ name: 'name', type: 'string', title: 'Name' }),
-            defineField({ name: 'href', type: 'string', title: 'Link' })
-          ]}],
+          of: [
+            {
+              type: 'object',
+              fields: [
+                defineField({name: 'name', type: 'string', title: 'Name'}),
+                defineField({name: 'href', type: 'string', title: 'Link'}),
+              ],
+            },
+          ],
         }),
         defineField({
           name: 'backgroundColor',
           title: 'Background Color',
           type: 'color',
           options: {
-            disableAlpha: true
-          }
+            disableAlpha: true,
+          },
         }),
         defineField({
           name: 'isTransparent',
@@ -120,18 +125,18 @@ const settings = defineType({
           name: 'copyrightText',
           title: 'Copyright Text',
           type: 'string',
-          validation: Rule => Rule.required()
+          validation: (Rule) => Rule.required(),
         }),
         defineField({
           name: 'alignment',
           title: 'Text Alignment',
           type: 'string',
-          validation: Rule => Rule.required(),
+          validation: (Rule) => Rule.required(),
           options: {
             list: [
-              { title: 'Left', value: 'left' },
-              { title: 'Center', value: 'center' },
-              { title: 'Right', value: 'right' },
+              {title: 'Left', value: 'left'},
+              {title: 'Center', value: 'center'},
+              {title: 'Right', value: 'right'},
             ],
             layout: 'radio',
           },
@@ -141,77 +146,81 @@ const settings = defineType({
           title: 'Footer Text Color',
           type: 'color',
           options: {
-            disableAlpha: true
+            disableAlpha: true,
           },
-          validation: Rule => Rule.required()
+          validation: (Rule) => Rule.required(),
         }),
         defineField({
           name: 'footerLinks',
           title: 'Footer Links',
           type: 'array',
           description: 'Add links to important pages',
-          of: [{
-            type: 'object',
-            preview: {
-              select: {
-                title: 'text',
-                subtitle: 'url'
-              }
+          of: [
+            {
+              type: 'object',
+              preview: {
+                select: {
+                  title: 'text',
+                  subtitle: 'url',
+                },
+              },
+              fields: [
+                defineField({
+                  name: 'text',
+                  type: 'string',
+                  title: 'Link Text',
+                  description: 'The text to display for this link',
+                }),
+                defineField({
+                  name: 'url',
+                  type: 'url',
+                  title: 'URL',
+                  description: 'Where should this link go?',
+                }),
+              ],
             },
-            fields: [
-              defineField({
-                name: 'text',
-                type: 'string',
-                title: 'Link Text',
-                description: 'The text to display for this link'
-              }),
-              defineField({
-                name: 'url',
-                type: 'url',
-                title: 'URL',
-                description: 'Where should this link go?'
-              })
-            ]
-          }],
-          initialValue: []
+          ],
+          initialValue: [],
         }),
         defineField({
           name: 'socialLinks',
           title: 'Social Media Links',
           type: 'array',
           description: 'Add your social media links',
-          of: [{
-            type: 'object',
-            preview: {
-              select: {
-                title: 'platform',
-                subtitle: 'url'
-              }
+          of: [
+            {
+              type: 'object',
+              preview: {
+                select: {
+                  title: 'platform',
+                  subtitle: 'url',
+                },
+              },
+              fields: [
+                defineField({
+                  name: 'platform',
+                  type: 'string',
+                  title: 'Platform',
+                  description: 'e.g., Instagram, Twitter, etc.',
+                }),
+                defineField({
+                  name: 'url',
+                  type: 'url',
+                  title: 'URL',
+                  description: 'Link to your social media profile',
+                }),
+                defineField({
+                  name: 'iconUrl',
+                  type: 'url',
+                  title: 'Icon URL',
+                  description: 'URL to the social media icon',
+                }),
+              ],
             },
-            fields: [
-              defineField({
-                name: 'platform',
-                type: 'string',
-                title: 'Platform',
-                description: 'e.g., Instagram, Twitter, etc.'
-              }),
-              defineField({
-                name: 'url',
-                type: 'url',
-                title: 'URL',
-                description: 'Link to your social media profile'
-              }),
-              defineField({
-                name: 'iconUrl',
-                type: 'url',
-                title: 'Icon URL',
-                description: 'URL to the social media icon'
-              })
-            ]
-          }],
-          initialValue: []
-        })
-      ]
+          ],
+          initialValue: [],
+        }),
+      ],
     }),
   ],
   preview: {
@@ -223,7 +232,7 @@ const settings = defineType({
       return {
         title: selection.title || 'Site Settings',
         media: selection.media,
-      };
+      }
     },
   },
   hooks: {
@@ -234,21 +243,20 @@ const settings = defineType({
       console.log('Mutation Details:', {
         type: props.type,
         transition: props.transition,
-        previousRev: props.document._rev
+        previousRev: props.document._rev,
       })
 
       // Log footer state
       console.log('Footer State:', {
         current: props.document.footer,
         hasRequiredFields: !!(
-          props.document.footer?.alignment &&
-          props.document.footer?.copyrightText
+          props.document.footer?.alignment && props.document.footer?.copyrightText
         ),
         missingFields: [
           !props.document.footer?.fontColor && 'fontColor',
           !props.document.footer?.footerLinks && 'footerLinks',
-          !props.document.footer?.socialLinks && 'socialLinks'
-        ].filter(Boolean)
+          !props.document.footer?.socialLinks && 'socialLinks',
+        ].filter(Boolean),
       })
 
       // Validate footer structure
@@ -296,8 +304,8 @@ const settings = defineType({
       console.log('Document ID:', props.document._id)
       console.groupEnd()
       return props
-    }
-  }
-} as SettingsSchema);
+    },
+  },
+} as SettingsSchema)
 
-export default settings;
+export default settings
