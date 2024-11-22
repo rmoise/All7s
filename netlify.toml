@@ -1,6 +1,6 @@
 [build]
   command = "npm run build"
-  publish = "out"
+  publish = ".next"
   functions = "netlify/functions"
 
 [build.environment]
@@ -9,7 +9,7 @@
   NEXT_PUBLIC_SANITY_STUDIO_URL = "https://all7z.sanity.studio"
   SANITY_STUDIO_PATH = "fresh_sanity_studio"
   NETLIFY_NEXT_PLUGIN_SKIP = "true"
-  NODE_VERSION = "18.x"
+  NODE_VERSION = "18.17.0"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
@@ -41,7 +41,7 @@
 
 # Your existing production, staging, and other environment configs...
 [context.production]
-  command = "npm run build"
+  command = "npm run build:production"
   publish = ".next"
   [context.production.environment]
     NEXT_PUBLIC_ENVIRONMENT = "production"
@@ -52,7 +52,7 @@
     NEXT_PUBLIC_SITE_URL = "https://all7z.com"
 
 [context.staging]
-  command = "npm run build"
+  command = "npm run build:staging"
   publish = ".next"
   [context.staging.environment]
     NEXT_PUBLIC_ENVIRONMENT = "staging"
@@ -98,7 +98,6 @@
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
-
 # Add form handling function
 [functions.form-submission]
   included_files = ["lib/formHandling.js"]
@@ -128,3 +127,4 @@
   SANITY_STUDIO_PATH = "fresh_sanity_studio"
   NEXT_PUBLIC_SANITY_STUDIO_URL = "https://all7z.sanity.studio"
   SANITY_STUDIO_API_TOKEN = "env(SANITY_STUDIO_API_TOKEN)"
+
