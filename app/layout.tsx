@@ -17,13 +17,11 @@ FontAwesome.library.add(faUser, faShoppingCart)
 
 export default async function RootLayout({
   children,
-  searchParams
 }: {
   children: React.ReactNode
-  searchParams?: { [key: string]: string | string[] | undefined }
 }) {
   const preview = await getPreviewToken()
-  const isPreview = Boolean(preview && searchParams?.preview === '1')
+  const isPreview = Boolean(preview)
 
   const siteSettings = await getClient(isPreview).fetch(`
     *[_type == "settings" && _id == "singleton-settings"][0] {
