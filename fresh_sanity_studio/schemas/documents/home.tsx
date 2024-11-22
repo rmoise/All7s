@@ -129,23 +129,11 @@ export default defineType({
 
         // Preserve existing content blocks and ensure both LISTEN and LOOK sections are properly handled
         const preservedData = {
-          contentBlocks: currentDoc.contentBlocks?.map((block: any) => {
-            if (block._type === 'videoBlock') {
-              return {
-                ...block,
-                lookTitle: block.lookTitle || 'LOOK',
-                _key: block._key
-              }
-            }
-            if (block._type === 'musicBlock') {
-              return {
-                ...block,
-                listenTitle: block.listenTitle || 'LISTEN',
-                _key: block._key
-              }
-            }
-            return block
-          }) || []
+          contentBlocks: currentDoc.contentBlocks?.map((block: any) => ({
+            ...block,
+            _key: block._key,
+            order: block.order || 0
+          })).sort((a: any, b: any) => (a.order || 0) - (b.order || 0)) || []
         }
 
         // Create new document data

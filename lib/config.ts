@@ -92,6 +92,7 @@ export const previewConfig: EnhancedClientConfig = {
   stega: {
     enabled: true,
     studioUrl: process.env.NEXT_PUBLIC_SANITY_STUDIO_URL
-  }
+  },
+  resultSourceMap: true
 }
 

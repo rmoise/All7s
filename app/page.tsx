@@ -55,7 +55,7 @@ export default async function HomePage(
 
   try {
     const homeData = await client.fetch(`
-      *[_type == "home" && (_id == "drafts.singleton-home" || _id == "singleton-home")] | order(_id desc)[0] {
+      *[_type == "home" && (_id == "drafts.singleton-home" || _id == "singleton-home")] {
         _id,
         _type,
         title,
@@ -114,10 +114,10 @@ export default async function HomePage(
             }
           )
         }
-      }
+      }[0]
     `, undefined, {
       cache: isPreview ? 'no-store' : 'force-cache',
-      next: { tags: ['home'] }
+      perspective: isPreview ? 'previewDrafts' : 'published'
     })
 
     const newsletterBlock = homeData?.contentBlocks?.find((block: ContentBlock) => block._type === 'newsletter')
