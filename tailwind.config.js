@@ -13,7 +13,17 @@ module.exports = {
     'justify-start',
     'justify-center',
     'justify-end',
-    'font-headline'
+    'font-headline',
+    'transform',
+    'transition',
+    'ease-out',
+    'duration-300',
+    'translate-y-2',
+    'opacity-0',
+    'translate-y-0',
+    'translate-x-2',
+    'opacity-100',
+    'translate-x-0'
   ],
   theme: {
     extend: {
@@ -22,7 +32,8 @@ module.exports = {
         '-1': '-1',
       },
       fontFamily: {
-        'headline': ['roc-grotesk-wide', ...defaultTheme.fontFamily.sans],
+        'headline': ['roc-grotesk-wide', 'system-ui', 'sans-serif'],
+        'sans': ['roc-grotesk-wide', 'system-ui', 'sans-serif'],
       },
       colors: {
         'primary': '#your-primary-color',
@@ -31,6 +42,18 @@ module.exports = {
       spacing: {
         '128': '32rem',
         '144': '36rem',
+      },
+      transitionProperty: {
+        'height': 'height',
+        'spacing': 'margin, padding',
+      },
+      transitionDuration: {
+        '250': '250ms',
+        '300': '300ms',
+        '400': '400ms',
+      },
+      transitionTimingFunction: {
+        'out-expo': 'cubic-bezier(0.19, 1, 0.22, 1)',
       },
     },
   },

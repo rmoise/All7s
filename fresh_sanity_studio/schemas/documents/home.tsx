@@ -1,8 +1,8 @@
-
 // schemas/home.js
 
 import {defineType, defineField} from 'sanity'
 import type {SanityClient} from '@sanity/client'
+import newsletter from '../objects/newsletter'
 
 interface SanityDocument {
   _id: string
@@ -25,39 +25,30 @@ export default defineType({
   title: 'Home',
   type: 'document',
   __experimental_actions: ['update', 'publish'],
+  groups: [
+    {
+      name: 'content',
+      title: 'Content',
+    },
+    {
+      name: 'seo',
+      title: 'SEO',
+    }
+  ],
   fields: [
     defineField({
       name: 'title',
       title: 'Title',
       type: 'string',
       validation: (Rule) => Rule.required(),
-    }),
-    defineField({
-      name: 'metaTitle',
-      title: 'Meta Title',
-      type: 'string',
-      validation: (Rule) => Rule.required(),
-    }),
-    defineField({
-      name: 'metaDescription',
-      title: 'Meta Description',
-      type: 'text',
-      validation: (Rule) => Rule.required(),
-    }),
-    defineField({
-      name: 'openGraphImage',
-      title: 'Open Graph Image',
-      type: 'image',
-      validation: (Rule) => Rule.required(),
-      options: {
-        hotspot: true,
-      },
+      group: 'content'
     }),
     defineField({
       name: 'contentBlocks',
       title: 'Content Blocks',
       type: 'array',
       validation: (Rule) => Rule.required(),
+      group: 'content',
       of: [
         {
           type: 'splash',
@@ -80,14 +71,38 @@ export default defineType({
           title: 'Background Video Block'
         },
         {
-          type: 'newsletter',
-          title: 'Newsletter'
+          type: newsletter.name,
+          title: newsletter.title
         },
         {
           type: 'heroBanner',
           title: 'Hero Banner'
         }
       ],
+    }),
+    defineField({
+      name: 'metaTitle',
+      title: 'Meta Title',
+      type: 'string',
+      validation: (Rule) => Rule.required(),
+      group: 'seo'
+    }),
+    defineField({
+      name: 'metaDescription',
+      title: 'Meta Description',
+      type: 'text',
+      validation: (Rule) => Rule.required(),
+      group: 'seo'
+    }),
+    defineField({
+      name: 'openGraphImage',
+      title: 'Open Graph Image',
+      type: 'image',
+      validation: (Rule) => Rule.required(),
+      options: {
+        hotspot: true,
+      },
+      group: 'seo'
     }),
   ],
   preview: {

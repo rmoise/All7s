@@ -21,7 +21,7 @@ const HeroBanner: React.FC<HeroBannerProps> = ({
   ctaLink,
 }) => {
   return (
-    <div className="relative w-full aspect-[16/9] z-10 sm:aspect-[16/9] overflow-hidden">
+    <div className="relative w-full aspect-[16/9] z-1 sm:aspect-[16/9] overflow-hidden">
       {backgroundImage && (
         <div className="absolute inset-0 w-full h-full">
           <Image

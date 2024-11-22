@@ -54,7 +54,7 @@ const About: React.FC<AboutProps> = (props) => {
   const alignmentClass = `text-${props.alignment}`;
 
   return (
-    <section className="relative z-10 w-full overflow-hidden" id="about">
+    <section className="relative w-full overflow-hidden bg-white z-2" id="about">
       <div className="relative w-full aspect-[16/9] sm:h-auto">
         <Image
           alt="About Image"

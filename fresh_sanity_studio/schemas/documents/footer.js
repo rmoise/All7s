@@ -1,4 +1,5 @@
-import { defineType } from 'sanity';
+import { defineType, defineField } from 'sanity';
+import { colorInput } from '@sanity/color-input';
 
 export default defineType({
   name: 'footer',
@@ -62,7 +63,7 @@ export default defineType({
     },
     {
       name: 'fontColor',
-      title: 'Footer Text Color',
+      title: 'Font Color',
       type: 'color',
       options: {
         disableAlpha: true,

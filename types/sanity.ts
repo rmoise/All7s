@@ -164,7 +164,17 @@ export interface VideoBlock {
 export interface MusicBlock {
   _type: 'musicBlock';
   listenTitle: string;
+  description: string;
   albums?: Album[];
+}
+
+export interface NewsletterBlock {
+  _type: 'newsletter';
+  headline: string;
+  description: string;
+  ctaText: string;
+  placeholderText: string;
+  formName: string;
 }
 
 export type ContentBlock =
@@ -172,7 +182,8 @@ export type ContentBlock =
   | HeroBannerBlock
   | BackgroundVideoBlock
   | VideoBlock
-  | MusicBlock;
+  | MusicBlock
+  | NewsletterBlock;
 
 export interface HomeProps {
   contentBlocks: ContentBlock[];
@@ -290,4 +301,27 @@ export interface NavbarContextType {
   updateBlockTitle: (type: 'listen' | 'look', newTitle: string) => Promise<void>;
   loading: boolean;
   error: Error | null;
+}
+
+interface NewsletterNotification {
+  title?: string
+  description?: string
+  showSocialLinks?: boolean
+  socialLinksTitle?: string
+  socialLinks?: Array<{
+    platform: string
+    url: string
+    color?: {
+      hex?: string
+    }
+  }>
+}
+
+interface Newsletter {
+  headline?: string
+  description?: string
+  placeholderText?: string
+  ctaText?: string
+  formName?: string
+  notification?: NewsletterNotification
 }

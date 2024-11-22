@@ -33,13 +33,12 @@ export default defineType({
   ],
   preview: {
     select: {
-      title: 'listenTitle',
       albumsRaw: 'albums',
     },
     prepare(selection: Record<string, any>) {
-      const {title, albumsRaw} = selection
+      const {albumsRaw} = selection
       return {
-        title: title || 'Music Block',
+        title: 'Music Block',
         subtitle: `${albumsRaw?.length || 0} albums`,
         media: <MdMusicNote />,
       }

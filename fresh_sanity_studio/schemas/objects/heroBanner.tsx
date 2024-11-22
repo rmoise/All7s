@@ -43,14 +43,11 @@ export default defineType({
   ],
   preview: {
     select: {
-      title: 'title',
-      subtitle: 'subtitle',
       media: 'backgroundImage'
     },
-    prepare(selection) {
-      const { media } = selection;
+    prepare({ media }) {
       return {
-        title: 'Hero Banner Section',
+        title: 'Hero Block',
         subtitle: 'Hero banner with background image and CTA',
         media: media
       };

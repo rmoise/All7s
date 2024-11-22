@@ -1,6 +1,7 @@
 // schemas/backgroundVideoBlock.js
 
 import { defineType, defineField } from 'sanity';
+import { MdOndemandVideo } from 'react-icons/md';
 
 // Define the parent type with both possible fields
 interface BackgroundVideoParent {
@@ -39,17 +40,28 @@ export default defineType({
       hidden: ({ parent }: { parent: BackgroundVideoParent }) =>
         Boolean(parent?.backgroundVideoUrl),
     }),
+    defineField({
+      name: 'posterImage',
+      title: 'Poster Image',
+      type: 'image',
+      description: 'Preview image for the video block',
+      options: {
+        hotspot: true
+      }
+    }),
   ],
   preview: {
     select: {
-      title: 'backgroundVideoUrl',
       media: 'posterImage',
+      videoUrl: 'backgroundVideoUrl',
+      videoFile: 'backgroundVideoFile'
     },
-    prepare(selection) {
+    prepare({ media, videoUrl, videoFile }) {
       return {
         title: 'Background Video Block',
-        media: selection.media || null,
+        subtitle: videoUrl || (videoFile ? 'Uploaded video file' : 'No video selected'),
+        media: media || <MdOndemandVideo style={{ fontSize: 30 }} />
       }
-    },
+    }
   },
 });

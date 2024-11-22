@@ -2,9 +2,8 @@ import React, { useEffect, useRef } from 'react';
 import { useNavbar } from '@/context/NavbarContext';
 
 export const NavTest = () => {
-  const { blockTitles, updateBlockTitle, navbarData } = useNavbar();
-  const lookRef = useRef<HTMLDivElement>(null);
-  const listenRef = useRef<HTMLDivElement>(null);
+  const { blockTitles, updateBlockTitle, navbarData, refs } = useNavbar();
+  const { lookRef, listenRef } = refs;
 
   // Debug logging
   useEffect(() => {
@@ -13,8 +12,16 @@ export const NavTest = () => {
   }, [blockTitles, navbarData]);
 
   const handleScroll = (type: 'look' | 'listen') => {
-    const ref = type === 'look' ? lookRef : listenRef;
-    ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    try {
+      const ref = type === 'look' ? lookRef : listenRef;
+      if (!ref.current) {
+        console.warn(`${type} section ref not found`);
+        return;
+      }
+      ref.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch (error) {
+      console.error(`Error scrolling to ${type} section:`, error);
+    }
   };
 
   return (
@@ -71,4 +78,4 @@ export const NavTest = () => {
       </div>
     </div>
   );
-}; 
+};

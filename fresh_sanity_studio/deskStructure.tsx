@@ -1,4 +1,4 @@
-import {HomeIcon, CogIcon, DocumentsIcon, ColorWheelIcon, ArchiveIcon} from '@sanity/icons'
+import {HomeIcon, CogIcon, DocumentsIcon, ColorWheelIcon, ArchiveIcon, TagIcon, ComponentIcon} from '@sanity/icons'
 import {FaMusic} from 'react-icons/fa'
 import {MdPerson, MdArticle} from 'react-icons/md'
 import type {StructureBuilder} from 'sanity/desk'
@@ -24,7 +24,8 @@ const getPreviewUrl = (doc: SanityDocument | null) => {
 
   if (doc._type === 'home') {
     const timestamp = new Date().getTime()
-    return `${baseUrl}/api/preview?secret=${secret}&type=${doc._type}&id=${doc._id}&preview=1&timestamp=${timestamp}`
+    const isDraft = doc._id.startsWith('drafts.')
+    return `${baseUrl}/api/preview?secret=${secret}&type=${doc._type}&id=${doc._id}&preview=1&timestamp=${timestamp}&draft=${isDraft}`
   }
 
   return null
@@ -37,7 +38,7 @@ const singletonListItem = (
   icon: any,
   preview = false,
 ) => {
-  const documentId = `singleton-${typeName}`
+  const documentId = typeName === 'shopPage' ? 'shopPage' : `singleton-${typeName}`
 
   const documentNode = S.document().schemaType(typeName).documentId(documentId)
 
@@ -76,6 +77,25 @@ export const structure = (S: StructureBuilder) =>
       S.divider(),
 
       S.listItem()
+        .title('E-commerce')
+        .icon(TagIcon)
+        .child(
+          S.list()
+            .title('E-commerce')
+            .items([
+              singletonListItem(S, 'shopPage', 'Shop Page', ComponentIcon),
+              S.listItem()
+                .title('Products')
+                .icon(TagIcon)
+                .child(S.documentTypeList('product')),
+              S.listItem()
+                .title('Categories')
+                .icon(ArchiveIcon)
+                .child(S.documentTypeList('category')),
+            ])
+        ),
+
+      S.listItem()
         .title('Pages')
         .icon(DocumentsIcon)
         .child(S.documentTypeList('page').title('Pages')),
@@ -93,18 +113,9 @@ export const structure = (S: StructureBuilder) =>
       S.divider(),
 
       S.listItem()
-        .title('Collections')
-        .icon(ArchiveIcon)
-        .child(S.documentTypeList('collection').title('Collections')),
-
-      S.listItem().title('Albums').icon(FaMusic).child(S.documentTypeList('album').title('Albums')),
-
-      S.divider(),
-
-      S.listItem()
-        .title('Color Themes')
-        .icon(ColorWheelIcon)
-        .child(S.documentTypeList('colorTheme').title('Color Themes')),
+        .title('Albums')
+        .icon(FaMusic)
+        .child(S.documentTypeList('album').title('Albums')),
 
       ...S.documentTypeListItems().filter(
         (listItem) =>
@@ -114,9 +125,11 @@ export const structure = (S: StructureBuilder) =>
             'page',
             'post',
             'author',
-            'colorTheme',
             'collection',
             'album',
+            'product',
+            'category',
+            'shopPage'
           ].includes(listItem.getId() as string),
       ),
     ])

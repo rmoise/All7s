@@ -10,7 +10,7 @@ export const client = createClient({
     : 'production',
   useCdn: false,
   apiVersion: '2024-03-19',
-  token: process.env.SANITY_STUDIO_API_TOKEN || process.env.SANITY_API_READ_TOKEN
+  token: process.env.SANITY_AUTH_TOKEN || process.env.SANITY_API_READ_TOKEN
 })
 
 export const studioConfig = workspaces[0]

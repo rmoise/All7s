@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Form Submitted</title>
+    <meta name="robots" content="noindex" />
+  </head>
+  <body>
+    <script>
+      window.onload = function() {
+        if (window.opener) {
+          window.opener.postMessage('form-submission-success', '*');
+        }
+        window.close();
+      }
+    </script>
+  </body>
+</html> 

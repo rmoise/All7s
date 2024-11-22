@@ -67,15 +67,14 @@ export default defineType({
   ],
   preview: {
     select: {
-      title: 'lookTitle',
       heroVideo: 'heroVideoLink',
       additionalVideos: 'additionalVideos',
     },
     prepare(selection: Record<string, any>) {
-      const {title, heroVideo, additionalVideos} = selection
+      const {heroVideo, additionalVideos} = selection
       const videoCount = (additionalVideos?.length || 0) + (heroVideo ? 1 : 0)
       return {
-        title: title || 'Video Block',
+        title: 'Video Block',
         subtitle: `${videoCount} video${videoCount === 1 ? '' : 's'}`,
         media: React.createElement(MdPlayCircleOutline)
       }

@@ -412,19 +412,6 @@ export type HeroBanner = {
   }
 }
 
-export type ColorTheme = {
-  _id: string
-  _type: 'colorTheme'
-  _createdAt: string
-  _updatedAt: string
-  _rev: string
-  name?: string
-  primaryColor?: Color
-  secondaryColor?: Color
-  backgroundColor?: Color
-  textColor?: Color
-}
-
 export type Settings = {
   _id: string
   _type: 'settings'
@@ -591,49 +578,6 @@ export type Product = {
     crop?: SanityImageCrop
     _type: 'image'
   }
-}
-
-export type Collection = {
-  _id: string
-  _type: 'collection'
-  _createdAt: string
-  _updatedAt: string
-  _rev: string
-  title?: string
-  slug?: Slug
-  description?: string
-  image?: {
-    asset?: {
-      _ref: string
-      _type: 'reference'
-      _weak?: boolean
-      [internalGroqTypeReferenceTo]?: 'sanity.imageAsset'
-    }
-    hotspot?: SanityImageHotspot
-    crop?: SanityImageCrop
-    _type: 'image'
-  }
-  items?: Array<
-    | {
-        _ref: string
-        _type: 'reference'
-        _weak?: boolean
-        [internalGroqTypeReferenceTo]?: 'album'
-      }
-    | {
-        _ref: string
-        _type: 'reference'
-        _weak?: boolean
-        [internalGroqTypeReferenceTo]?: 'product'
-      }
-    | {
-        _ref: string
-        _type: 'reference'
-        _weak?: boolean
-        [internalGroqTypeReferenceTo]?: 'page'
-      }
-  >
-  order?: number
 }
 
 export type ContactPage = {
@@ -1029,13 +973,11 @@ export type AllSanitySchemaTypes =
   | MusicBlock
   | Splash
   | HeroBanner
-  | ColorTheme
   | Settings
   | Navbar
   | Footer
   | Comment
   | Product
-  | Collection
   | ContactPage
   | About
   | Home

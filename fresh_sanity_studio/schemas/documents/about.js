@@ -49,12 +49,18 @@ export default defineType({
   preview: {
     select: {
       media: 'image',
+      body: 'body'
     },
-    prepare({ media }) {
+    prepare({ media, body }) {
+      const subtitle = body?.[0]?.children?.[0]?.text
+        ? `${body[0].children[0].text.substring(0, 50)}...`
+        : 'About me section';
+
       return {
-        title: 'About Section',
-        media,
-      };
-    },
+        title: 'About Me Block',
+        subtitle,
+        media: media
+      }
+    }
   },
 });

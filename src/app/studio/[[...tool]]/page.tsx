@@ -11,16 +11,22 @@
 
 import { NextStudio } from 'next-sanity/studio'
 import config from '@/fresh_sanity_studio/sanity.config'
-import { StudioProvider, StudioLayout } from 'sanity'
+import { StudioProvider, StudioLayout, WorkspaceOptions } from 'sanity'
 import { usePathname } from 'next/navigation'
 import { useEffect } from 'react'
+
+type WorkspaceConfig = WorkspaceOptions & {
+  name: string
+  basePath: string
+  dataset: string
+}
 
 export default function StudioPage() {
   const pathname = usePathname()
   const workspaces = Array.isArray(config) ? config : [config]
-  const currentWorkspace = workspaces.find(workspace =>
+  const currentWorkspace = (workspaces.find(workspace =>
     pathname?.includes(workspace.basePath)
-  ) || workspaces[0]
+  ) || workspaces[0]) as WorkspaceConfig
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -38,12 +44,7 @@ export default function StudioPage() {
 
   return (
     <StudioProvider
-      config={{
-        ...currentWorkspace,
-        apiVersion: '2024-03-19',
-        projectId: '1gxdk71x',
-        token: process.env.SANITY_API_READ_TOKEN || process.env.SANITY_TOKEN,
-      }}
+      config={currentWorkspace}
     >
       <StudioLayout />
     </StudioProvider>

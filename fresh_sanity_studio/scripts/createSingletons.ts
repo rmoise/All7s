@@ -1,14 +1,16 @@
 // @ts-check
 import {createClient} from '@sanity/client'
 import {sanityConfig} from '../../lib/config'
-require('dotenv').config()
+import dotenv from 'dotenv'
 
-const token = process.env.SANITY_STUDIO_API_TOKEN
+dotenv.config()
+
+const token = process.env.SANITY_AUTH_TOKEN
 console.log('Token present:', !!token)
 console.log('Token length:', token?.length)
 
 if (!token) {
-  throw new Error('SANITY_STUDIO_API_TOKEN is not set in .env')
+  throw new Error('SANITY_AUTH_TOKEN is not set in .env')
 }
 
 const client = createClient({

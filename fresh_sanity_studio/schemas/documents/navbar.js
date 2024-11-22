@@ -1,4 +1,5 @@
-import { defineType } from 'sanity';
+import { defineType, defineField } from 'sanity';
+import { colorInput } from '@sanity/color-input';
 
 export default defineType({
   name: 'navbar',
@@ -40,6 +41,9 @@ export default defineType({
       name: 'backgroundColor',
       title: 'Background Color',
       type: 'color',
+      options: {
+        disableAlpha: true
+      }
     },
     {
       name: 'isTransparent',

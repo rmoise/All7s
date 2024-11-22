@@ -1,68 +1,105 @@
 import { ClientConfig, ClientPerspective } from '@sanity/client'
 
-const getWorkspaceDataset = () => {
-  if (typeof window !== 'undefined') {
-    return window.location.pathname.includes('/staging') ? 'staging' : 'production';
+// Define the enhanced config type
+export interface EnhancedClientConfig extends ClientConfig {
+  stega?: {
+    enabled: boolean
+    studioUrl?: string
   }
-  return process.env.SANITY_STUDIO_DATASET || 'production';
-};
+  listen?: {
+    enabled: boolean
+    includeTypes?: string[]
+    visibility?: 'query' | 'mutation'
+    subscribeTo?: string[]
+    events?: string[]
+  }
+}
 
 const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || '1gxdk71x'
-const dataset = getWorkspaceDataset();
+const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET || 'production'
 
-// Get the appropriate token based on environment
-const getApiToken = () => {
-  if (typeof window === 'undefined') {
-    return process.env.SANITY_API_READ_TOKEN || process.env.SANITY_TOKEN;
+// Initialize tokens with proper hierarchy
+const authToken = process.env.SANITY_AUTH_TOKEN
+const studioToken = process.env.SANITY_STUDIO_API_TOKEN
+const readToken = process.env.SANITY_API_READ_TOKEN
+const previewToken = process.env.SANITY_PREVIEW_TOKEN
+
+// Debug logging
+console.log('Token Status:', {
+  hasAuthToken: !!authToken,
+  hasStudioToken: !!studioToken,
+  hasReadToken: !!readToken,
+  hasPreviewToken: !!previewToken,
+  isServer: typeof window === 'undefined',
+  isStudio: typeof window !== 'undefined' && window.location.pathname.includes('/studio')
+})
+
+// Synchronous token getter with preview support
+const getToken = (requireAuth = false): string | undefined => {
+  // Special case for Sanity Studio
+  if (typeof window !== 'undefined' && window.location.pathname.includes('/studio')) {
+    return studioToken || authToken;  // Maintain studio token fallback
   }
-  return process.env.NEXT_PUBLIC_SANITY_TOKEN;
+
+  // Server-side: use auth token for mutations, read token for queries
+  if (typeof window === 'undefined') {
+    return requireAuth ? (authToken || studioToken) : readToken;
+  }
+
+  // Client-side: use read token for preview, or preview token if available
+  return previewToken || readToken;
 };
 
-const apiToken = getApiToken();
-
-if (!projectId) throw new Error('Missing NEXT_PUBLIC_SANITY_PROJECT_ID')
-
-console.log('Sanity Config Environment:', {
-  NODE_ENV: process.env.NODE_ENV,
-  NEXT_PUBLIC_ENVIRONMENT: process.env.NEXT_PUBLIC_ENVIRONMENT,
-  dataset,
-  workspace: typeof window !== 'undefined' ? window.location.pathname : 'server',
-  hasToken: !!apiToken,
-  tokenLength: apiToken?.length
-});
-
 // Base configuration for website
-export const sanityConfig: ClientConfig = {
+export const sanityConfig: EnhancedClientConfig = {
   projectId,
   dataset,
   apiVersion: '2024-03-19',
   useCdn: false,
-  token: apiToken,
+  token: readToken,
   perspective: 'published' as ClientPerspective,
   withCredentials: true,
   stega: {
-    enabled: false
+    enabled: false,
+    studioUrl: '/studio'
   },
-  apiHost: 'https://api.sanity.io'
-}
-
-// Studio configuration with optional token
-export const studioConfig: ClientConfig = {
-  ...sanityConfig,
-  useCdn: false,
-  token: process.env.SANITY_STUDIO_API_TOKEN || apiToken,
-  stega: {
-    enabled: false
+  apiHost: 'https://api.sanity.io',
+  listen: {
+    enabled: false,
+    includeTypes: [],
+    visibility: 'query',
+    subscribeTo: ['mutation'],
+    events: ['mutation']
   }
 }
 
-// Preview configuration
-export const previewConfig: ClientConfig = {
+// Studio configuration
+export const studioConfig: EnhancedClientConfig = {
   ...sanityConfig,
-  useCdn: false,
-  token: process.env.SANITY_PREVIEW_TOKEN || apiToken,
-  perspective: 'previewDrafts' as ClientPerspective,
+  token: getToken(true),
   stega: {
-    enabled: false
+    enabled: false,
+    studioUrl: '/studio'
   }
 }
+
+// Preview configuration with WebSocket support
+export const previewConfig: EnhancedClientConfig = {
+  ...sanityConfig,
+  token: getToken(true),
+  perspective: 'previewDrafts',
+  stega: {
+    enabled: false,
+    studioUrl: '/studio'
+  },
+  withCredentials: true,
+  resultSourceMap: false,
+  listen: {
+    enabled: true,
+    events: ['mutation', 'reconnect'],
+    includeTypes: ['home'],
+    visibility: 'query',
+    subscribeTo: ['mutation', 'reconnect']
+  }
+}
+

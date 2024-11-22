@@ -1,5 +1,3 @@
-'use server'
-
 import React from 'react'
 import { SanityLive } from './live-client'
 
@@ -11,5 +9,5 @@ interface PreviewProviderProps {
 export function PreviewProvider({ children, preview }: PreviewProviderProps) {
   return <SanityLive enabled={preview}>{children}</SanityLive>
 }
-
 export { SanityLive } from './live-client'
+

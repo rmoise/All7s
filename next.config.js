@@ -1,12 +1,26 @@
 const path = require('path');
+const dotenv = require('dotenv');
 
-const dataset = process.env.SANITY_STUDIO_DATASET || 'production';
+// Load environment variables from all possible locations
+dotenv.config({ path: '.env' });
+dotenv.config({ path: '.env.local' });
+dotenv.config({ path: '.env.development' });
+dotenv.config({ path: '.env.development.local' });
 
-console.log('Next.js Config Environment:', {
-  NODE_ENV: process.env.NODE_ENV,
-  NEXT_PUBLIC_ENVIRONMENT: process.env.NEXT_PUBLIC_ENVIRONMENT,
-  NEXT_PUBLIC_SANITY_DATASET: dataset,
-  dataset
+// Initialize token with fallbacks
+const token = process.env.SANITY_AUTH_TOKEN ||
+              process.env.SANITY_STUDIO_API_TOKEN ||
+              process.env.NEXT_PUBLIC_SANITY_TOKEN;
+
+console.log('Next.js Config Token Status:', {
+  hasToken: !!token,
+  tokenLength: token?.length,
+  environment: process.env.NODE_ENV,
+  envVars: {
+    SANITY_AUTH_TOKEN: !!process.env.SANITY_AUTH_TOKEN,
+    SANITY_STUDIO_API_TOKEN: !!process.env.SANITY_STUDIO_API_TOKEN,
+    NEXT_PUBLIC_SANITY_TOKEN: !!process.env.NEXT_PUBLIC_SANITY_TOKEN,
+  }
 });
 
 /** @type {import('next').NextConfig} */
@@ -18,15 +32,16 @@ const nextConfig = {
       ? 'production'
       : process.env.NEXT_PUBLIC_ENVIRONMENT || 'development',
     NEXT_PUBLIC_SANITY_PROJECT_ID: '1gxdk71x',
-    NEXT_PUBLIC_SANITY_DATASET: dataset,
+    NEXT_PUBLIC_SANITY_DATASET: process.env.SANITY_STUDIO_DATASET || 'production',
     NEXT_PUBLIC_SANITY_STUDIO_URL: process.env.NEXT_PUBLIC_SANITY_STUDIO_URL || 'http://localhost:3333',
-    SANITY_TOKEN: process.env.NEXT_PUBLIC_ENVIRONMENT === 'staging'
-      ? process.env.NEXT_STAGING_SANITY_TOKEN
-      : process.env.SANITY_TOKEN,
+    SANITY_TOKEN: token,
     NEXT_PUBLIC_NETLIFY: process.env.NEXT_PUBLIC_NETLIFY || process.env.NETLIFY || 'false',
-    SANITY_API_READ_TOKEN: process.env.SANITY_API_READ_TOKEN,
+    SANITY_API_READ_TOKEN: process.env.SANITY_API_READ_TOKEN || token,
     SANITY_STUDIO_PATH: 'fresh_sanity_studio',
-    SANITY_PREVIEW_SECRET: process.env.SANITY_PREVIEW_SECRET || ''
+    SANITY_PREVIEW_SECRET: process.env.SANITY_PREVIEW_SECRET || '',
+    SANITY_AUTH_TOKEN: process.env.SANITY_AUTH_TOKEN || token,
+    SANITY_STUDIO_API_TOKEN: process.env.SANITY_STUDIO_API_TOKEN || token,
+    NEXT_PUBLIC_SANITY_TOKEN: process.env.NEXT_PUBLIC_SANITY_TOKEN || token,
   },
 
   images: {
@@ -153,17 +168,26 @@ const nextConfig = {
   async redirects() {
     return [
       {
-        source: '/blog',
-        destination: '/blog/posts',
-        permanent: true,
-      },
-      {
         source: '/store',
         destination: '/shop',
         permanent: true,
       },
+      {
+        source: '/blog',
+        destination: '/blog/posts',
+        permanent: true,
+      },
     ]
-  }
+  },
+
+  rewrites: async () => {
+    return [
+      {
+        source: '/studio/:path*',
+        destination: '/studio/[[...index]]/page',
+      },
+    ]
+  },
 };
 
 module.exports = nextConfig;

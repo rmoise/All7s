@@ -19,10 +19,8 @@ const Layout: React.FC<LayoutProps> = ({ children, settings }) => {
       </Head>
 
       <div className="flex flex-col min-h-screen">
-        {/* Navbar */}
-        {settings?.navbar && (
-          <Navbar navbarData={settings.navbar} />
-        )}
+        {/* Navbar - Always render, optionally pass data */}
+        <Navbar navbarData={settings?.navbar} />
 
         {/* Main Content */}
         <motion.main

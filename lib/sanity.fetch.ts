@@ -1,4 +1,4 @@
-import { getClient } from './client'
+import { getClient, previewClient } from './client'
 
 // Define types for the home data structure
 interface ContentBlock {
@@ -56,6 +56,10 @@ interface HomeData {
 
 const client = getClient()
 
+// Add cache at the top of the file
+const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
+const queryCache = new Map<string, { data: any; timestamp: number }>()
+
 async function fetchWithRetry<T>(query: string, preview = false, maxRetries = 3): Promise<T | null> {
   const sanityClient = getClient(preview)
 
@@ -93,87 +97,48 @@ async function fetchWithRetry<T>(query: string, preview = false, maxRetries = 3)
 
 export async function getHome(preview = false): Promise<HomeData | null> {
   try {
-    const result = await fetchWithRetry<HomeData>(`
-      *[_type == "home" && _id == ${preview ? '"drafts.singleton-home"' : '"singleton-home"'}][0]{
-        contentBlocks[]{
-          _type,
-          ...,
+    const client = preview ? previewClient : getClient(preview)
+
+    // Modified query to explicitly handle drafts
+    const query = `*[_type == "home" && (_id == "singleton-home" || _id == "drafts.singleton-home")] | order(_id desc)[0] {
+      _id,
+      _type,
+      contentBlocks[] {
+        _type,
+        _key,
+        "musicBlock": select(
           _type == 'musicBlock' => {
             listenTitle,
-            "albums": albums[]-> {
-              _id,
-              albumSource,
-              embeddedAlbum {
-                embedUrl,
-                title,
-                artist,
-                platform,
-                releaseType,
-                imageUrl,
-                "processedImageUrl": select(
-                  platform == 'soundcloud' && defined(imageUrl) =>
-                    imageUrl,
-                  defined(imageUrl) => imageUrl,
-                  '/images/placeholder.png'
-                ),
-                customImage {
-                  asset-> {
-                    url,
-                    metadata {
-                      dimensions
-                    }
-                  }
-                }
-              },
-              customAlbum {
-                title,
-                artist,
-                releaseType,
-                customImage {
-                  asset-> {
-                    url
-                  }
-                },
-                songs[] {
-                  trackTitle,
-                  "url": file.asset->url,
-                  duration
-                }
-              }
-            }
-          },
+            "albums": coalesce(
+              *[_type == "album" && _id in ^.albums[]._ref][],
+              *[_type == "album" && _id in ^.albums[]._ref && _id match "drafts.*"][]
+            )
+          }
+        ),
+        "videoBlock": select(
           _type == 'videoBlock' => {
             lookTitle,
-            heroVideoLink,
-            additionalVideos,
+            heroVideoLink
           }
-        }
+        )
       }
-    `, preview)
+    }`
 
-    if (!result) {
-      console.error('No home data found')
-      return null
-    }
+    console.log('Preview state:', {
+      preview,
+      hasToken: !!client.config().token,
+      tokenLength: client.config().token?.length,
+      perspective: client.config().perspective
+    })
 
-    if (!result.contentBlocks?.length) {
-      console.warn('Home data found but no content blocks present')
-    }
-
-    // Log successful data fetch with content block count
-    console.log('Home data fetched successfully:', {
-      hasData: !!result,
-      contentBlocksCount: result.contentBlocks?.length || 0,
-      musicBlocksCount: result.contentBlocks?.filter((block: ContentBlock) => block._type === 'musicBlock').length || 0
+    const result = await client.fetch(query, undefined, {
+      cache: preview ? 'no-store' : 'force-cache',
+      next: { tags: ['home'] }
     })
 
     return result
   } catch (error) {
-    console.error('Error fetching home data:', {
-      error,
-      preview,
-      timestamp: new Date().toISOString()
-    })
+    console.error('Error fetching home data:', error)
     return null
   }
 }

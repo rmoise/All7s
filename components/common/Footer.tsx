@@ -6,12 +6,22 @@ interface FooterProps {
 }
 
 const Footer: React.FC<FooterProps> = ({ footer }) => {
-  console.log('Footer props:', footer);
+  if (!footer) {
+    return (
+      <footer className="w-full bg-black py-4 relative z-20">
+        <div className="flex justify-center items-center">
+          <h1 className="text-xs sm:text-sm font-sans font-normal text-white">
+            © 2024 All Rights Reserved
+          </h1>
+        </div>
+      </footer>
+    );
+  }
 
   const alignment = footer.alignment || 'center';
 
   const {
-    copyrightText,
+    copyrightText = '© 2024 All Rights Reserved',
     footerLinks = [],
     socialLinks = [],
     fontColor,

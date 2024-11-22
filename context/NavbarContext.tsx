@@ -1,3 +1,5 @@
+'use client';
+
 import React, {
   createContext,
   useState,
@@ -9,6 +11,8 @@ import React, {
 import { createClient } from '@sanity/client'
 import { getClient } from '@/lib/client'
 import { v4 as uuidv4 } from 'uuid'
+import { updateBlockTitleAction } from '@/app/actions/navbar';
+import debounce from 'lodash/debounce'
 
 interface NavbarLink {
   name: string
@@ -116,57 +120,19 @@ export const NavbarProvider: React.FC<NavbarProviderProps> = ({ children }) => {
   const listenRef = useRef<HTMLDivElement>(null)
 
   const fetchInitialData = useCallback(async () => {
-    console.log('Fetching initial data...')
+    if (!mounted.current) return;
+
     try {
-      const client = getClient()
-      console.log('Client config:', {
-        hasToken: !!client.config().token,
-        tokenLength: client.config().token?.length,
-        projectId: client.config().projectId,
-        dataset: client.config().dataset
-      })
-
-      const [settings, home] = await Promise.all([
-        client.fetch(
-          `*[_type == "settings" && _id == "singleton-settings"][0]{
-            navbar{
-              navigationLinks[]{
-                _key,
-                name,
-                href
-              },
-              backgroundColor,
-              isTransparent,
-              logo
-            }
-          }`,
-          {},
-          {
-            cache: 'no-store'
+      setLoading(true)
+      const home = await getClient().fetch(`
+        *[_type == "home"][0] {
+          contentBlocks[] {
+            _type,
+            listenTitle,
+            lookTitle
           }
-        ),
-        client.fetch(
-          `*[_type == "home" && _id == "singleton-home"][0]{
-            contentBlocks[]{
-              _type,
-              listenTitle,
-              lookTitle
-            }
-          }`,
-          {},
-          {
-            cache: 'no-store'
-          }
-        )
-      ])
-
-      if (!settings?.navbar) {
-        console.warn('No navbar data found in settings')
-      }
-
-      if (settings?.navbar) {
-        setNavbarData(settings.navbar)
-      }
+        }
+      `)
 
       if (home?.contentBlocks) {
         const musicBlock = home.contentBlocks.find((block: any) => block._type === 'musicBlock')
@@ -180,33 +146,29 @@ export const NavbarProvider: React.FC<NavbarProviderProps> = ({ children }) => {
         }
       }
     } catch (error) {
-      console.error('Error fetching initial data:', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined
-      })
+      console.error('Error fetching initial data:', error)
       setError(error instanceof Error ? error : new Error('Failed to fetch data'))
     } finally {
-      setLoading(false)
+      if (mounted.current) {
+        setLoading(false)
+      }
     }
   }, [])
 
-  useEffect(() => {
-    let mounted = true;
+  const mounted = useRef(true)
 
-    if (mounted) {
-      fetchInitialData();
-    }
+  useEffect(() => {
+    mounted.current = true;
+    fetchInitialData();
 
     return () => {
-      mounted = false;
+      mounted.current = false;
     };
-  }, []); // Empty dependency array since fetchInitialData is memoized
+  }, []);
 
   const updateBlockTitle = useCallback(async (type: 'listen' | 'look', newTitle: string) => {
-    const client = getWriteClient()
-
     try {
-      // Update local state first
+      // Update local state first for immediate feedback
       setBlockTitles(prev => ({
         ...prev,
         [type]: newTitle
@@ -222,39 +184,16 @@ export const NavbarProvider: React.FC<NavbarProviderProps> = ({ children }) => {
         )
       }
 
-      // Fetch current data with complete structure
-      const [home, settings] = await Promise.all([
-        client.fetch(`*[_type == "home" && _id == "singleton-home"][0]`),
-        client.fetch(`*[_type == "settings" && _id == "singleton-settings"][0]`)
-      ])
+      // Call server action
+      const result = await updateBlockTitleAction(type, newTitle)
 
-      if (!home || !settings) {
-        throw new Error('Required documents not found')
+      if (!result.success) {
+        throw new Error(result.error?.message || 'Failed to update block title')
       }
 
-      // Create transaction
-      const tx = client.transaction()
-
-      // Update both documents in one transaction
-      const updates = []
-
-      // Update home document
-      if (home.contentBlocks) {
-        const updatedBlocks = home.contentBlocks.map((block: any) => {
-          if (block._type === 'musicBlock' && type === 'listen') {
-            return { ...block, listenTitle: newTitle }
-          }
-          if (block._type === 'videoBlock' && type === 'look') {
-            return { ...block, lookTitle: newTitle }
-          }
-          return block
-        })
-        updates.push(tx.patch('singleton-home', p => p.set({ contentBlocks: updatedBlocks })))
-      }
-
-      // Update navbar data
-      if (settings?.navbar?.navigationLinks) {
-        const updatedNavLinks = settings.navbar.navigationLinks.map((link: NavigationLink) => {
+      // Update navbar links locally
+      if (navbarData?.navigationLinks) {
+        const updatedNavLinks = navbarData.navigationLinks.map((link: NavigationLink) => {
           const isLookLink = link.href?.toLowerCase().includes('look') || link.href?.toLowerCase().includes('/#look')
           const isListenLink = link.href?.toLowerCase().includes('listen') || link.href?.toLowerCase().includes('/#listen')
 
@@ -263,20 +202,11 @@ export const NavbarProvider: React.FC<NavbarProviderProps> = ({ children }) => {
           }
           return link
         })
-        updates.push(tx.patch('singleton-settings', p => p.set({ 'navbar.navigationLinks': updatedNavLinks })))
 
-        // Execute all updates in one transaction
-        await Promise.all(updates)
-        await tx.commit()
-
-        // Update local state after successful commit
-        setNavbarData(prevData => {
-          if (!prevData) return prevData
-          return {
-            ...prevData,
-            navigationLinks: updatedNavLinks
-          }
-        })
+        setNavbarData(prev => ({
+          ...prev!,
+          navigationLinks: updatedNavLinks
+        }))
       }
     } catch (error) {
       console.error('Error updating block title:', error)
@@ -285,18 +215,21 @@ export const NavbarProvider: React.FC<NavbarProviderProps> = ({ children }) => {
         ...prev,
         [type]: prev[type]
       }))
+      // Show error to user
+      throw new Error('Failed to update section title. Please try again.')
     }
-  }, [])
+  }, [navbarData])
 
   // Add debug logging
   useEffect(() => {
-    console.log('NavbarData updated:', navbarData)
-  }, [navbarData])
-
-  useEffect(() => {
-    console.log('Current block titles:', blockTitles);
-    console.log('Current navbar data:', navbarData);
-  }, [blockTitles, navbarData]);
+    if (process.env.NODE_ENV === 'development') {
+      console.log({
+        navbarData,
+        blockTitles,
+        timestamp: new Date().toISOString()
+      });
+    }
+  }, [navbarData, blockTitles]);
 
   useEffect(() => {
     if (blockTitles && navbarData?.navigationLinks) {
@@ -318,7 +251,23 @@ export const NavbarProvider: React.FC<NavbarProviderProps> = ({ children }) => {
         navigationLinks: updatedNavLinks
       }))
     }
-  }, [blockTitles])
+  }, [blockTitles, navbarData?.navigationLinks])
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const hash = window.location.hash.substring(1);
+      if (hash) {
+        if (hash.toLowerCase().includes('look')) {
+          setBlockTitles(prev => ({ ...prev, look: hash }));
+        } else if (hash.toLowerCase().includes('listen')) {
+          setBlockTitles(prev => ({ ...prev, listen: hash }));
+        }
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   return (
     <NavbarContext.Provider

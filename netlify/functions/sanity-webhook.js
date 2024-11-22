@@ -64,7 +64,7 @@ try {
   client = createClient({
     projectId: process.env.SANITY_STUDIO_PROJECT_ID,
     dataset: process.env.SANITY_STUDIO_DATASET,
-    token: process.env.SANITY_TOKEN,
+    token: process.env.SANITY_AUTH_TOKEN,
     apiVersion: '2023-05-03',
     useCdn: false
   });
@@ -432,113 +432,77 @@ async function getFileAssetUrl(fileAsset) {
   return null;
 }
 
+const rateLimit = new Map()
+const RATE_LIMIT_WINDOW = 60000 // 1 minute
+const MAX_REQUESTS = 30 // per minute
+
+function checkRateLimit(documentId) {
+  const now = Date.now()
+  const windowStart = now - RATE_LIMIT_WINDOW
+
+  // Clean old entries
+  for (const [key, timestamp] of rateLimit.entries()) {
+    if (timestamp < windowStart) rateLimit.delete(key)
+  }
+
+  // Count recent requests
+  const recentRequests = Array.from(rateLimit.values())
+    .filter(timestamp => timestamp > windowStart)
+    .length
+
+  if (recentRequests >= MAX_REQUESTS) {
+    return false
+  }
+
+  rateLimit.set(`${documentId}-${now}`, now)
+  return true
+}
+
+// Add debouncing for album processing
+const processingQueue = new Map()
+const PROCESSING_DELAY = 2000 // 2 seconds
+
+// Add batch processing
+const BATCH_SIZE = 5
+const BATCH_DELAY = 1000 // 1 second between batches
+
+async function processBatch(albums, config) {
+  const batches = []
+  for (let i = 0; i < albums.length; i += BATCH_SIZE) {
+    batches.push(albums.slice(i, i + BATCH_SIZE))
+  }
+
+  for (const batch of batches) {
+    await Promise.all(batch.map(album => extractAndUpdateDurations({ ...config, album })))
+    if (batches.indexOf(batch) < batches.length - 1) {
+      await new Promise(resolve => setTimeout(resolve, BATCH_DELAY))
+    }
+  }
+}
+
 async function handler(event) {
   try {
-    const body = JSON.parse(event.body);
-    console.log('Webhook payload:', JSON.stringify(body, null, 2));
+    const body = JSON.parse(event.body)
+    const albumId = body._id
 
-    let albumsToProcess = [];
-
-    if (body.albums) {
-      albumsToProcess = body.albums;
-    } else if (body._type === 'album') {
-      albumsToProcess = [body];
-    } else {
-      console.log('Skipping webhook: not a create/update album operation');
-      return { statusCode: 200 };
+    // Debounce processing
+    if (processingQueue.has(albumId)) {
+      clearTimeout(processingQueue.get(albumId))
     }
 
-    for (const album of albumsToProcess) {
-      if (!canProcessDocument(album._id, album._rev)) {
-        console.log(`Document ${album._id} rev ${album._rev} was recently processed, skipping`);
-        continue;
-      }
+    const timeoutPromise = new Promise((resolve) => {
+      const timeout = setTimeout(async () => {
+        processingQueue.delete(albumId)
+        const result = await processWebhook(event, console.log)
+        resolve(result)
+      }, PROCESSING_DELAY)
+      processingQueue.set(albumId, timeout)
+    })
 
-      console.log('Processing Album:', album.customAlbum?.title);
-
-      const doc = await client.getDocument(album._id);
-      if (!doc) {
-        console.log(`Document ${album._id} no longer exists, skipping`);
-        continue;
-      }
-
-      // Process the songs
-      const updatedSongs = await Promise.all((album.customAlbum?.songs || []).map(async (song) => {
-        const baseSong = {
-          _type: 'song',
-          _key: song._key || `song-${Date.now()}`,
-          trackTitle: song.trackTitle,
-          duration: song.duration,
-          file: {
-            _type: 'file',
-            asset: song.file?.asset
-          }
-        };
-
-        // Skip if song already has a duration
-        if (typeof song.duration === 'number') {
-          console.log(`Skipping song "${song.trackTitle}": already has duration ${song.duration}`);
-          return baseSong;
-        }
-
-        if (!song.file?.asset) {
-          console.log(`Skipping song "${song.trackTitle}": no file asset`);
-          return baseSong;
-        }
-
-        try {
-          const fileUrl = await getFileAssetUrl(song.file);
-          if (!fileUrl) {
-            console.log(`Could not get file URL for "${song.trackTitle}"`);
-            return baseSong;
-          }
-
-          console.log(`Processing file for "${song.trackTitle}":`, fileUrl);
-          const duration = await getAudioDuration(fileUrl);
-          console.log(`Got duration for "${song.trackTitle}":`, duration);
-
-          return {
-            ...baseSong,
-            duration: duration
-          };
-        } catch (error) {
-          console.error(`Error processing "${song.trackTitle}":`, error);
-          return baseSong;
-        }
-      }));
-
-      // Only update if any songs actually need duration updates
-      const needsUpdate = updatedSongs.some((song, i) =>
-        song.duration !== album.customAlbum.songs[i].duration
-      );
-
-      if (!needsUpdate) {
-        console.log(`No duration updates needed for album ${album.customAlbum?.title}`);
-        continue;
-      }
-
-      // Update the album
-      const mutation = [{
-        patch: {
-          id: album._id,
-          set: {
-            'customAlbum.songs': updatedSongs
-          }
-        }
-      }];
-
-      try {
-        const result = await client.mutate(mutation);
-        console.log(`Successfully updated album ${album.customAlbum?.title}:`, result);
-      } catch (error) {
-        console.error(`Failed to update album ${album.customAlbum?.title}:`, error);
-      }
-    }
-
-    return { statusCode: 200 };
+    return await timeoutPromise
   } catch (error) {
-    console.error('Error processing webhook:', error);
-    return { statusCode: 500, body: JSON.stringify({ error: error.message }) };
+    console.error('Handler error:', error)
+    return { statusCode: 500, body: JSON.stringify({ error: error.message }) }
   }
 }
 

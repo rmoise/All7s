@@ -1,7 +1,7 @@
 [build]
   command = "npm run build"
-  publish = ".next"
-  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF ."
+  publish = "out"
+  functions = "netlify/functions"
 
 [build.environment]
   NETLIFY = "true"
@@ -9,12 +9,37 @@
   NEXT_PUBLIC_SANITY_STUDIO_URL = "https://all7z.sanity.studio"
   SANITY_STUDIO_PATH = "fresh_sanity_studio"
   NETLIFY_NEXT_PLUGIN_SKIP = "true"
-  NODE_VERSION = "18"
+  NODE_VERSION = "18.x"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
 
-# Production-specific settings
+# Add form handling configuration
+[[redirects]]
+  from = "/api/form-submission"
+  to = "/.netlify/functions/form-submission"
+  status = 200
+  force = true
+
+# Keep your existing redirects
+[[redirects]]
+  from = "/api/music-metadata"
+  to = "/.netlify/functions/music-metadata"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/studio/*"
+  to = "/studio/index.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Your existing production, staging, and other environment configs...
 [context.production]
   command = "npm run build"
   publish = ".next"
@@ -26,7 +51,6 @@
     NEXT_PUBLIC_SANITY_STUDIO_URL = "https://all7z.sanity.studio"
     NEXT_PUBLIC_SITE_URL = "https://all7z.com"
 
-# Staging-specific settings
 [context.staging]
   command = "npm run build"
   publish = ".next"
@@ -38,7 +62,6 @@
     NEXT_PUBLIC_SANITY_STUDIO_URL = "https://all7z.sanity.studio"
     NEXT_PUBLIC_SITE_URL = "https://staging.all7z.com"
 
-# Deploy previews
 [context.deploy-preview]
   command = "npm run build"
   publish = ".next"
@@ -46,7 +69,6 @@
     NEXT_PUBLIC_SANITY_STUDIO_URL = "https://deploy-preview-${REVIEW_ID}--stak-app.netlify.app/studio"
     NEXT_PUBLIC_SITE_URL = "https://deploy-preview-${REVIEW_ID}--stak-app.netlify.app"
 
-# Branch deploys
 [context.branch-deploy]
   command = "npm run build"
   publish = ".next"
@@ -54,7 +76,7 @@
     NEXT_PUBLIC_SANITY_STUDIO_URL = "https://branch-${BRANCH}--stak-app.netlify.app/studio"
     NEXT_PUBLIC_SITE_URL = "https://branch-${BRANCH}--stak-app.netlify.app"
 
-# Processing and optimization
+# Keep your existing processing settings
 [build.processing]
   skip_processing = false
 
@@ -72,11 +94,16 @@
 [build.processing.images]
   compress = true
 
-# Functions configuration
+# Keep your existing functions configuration
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
 
+# Add form handling function
+[functions.form-submission]
+  included_files = ["lib/formHandling.js"]
+
+# Keep your existing function configurations
 [functions.extract-album-durations]
   included_files = ["lib/extractDurations.js"]
 
@@ -86,21 +113,13 @@
 [functions.fetchBatchSpotifyMetadata]
   included_files = ["lib/spotify.js"]
 
-# Redirects
-[[redirects]]
-  from = "/api/music-metadata"
-  to = "/.netlify/functions/music-metadata"
-  status = 200
-  force = true
-
-# Development settings
+# Keep your existing dev settings
 [dev]
-  command = "npm run dev"
+  command = "cross-env NODE_ENV=development SANITY_STUDIO_API_TOKEN=$SANITY_AUTH_TOKEN next dev"
   targetPort = 3000
   port = 8888
-  publish = ".next"
+  publish = "out"
   framework = "next"
-  autoLaunch = true
 
 [dev.environment]
   NEXT_PUBLIC_NETLIFY = "true"

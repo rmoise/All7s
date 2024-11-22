@@ -30,12 +30,31 @@ const settings = defineType({
   title: 'Site Settings',
   type: 'document',
   __experimental_actions: ['update', 'publish'],
+  groups: [
+    {
+      name: 'general',
+      title: 'General',
+    },
+    {
+      name: 'seo',
+      title: 'SEO',
+    },
+    {
+      name: 'navigation',
+      title: 'Navigation',
+    },
+    {
+      name: 'footer',
+      title: 'Footer',
+    }
+  ],
   fields: [
     defineField({
       name: 'title',
       title: 'Site Title',
       type: 'string',
       description: 'The title of your website.',
+      group: 'general'
     }),
     defineField({
       name: 'favicon',
@@ -45,11 +64,13 @@ const settings = defineType({
       options: {
         hotspot: true,
       },
+      group: 'general'
     }),
     defineField({
       name: 'seo',
       title: 'SEO',
       type: 'object',
+      group: 'seo',
       fields: [
         defineField({
           name: 'metaTitle',
@@ -78,6 +99,7 @@ const settings = defineType({
       name: 'navbar',
       title: 'Navbar',
       type: 'object',
+      group: 'navigation',
       fields: [
         defineField({
           name: 'logo',
@@ -120,12 +142,21 @@ const settings = defineType({
       name: 'footer',
       title: 'Footer',
       type: 'object',
+      group: 'footer',
       fields: [
         defineField({
           name: 'copyrightText',
           title: 'Copyright Text',
           type: 'string',
           validation: (Rule) => Rule.required(),
+        }),
+        defineField({
+          name: 'fontColor',
+          title: 'Font Color',
+          type: 'color',
+          options: {
+            disableAlpha: true,
+          },
         }),
         defineField({
           name: 'alignment',
@@ -140,15 +171,6 @@ const settings = defineType({
             ],
             layout: 'radio',
           },
-        }),
-        defineField({
-          name: 'fontColor',
-          title: 'Footer Text Color',
-          type: 'color',
-          options: {
-            disableAlpha: true,
-          },
-          validation: (Rule) => Rule.required(),
         }),
         defineField({
           name: 'footerLinks',
@@ -253,7 +275,6 @@ const settings = defineType({
           props.document.footer?.alignment && props.document.footer?.copyrightText
         ),
         missingFields: [
-          !props.document.footer?.fontColor && 'fontColor',
           !props.document.footer?.footerLinks && 'footerLinks',
           !props.document.footer?.socialLinks && 'socialLinks',
         ].filter(Boolean),
@@ -270,9 +291,6 @@ const settings = defineType({
         }
         if (!props.document.footer.alignment) {
           validationIssues.push('Alignment is missing')
-        }
-        if (!props.document.footer.fontColor) {
-          validationIssues.push('Font color is missing')
         }
         if (!props.document.footer.footerLinks) {
           validationIssues.push('Footer links array is missing')

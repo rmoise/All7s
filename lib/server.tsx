@@ -13,7 +13,15 @@ export const getServerClient = (usePreview = false) =>
 
 // Image builder
 const builder = imageUrlBuilder(serverClient)
+  .auto('format')
+  .fit('clip')
+  .quality(100)
+  .sharpen(0)
 export const urlFor = (source: any) => builder.image(source)
+
+// Add cache map
+const CACHE_DURATION = 0
+const queryCache = new Map<string, { data: any; timestamp: number }>()
 
 // Enhanced fetch with retries and logging
 export async function safeFetch<T>(
@@ -21,6 +29,15 @@ export async function safeFetch<T>(
   params: QueryParams = {},
   usePreview = false
 ): Promise<T> {
+  const cacheKey = `${query}-${JSON.stringify(params)}-${usePreview}`
+  const now = Date.now()
+  const cached = queryCache.get(cacheKey)
+
+  // Return cached data if valid
+  if (cached && now - cached.timestamp < CACHE_DURATION) {
+    return cached.data as T
+  }
+
   const client = getServerClient(usePreview)
   const maxRetries = 3
   let lastError
@@ -36,6 +53,10 @@ export async function safeFetch<T>(
 
       const result = await client.fetch<T>(query, params)
       console.log('Fetch successful:', { hasData: !!result })
+
+      // Cache the result
+      queryCache.set(cacheKey, { data: result, timestamp: now })
+
       return result
     } catch (error: any) {
       lastError = error
