@@ -41,7 +41,7 @@
 
 # Your existing production, staging, and other environment configs...
 [context.production]
-  command = "npm run build:production"
+  command = "cd fresh_sanity_studio && npm install && cd .. && npm run build:production"
   publish = ".next"
   [context.production.environment]
     NEXT_PUBLIC_ENVIRONMENT = "production"
