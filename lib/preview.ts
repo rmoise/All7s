@@ -8,16 +8,9 @@ const PREVIEW_TOKEN_NAME = 'sanityPreviewToken'
 export async function getPreviewToken(): Promise<string | null> {
   const cookieStore = await cookies()
   const token = cookieStore.get(PREVIEW_TOKEN_NAME)
-  const fallbackToken = process.env.SANITY_API_READ_TOKEN
 
-  // Debug logging
-  console.log('Preview Token Status:', {
-    hasCookieToken: !!token?.value,
-    hasFallbackToken: !!fallbackToken,
-    isServer: typeof window === 'undefined'
-  })
-
-  return token?.value || fallbackToken || null
+  // Only use cookie token, no fallback to API read token
+  return token?.value || null
 }
 
 export async function setPreviewToken(token: string) {
