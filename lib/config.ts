@@ -88,18 +88,10 @@ export const previewConfig: EnhancedClientConfig = {
   ...sanityConfig,
   token: getToken(true),
   perspective: 'previewDrafts',
+  useCdn: false,
   stega: {
-    enabled: false,
-    studioUrl: '/studio'
-  },
-  withCredentials: true,
-  resultSourceMap: false,
-  listen: {
     enabled: true,
-    events: ['mutation', 'reconnect'],
-    includeTypes: ['home'],
-    visibility: 'query',
-    subscribeTo: ['mutation', 'reconnect']
+    studioUrl: process.env.NEXT_PUBLIC_SANITY_STUDIO_URL
   }
 }
 

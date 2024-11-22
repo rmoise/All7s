@@ -52,6 +52,7 @@
     NEXT_PUBLIC_SITE_URL = "https://all7z.com"
     STRIPE_SECRET_KEY = "env(STRIPE_SECRET_KEY)"
     NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY = "env(NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)"
+    SANITY_PREVIEW_TOKEN = "env(SANITY_PREVIEW_TOKEN)"
 
 [context.staging]
   command = "npm run build:staging"

@@ -99,8 +99,8 @@ export async function getHome(preview = false): Promise<HomeData | null> {
   try {
     const client = preview ? previewClient : getClient(preview)
 
-    // Modified query to explicitly handle drafts
-    const query = `*[_type == "home" && (_id == "singleton-home" || _id == "drafts.singleton-home")] | order(_id desc)[0] {
+    // Adjust query based on preview mode
+    const query = `*[_type == "home"] | order(_updatedAt desc)[0] {
       _id,
       _type,
       contentBlocks[] {
@@ -109,10 +109,9 @@ export async function getHome(preview = false): Promise<HomeData | null> {
         "musicBlock": select(
           _type == 'musicBlock' => {
             listenTitle,
-            "albums": coalesce(
-              *[_type == "album" && _id in ^.albums[]._ref][],
-              *[_type == "album" && _id in ^.albums[]._ref && _id match "drafts.*"][]
-            )
+            "albums": *[_type == "album" && _id in ^.albums[]._ref] {
+              ...
+            }
           }
         ),
         "videoBlock": select(
@@ -124,16 +123,9 @@ export async function getHome(preview = false): Promise<HomeData | null> {
       }
     }`
 
-    console.log('Preview state:', {
-      preview,
-      hasToken: !!client.config().token,
-      tokenLength: client.config().token?.length,
-      perspective: client.config().perspective
-    })
-
     const result = await client.fetch(query, undefined, {
       cache: preview ? 'no-store' : 'force-cache',
-      next: { tags: ['home'] }
+      perspective: preview ? 'previewDrafts' : 'published'
     })
 
     return result
