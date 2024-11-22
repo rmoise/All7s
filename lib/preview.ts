@@ -9,7 +9,14 @@ export async function getPreviewToken(): Promise<string | null> {
   const cookieStore = await cookies()
   const token = cookieStore.get(PREVIEW_TOKEN_NAME)
 
-  // Only use cookie token, no fallback to API read token
+  // Check if preview is explicitly enabled via URL
+  const isPreviewRequested = typeof window !== 'undefined' &&
+    new URL(window.location.href).searchParams.get('preview') === '1'
+
+  if (!isPreviewRequested) {
+    return null
+  }
+
   return token?.value || null
 }
 
