@@ -1,15 +1,16 @@
-import { defineCliConfig } from 'sanity/cli'
-import dotenv from 'dotenv'
+const { defineCliConfig } = require('sanity/cli')
+const dotenv = require('dotenv')
 
 // Load environment variables
-dotenv.config()
+dotenv.config({ path: '../.env' })
 
 const dataset = process.env.SANITY_STUDIO_DATASET || 'production'
 
-export default defineCliConfig({
+module.exports = defineCliConfig({
   api: {
     projectId: process.env.SANITY_STUDIO_PROJECT_ID || '1gxdk71x',
-    dataset
+    dataset,
+    token: process.env.SANITY_STUDIO_API_TOKEN
   },
   studioHost: 'all7z'
 }) 

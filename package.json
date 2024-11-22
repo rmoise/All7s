@@ -22,7 +22,7 @@
     "fresh-studio:dev:staging": "cd fresh_sanity_studio && SANITY_STUDIO_DATASET=staging npm run dev:staging",
     "fresh-studio:start": "cd fresh_sanity_studio && cross-env NODE_ENV=production NEXT_PUBLIC_ENVIRONMENT=production SANITY_STUDIO_DATASET=production npm run start",
     "prod": "npm run build:production && npm run start:production",
-    "deploy": "cd fresh_sanity_studio && cross-env SANITY_AUTH_TOKEN=$SANITY_AUTH_TOKEN sanity deploy --no-verify",
+    "deploy": "cd fresh_sanity_studio && cross-env SANITY_STUDIO_API_TOKEN=$SANITY_STUDIO_API_TOKEN sanity deploy --no-verify",
     "deploy:staging": "cd fresh_sanity_studio && cross-env SANITY_STUDIO_DATASET=staging SANITY_AUTH_TOKEN=$SANITY_AUTH_TOKEN sanity deploy --no-verify",
     "deploy:production": "cd fresh_sanity_studio && cross-env SANITY_STUDIO_DATASET=production SANITY_AUTH_TOKEN=$SANITY_AUTH_TOKEN sanity deploy --no-verify",
     "deploy-graphql": "sanity graphql deploy",
