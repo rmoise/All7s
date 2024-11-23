@@ -1,5 +1,5 @@
 [build]
-  command = "npm install && npm run fresh-studio:build && npm run build:production"
+  command = "cd fresh_sanity_studio && npm install && cd .. && npm run build:production"
   publish = ".next"
   functions = "netlify/functions"
 
@@ -14,14 +14,13 @@
 [[plugins]]
   package = "@netlify/plugin-nextjs"
 
-# Add form handling configuration
+# Keep all your existing redirects
 [[redirects]]
   from = "/api/form-submission"
   to = "/.netlify/functions/form-submission"
   status = 200
   force = true
 
-# Keep your existing redirects
 [[redirects]]
   from = "/api/music-metadata"
   to = "/.netlify/functions/music-metadata"
@@ -39,7 +38,7 @@
   to = "/index.html"
   status = 200
 
-# Your existing production, staging, and other environment configs...
+# Keep all your environment-specific configurations
 [context.production]
   command = "cd fresh_sanity_studio && npm install && cd .. && npm run build:production"
   publish = ".next"
