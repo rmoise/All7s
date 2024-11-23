@@ -64,9 +64,9 @@ const nextConfig = {
     SANITY_API_READ_TOKEN: process.env.SANITY_API_READ_TOKEN || token,
     SANITY_STUDIO_PATH: 'fresh_sanity_studio',
     SANITY_PREVIEW_SECRET: process.env.SANITY_PREVIEW_SECRET || '',
-    SANITY_AUTH_TOKEN: process.env.SANITY_AUTH_TOKEN || token,
-    SANITY_STUDIO_API_TOKEN: process.env.SANITY_STUDIO_API_TOKEN || token,
-    NEXT_PUBLIC_SANITY_TOKEN: process.env.NEXT_PUBLIC_SANITY_TOKEN || token,
+    SANITY_AUTH_TOKEN: process.env.SANITY_AUTH_TOKEN || '',
+    SANITY_STUDIO_API_TOKEN: process.env.SANITY_STUDIO_API_TOKEN || '',
+    NEXT_PUBLIC_SANITY_TOKEN: process.env.NEXT_PUBLIC_SANITY_TOKEN || '',
   },
 
   images: {
