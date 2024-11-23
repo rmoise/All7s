@@ -1,5 +1,5 @@
 [build]
-  command = "npm ci && npm install next@latest && npm run build"
+  command = "npm ci && npm install @netlify/plugin-nextjs tailwindcss && npm run build"
   publish = ".next"
   functions = "netlify/functions"
 
