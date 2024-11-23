@@ -21,8 +21,8 @@
   status = 200
   force = true
 
-[[redirects]]
-  from = "/api/music-metadata"
+        [[redirects]]
+          from = "/api/music-metadata"
   to = "/.netlify/functions/music-metadata"
   status = 200
   force = true
@@ -40,7 +40,7 @@
 
 # Keep all your environment-specific configurations
 [context.production]
-  command = "cd fresh_sanity_studio && npm install && cd .. && npm run build:production"
+  command = "npm install && cd fresh_sanity_studio && npm install && npm run build && cd .. && npm run build:production"
   publish = ".next"
   [context.production.environment]
     NEXT_PUBLIC_ENVIRONMENT = "production"
