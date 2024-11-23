@@ -61,11 +61,11 @@ const nextConfig = {
     config.resolve.alias = {
       ...config.resolve.alias,
       '@': path.resolve(__dirname),
-      '@components': path.resolve(__dirname, './components'),
+      '@components': path.join(__dirname, 'components'),
       '@lib': path.resolve(__dirname, './lib'),
       '@utils': path.resolve(__dirname, './utils'),
       '@context': path.resolve(__dirname, './context'),
-      '@sanity': path.resolve(__dirname, './fresh_sanity_studio'),
+      '@sanity': path.join(__dirname, 'node_modules/@sanity'),
     };
 
     if (dev && !isServer) {

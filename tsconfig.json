@@ -32,7 +32,8 @@
       "@types/*": ["types/*"],
       "@context/*": ["context/*"],
       "@sanity/*": ["fresh_sanity_studio/*"],
-      "@styles/*": ["styles/*"]
+      "@styles/*": ["styles/*"],
+      "@sanity/client": ["node_modules/@sanity/client"]
     },
     "typeRoots": [
       "./node_modules/@types",
