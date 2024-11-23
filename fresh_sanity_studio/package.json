@@ -8,7 +8,7 @@
     "dev": "dotenv -e .env -- cross-env NODE_ENV=development NEXT_PUBLIC_ENVIRONMENT=development sanity dev",
     "dev:staging": "dotenv -e .env -- cross-env NODE_ENV=development NEXT_PUBLIC_ENVIRONMENT=staging SANITY_STUDIO_DATASET=staging sanity dev",
     "start": "dotenv -e .env -- cross-env NODE_ENV=production SANITY_STUDIO_DATASET=production sanity start",
-    "build": "NODE_ENV=production SANITY_STUDIO_DATASET=production sanity build",
+    "build": "DISABLE_ESLINT_PLUGIN=true NODE_ENV=production SANITY_STUDIO_DATASET=production sanity build --no-minify",
     "deploy": "dotenv -e ../.env -- cross-env NODE_ENV=production NEXT_PUBLIC_ENVIRONMENT=production sanity deploy --token=$SANITY_STUDIO_API_TOKEN --no-verify",
     "deploy:staging": "dotenv -e .env -- cross-env NODE_ENV=production NEXT_PUBLIC_ENVIRONMENT=staging SANITY_STUDIO_DATASET=staging sanity deploy --token=$SANITY_AUTH_TOKEN --no-verify",
     "deploy-graphql": "sanity graphql deploy",
