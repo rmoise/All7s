@@ -2,7 +2,7 @@
   command = """
     npm ci && \
     cd fresh_sanity_studio && \
-    npm ci && \
+    npm ci --workspace=fresh_sanity_studio && \
     NODE_ENV=production SANITY_STUDIO_DATASET=production DISABLE_ESLINT_PLUGIN=true npm run build && \
     cd .. && \
     NODE_ENV=production NEXT_PUBLIC_ENVIRONMENT=production SANITY_STUDIO_DATASET=production npm run build:production
