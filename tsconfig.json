@@ -25,10 +25,12 @@
     ],
     "baseUrl": ".",
     "paths": {
+      "@/*": ["./*"],
       "@components/*": ["components/*"],
       "@lib/*": ["lib/*"],
       "@utils/*": ["utils/*"],
-      "@app/*": ["app/*"]
+      "@context/*": ["context/*"],
+      "@blocks/*": ["components/blocks/*"]
     }
   },
   "include": [
