@@ -23,6 +23,8 @@
   NEXT_PUBLIC_SANITY_PROJECT_ID = "1gxdk71x"
   NEXT_PUBLIC_SITE_URL = "https://all7z.com"
   SANITY_PREVIEW_TOKEN = "env(SANITY_PREVIEW_TOKEN)"
+  NEXT_USE_NETLIFY_EDGE = "true"
+  NEXT_FORCE_EDGE_IMAGES = "true"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
@@ -51,7 +53,12 @@
   status = 200
 
 [context.production]
-  command = "cd fresh_sanity_studio && npm install && cd .. && npm run build:production"
+  command = """
+    npm ci && \
+    cd fresh_sanity_studio && npm ci && cd .. && \
+    npm run fresh-studio:build && \
+    npm run build:production
+  """
   publish = ".next"
   [context.production.environment]
     NEXT_PUBLIC_ENVIRONMENT = "production"
@@ -89,7 +96,6 @@
     NEXT_PUBLIC_SANITY_STUDIO_URL = "https://branch-${BRANCH}--stak-app.netlify.app/studio"
     NEXT_PUBLIC_SITE_URL = "https://branch-${BRANCH}--stak-app.netlify.app"
 
-# Keep your existing processing settings
 [build.processing]
   skip_processing = false
 
@@ -107,15 +113,13 @@
 [build.processing.images]
   compress = true
 
-# Keep your existing functions configuration
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
-# Add form handling function
+
 [functions.form-submission]
   included_files = ["lib/formHandling.js"]
 
-# Keep your existing function configurations
 [functions.extract-album-durations]
   included_files = ["lib/extractDurations.js"]
 
@@ -125,7 +129,6 @@
 [functions.fetchBatchSpotifyMetadata]
   included_files = ["lib/spotify.js"]
 
-# Keep your existing dev settings
 [dev]
   command = "cross-env NODE_ENV=development SANITY_STUDIO_API_TOKEN=$SANITY_AUTH_TOKEN next dev"
   targetPort = 3000

@@ -79,6 +79,8 @@ const nextConfig = {
         pathname: '/artworks-**',
       },
     ],
+    loader: 'custom',
+    loaderFile: './netlify/image-loader.js',
   },
 
   async headers() {
@@ -187,6 +189,12 @@ const nextConfig = {
   },
 
   distDir: '.next',
+
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '2mb'
+    }
+  },
 };
 
 module.exports = nextConfig;
