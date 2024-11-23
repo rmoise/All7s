@@ -1,10 +1,5 @@
 [build]
-  command = """
-    npm ci && \
-    cd fresh_sanity_studio && npm ci && cd .. && \
-    npm run fresh-studio:build && \
-    npm run build:production
-  """
+  command = "npm ci && npm run build"
   publish = ".next"
   functions = "netlify/functions"
 
@@ -53,12 +48,7 @@
   status = 200
 
 [context.production]
-  command = """
-    npm ci && \
-    cd fresh_sanity_studio && npm ci && cd .. && \
-    npm run fresh-studio:build && \
-    npm run build:production
-  """
+  command = "npm ci && npm run build"
   publish = ".next"
   [context.production.environment]
     NEXT_PUBLIC_ENVIRONMENT = "production"
