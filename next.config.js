@@ -60,10 +60,12 @@ const nextConfig = {
   webpack: (config, { isServer, dev }) => {
     config.resolve.alias = {
       ...config.resolve.alias,
-      '@components': path.join(__dirname, 'components'),
-      '@lib': path.join(__dirname, 'lib'),
-      '@utils': path.join(__dirname, 'utils'),
-      '@styles': path.join(__dirname, 'styles'),
+      '@': path.resolve(__dirname),
+      '@components': path.resolve(__dirname, './components'),
+      '@lib': path.resolve(__dirname, './lib'),
+      '@utils': path.resolve(__dirname, './utils'),
+      '@context': path.resolve(__dirname, './context'),
+      '@sanity': path.resolve(__dirname, './fresh_sanity_studio'),
     };
 
     if (dev && !isServer) {
