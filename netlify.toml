@@ -1,5 +1,5 @@
 [build]
-  command = "npm ci && npm install @netlify/plugin-nextjs && npm run fresh-studio:build && npm run build"
+  command = "npm ci && npm run fresh-studio:build && npm run build"
   publish = ".next"
   functions = "netlify/functions"
 
@@ -8,7 +8,6 @@
   NEXT_PUBLIC_NETLIFY = "true"
   NEXT_PUBLIC_SANITY_STUDIO_URL = "https://all7z.sanity.studio"
   SANITY_STUDIO_PATH = "fresh_sanity_studio"
-  NETLIFY_NEXT_PLUGIN_SKIP = "true"
   NODE_VERSION = "20.11.1"
   NPM_FLAGS = "--no-audit --no-fund"
   STRIPE_SECRET_KEY = "env(STRIPE_SECRET_KEY)"
@@ -48,7 +47,7 @@
   status = 200
 
 [context.production]
-  command = "npm ci && npm run build"
+  command = "npm ci && npm run fresh-studio:build && npm run build"
   publish = ".next"
   [context.production.environment]
     NEXT_PUBLIC_ENVIRONMENT = "production"
