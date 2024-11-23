@@ -7,7 +7,7 @@
     NODE_ENV=production SANITY_STUDIO_DATASET=production DISABLE_ESLINT_PLUGIN=true npm run build && \
     cd .. && \
     NODE_ENV=development npm install next@latest react@latest react-dom@latest && \
-    cross-env NODE_ENV=production NEXT_PUBLIC_ENVIRONMENT=production SANITY_STUDIO_DATASET=production NODE_OPTIONS='--max_old_space_size=4096' npx next build
+    NODE_ENV=production NEXT_PUBLIC_ENVIRONMENT=production SANITY_STUDIO_DATASET=production NODE_OPTIONS='--max_old_space_size=4096' npx next build
   """
   publish = ".next"
   functions = "netlify/functions"
@@ -20,8 +20,6 @@
   NETLIFY_NEXT_PLUGIN_SKIP = "true"
   NODE_VERSION = "20.11.1"
   NPM_FLAGS = "--no-audit --no-fund"
-  USE_PNPM = "true"
-  NODE_ENV = "development"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
