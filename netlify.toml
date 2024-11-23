@@ -1,5 +1,5 @@
 [build]
-  command = "npm ci && cd fresh_sanity_studio && npm ci && cd .. && npm run fresh-studio:build && npm run build"
+  command = "npm ci && npm run fresh-studio:build && npm run build"
   publish = ".next"
   functions = "netlify/functions"
 
