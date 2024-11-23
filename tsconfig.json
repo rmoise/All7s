@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "ES2017",
+    "target": "es5",
     "lib": [
       "dom",
       "dom.iterable",
@@ -9,52 +9,33 @@
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
+    "forceConsistentCasingInFileNames": true,
     "noEmit": true,
-    "incremental": true,
-    "module": "esnext",
     "esModuleInterop": true,
+    "module": "esnext",
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["./*"],
-      "@/lib/*": ["lib/*"],
-      "@/components/*": ["components/*"],
-      "@/utils/*": ["utils/*"],
-      "@/types/*": ["types/*"],
-      "@/context/*": ["context/*"],
-      "@/sanity/*": ["fresh_sanity_studio/*"],
-      "@lib/*": ["lib/*"],
-      "@components/*": ["components/*"],
-      "@utils/*": ["utils/*"],
-      "@types/*": ["types/*"],
-      "@context/*": ["context/*"],
-      "@sanity/*": ["fresh_sanity_studio/*"],
-      "@styles/*": ["styles/*"],
-      "@sanity/client": ["node_modules/@sanity/client"]
-    },
-    "typeRoots": [
-      "./node_modules/@types",
-      "./fresh_sanity_studio/types",
-      "./types"
-    ],
+    "incremental": true,
     "plugins": [
       {
         "name": "next"
       }
     ],
-    "strictNullChecks": true
+    "baseUrl": ".",
+    "paths": {
+      "@components/*": ["components/*"],
+      "@lib/*": ["lib/*"],
+      "@utils/*": ["utils/*"],
+      "@/*": ["./*"]
+    }
   },
   "include": [
-    "**/*.js",
-    "**/*.jsx",
+    "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    "next-env.d.ts",
-    ".next/types/**/*.ts",
-    "types/**/*.d.ts"
+    ".next/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"

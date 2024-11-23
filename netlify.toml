@@ -1,5 +1,5 @@
 [build]
-  command = "cd fresh_sanity_studio && npm install && cd .. && npm run build:production"
+  command = "npm install && cd fresh_sanity_studio && npm install && npm run build && cd .. && npm run build:production"
   publish = ".next"
   functions = "netlify/functions"
 
