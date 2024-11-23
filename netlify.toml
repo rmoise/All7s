@@ -69,10 +69,8 @@
     NODE_ENV=development npm ci && \
     cd fresh_sanity_studio && \
     NODE_ENV=development npm ci && \
-    NODE_ENV=development npm install postcss@latest autoprefixer@latest tailwindcss@latest && \
-    NODE_ENV=production SANITY_STUDIO_DATASET=production DISABLE_ESLINT_PLUGIN=true npm run build && \
+    NODE_ENV=production SANITY_STUDIO_DATASET=production npm run build && \
     cd .. && \
-    NODE_ENV=development npm install react react-dom && \
     NODE_ENV=production NEXT_PUBLIC_ENVIRONMENT=production SANITY_STUDIO_DATASET=production npm run build:production
   """
   publish = ".next"
