@@ -1,13 +1,6 @@
 [build]
   command = """
     NODE_ENV=development npm ci && \
-    cd fresh_sanity_studio && \
-    NODE_ENV=development npm ci && \
-    SANITY_STUDIO_API_TOKEN=$SANITY_STUDIO_API_TOKEN \
-    SANITY_STUDIO_DATASET=production \
-    NODE_ENV=production \
-    npm run build && \
-    cd .. && \
     NODE_ENV=production \
     NEXT_PUBLIC_ENVIRONMENT=production \
     SANITY_STUDIO_DATASET=production \
