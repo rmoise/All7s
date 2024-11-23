@@ -21,6 +21,7 @@
   NODE_VERSION = "20.11.1"
   NPM_FLAGS = "--no-audit --no-fund"
   USE_PNPM = "true"
+  NODE_ENV = "development"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"

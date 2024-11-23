@@ -13,7 +13,7 @@
   ```
 */
 
-import { client } from '../../lib/client';
+import { client } from '../../lib/sanity';
 import {PortableText} from '@portabletext/react'
 import Link from 'next/link'
 
@@ -97,4 +97,3 @@ import Link from 'next/link'
 
   export default AllPosts
 
-  

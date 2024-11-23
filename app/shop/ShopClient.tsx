@@ -20,17 +20,15 @@ const ShopClient = ({ products }: ShopClientProps) => {
     setMounted(true)
   }, [])
 
-  const categories = [
-    'all',
-    ...new Set(
-      products
-        ?.map((product) => product?.category?.title)
-        .filter(
-          (category): category is string => !!category && category.trim() !== ''
-        )
-        .sort()
-    ),
-  ]
+  const categories = ['all'].concat(
+    Array.from(
+      new Set(
+        products
+          ?.map((product) => product?.category?.title)
+          .filter(Boolean)
+      )
+    )
+  );
 
   const filteredProducts =
     selectedCategory === 'all'
