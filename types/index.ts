@@ -23,10 +23,7 @@ export type {
   SanityImage,
   SanityRawSong,
   NavigationLink,
-  Song,
-  ProductImage,
-  CustomAlbum,
-  EmbeddedAlbum
+  ProductImage
 }
 
 // Content Block Types
@@ -56,7 +53,7 @@ export interface AboutContent extends BaseContentBlock {
 export interface MusicBlockProps {
   listenTitle: string
   description?: string
-  albums?: Array<Album | {
+  albums?: Array<MusicAlbum | {
     _ref: string
     _type: 'reference'
     _key: string
@@ -72,7 +69,7 @@ export interface MusicBlockContent extends BaseContentBlock {
     _type: 'reference'
     _key: string
   }>
-  resolvedAlbums?: Album[]
+  resolvedAlbums?: MusicAlbum[]
 }
 
 export interface VideoBlockContent extends BaseContentBlock {
@@ -149,13 +146,12 @@ export interface SanityAsset {
   }
 }
 
-export interface Album extends MusicAlbum {
-  _id: string
-  _key?: string
-  albumSource: 'custom' | 'embedded'
-  embeddedAlbum?: EmbeddedAlbum
-  customAlbum?: CustomAlbum
-}
+export type {
+  Album,
+  CustomAlbum,
+  EmbeddedAlbum,
+  Song
+} from './music'
 
 // Export HomeData interface
 export interface HomeData extends SanityBaseDocument {
@@ -184,3 +180,15 @@ export interface SiteSettings extends SanitySiteSettings {
 // Keep existing component and context types...
 startLine: 258
 endLine: 270
+
+// Export the Album type and other shared types
+export * from './music'
+export * from './shop'
+export * from './page'
+export * from './cart'
+export * from './sanity'
+
+// If you have any types defined directly in index.ts, keep them:
+export interface SomeType {
+  // ...
+}

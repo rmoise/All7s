@@ -37,7 +37,8 @@
       "@styles/*": ["./styles/*"],
       "@fresh_sanity_studio/*": ["./fresh_sanity_studio/*"],
       "@components/common/*": ["./components/common/*"],
-      "@components/blog/*": ["./components/blog/*"]
+      "@components/blog/*": ["./components/blog/*"],
+      "@types": ["types/index.ts"]
     }
   },
   "include": [
