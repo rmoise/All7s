@@ -3,7 +3,7 @@
     npm ci && \
     cd fresh_sanity_studio && \
     NODE_ENV=development npm ci && \
-    NODE_ENV=production SANITY_STUDIO_DATASET=production DISABLE_ESLINT_PLUGIN=true npm run build && \
+    NODE_ENV=production SANITY_STUDIO_DATASET=production DISABLE_ESLINT_PLUGIN=true NODE_OPTIONS='--experimental-json-modules' npm run build && \
     cd .. && \
     NODE_ENV=production NEXT_PUBLIC_ENVIRONMENT=production SANITY_STUDIO_DATASET=production npm run build:production
   """
