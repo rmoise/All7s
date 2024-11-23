@@ -1,0 +1,7 @@
+./components/blocks/VideoBlock.tsx
+./components/blocks/MusicBlock.tsx
+./components/Music/FlipCard.tsx
+./components/layout/Layout.tsx
+./components/shop/ProductDetails.tsx
+./components/shop/Products.tsx
+./components/common/Newsletter.tsx

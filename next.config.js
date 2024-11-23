@@ -61,11 +61,12 @@ const nextConfig = {
     config.resolve.alias = {
       ...config.resolve.alias,
       '@': path.join(__dirname, './'),
-      '@components': path.join(__dirname, 'components'),
-      '@lib': path.join(__dirname, 'lib'),
-      '@utils': path.join(__dirname, 'utils'),
-      '@context': path.join(__dirname, 'context'),
-      '@blocks': path.join(__dirname, 'components/blocks')
+      '@components': path.join(__dirname, './components'),
+      '@lib': path.join(__dirname, './lib'),
+      '@utils': path.join(__dirname, './utils'),
+      '@context': path.join(__dirname, './context'),
+      '@blocks': path.join(__dirname, './components/blocks'),
+      '@blog': path.join(__dirname, './components/blog')
     };
     return config;
   },

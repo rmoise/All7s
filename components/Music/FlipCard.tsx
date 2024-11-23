@@ -13,7 +13,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPlay, faPause, faSyncAlt } from '@fortawesome/free-solid-svg-icons'
 import anime from 'animejs'
 import { useAudio } from '@/context/AudioContext' // Adjust the path as needed
-import MusicEmbed from '@components/MusicEmbed' // Ensure correct path
+import MusicEmbed from '@/components/MusicEmbed' // Ensure correct path
 import { debounce } from 'lodash'
 import Image from 'next/image'
 import type { Song } from '@/types/sanity';
