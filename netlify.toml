@@ -1,5 +1,5 @@
 [build]
-  command = "npm run build:production"
+  command = "npm run fresh-studio:build && npm run build:production"
   publish = ".next"
   functions = "netlify/functions"
 
@@ -50,6 +50,9 @@
     NEXT_PUBLIC_NETLIFY = "true"
     NEXT_PUBLIC_SANITY_STUDIO_URL = "https://all7z.sanity.studio"
     NEXT_PUBLIC_SITE_URL = "https://all7z.com"
+    SANITY_AUTH_TOKEN = "env(SANITY_AUTH_TOKEN)"
+    SANITY_STUDIO_API_TOKEN = "env(SANITY_STUDIO_API_TOKEN)"
+    NEXT_PUBLIC_SANITY_TOKEN = "env(NEXT_PUBLIC_SANITY_TOKEN)"
     STRIPE_SECRET_KEY = "env(STRIPE_SECRET_KEY)"
     NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY = "env(NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)"
     SANITY_PREVIEW_TOKEN = "env(SANITY_PREVIEW_TOKEN)"
