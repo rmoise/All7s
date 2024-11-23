@@ -34,7 +34,7 @@
     "test-connection": "NODE_OPTIONS=\"--loader ts-node/esm\" ts-node lib/testConnection.ts",
     "deploy:with-env": "SANITY_STUDIO_API_TOKEN=${SANITY_STUDIO_API_TOKEN} sanity deploy --no-verify",
     "dev:env": "dotenv -e .env -- cross-env SANITY_STUDIO_API_TOKEN=$SANITY_AUTH_TOKEN NODE_ENV=development next dev",
-    "postinstall": "node -e \"try { require('fs').symlinkSync(require('path').resolve('node_modules'), 'node_modules', 'dir') } catch (e) {}\" && cd fresh_sanity_studio && npm install && cd ..",
+    "postinstall": "cd fresh_sanity_studio && npm install",
     "dev:all:staging": "concurrently \"npm run dev:staging\" \"npm run fresh-studio:dev:staging\"",
     "fresh-studio:dev:staging": "cd fresh_sanity_studio && SANITY_STUDIO_DATASET=staging npm run dev:staging",
     "fresh-studio:start": "cd fresh_sanity_studio && cross-env NODE_ENV=production NEXT_PUBLIC_ENVIRONMENT=production SANITY_STUDIO_DATASET=production npm run start",
