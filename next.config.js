@@ -39,15 +39,15 @@ const nextConfig = {
     config.resolve.alias = {
       ...config.resolve.alias,
       '@': path.join(__dirname, './'),
-      '@components': path.join(__dirname, './components'),
-      '@lib': path.join(__dirname, './lib'),
-      '@utils': path.join(__dirname, './utils'),
+      '@components': './components',
+      '@lib': './lib',
+      '@utils': './utils',
       '@context': path.join(__dirname, './context'),
       '@blocks': path.join(__dirname, './components/blocks'),
       '@blog': path.join(__dirname, './components/blog'),
       '@app': path.join(__dirname, './app'),
       '@types': path.join(__dirname, './types'),
-      '@styles': path.join(__dirname, './styles'),
+      '@styles': './styles',
       '@fresh_sanity_studio': path.join(__dirname, './fresh_sanity_studio')
     };
     return config;
