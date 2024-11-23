@@ -9,7 +9,7 @@
     "clean": "rimraf .next fresh_sanity_studio/dist .netlify/cache",
     "dev": "cross-env NODE_ENV=development next dev",
     "dev:staging": "cross-env NODE_ENV=development NEXT_PUBLIC_ENVIRONMENT=staging SANITY_STUDIO_DATASET=staging next dev",
-    "build": "npm run fresh-studio:build && next build",
+    "build": "cross-env NODE_ENV=production npm run fresh-studio:build && next build",
     "start": "next start",
     "lint": "next lint",
     "build:staging": "cross-env NODE_ENV=production NEXT_PUBLIC_ENVIRONMENT=staging SANITY_STUDIO_DATASET=staging next build",
