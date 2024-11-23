@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
-import { setPreviewToken } from '@/lib/preview'
+import { setPreviewToken } from '@lib/preview'
 
 export async function GET(request: Request) {
   try {

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { useNavbar } from '@/context/NavbarContext';
+import { useNavbar } from '@context/NavbarContext';
 
 export const NavTest = () => {
   const { blockTitles, updateBlockTitle, navbarData, refs } = useNavbar();

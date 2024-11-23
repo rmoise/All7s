@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic'
 import { ReactNode } from 'react'
-import { Providers } from '@/app/providers'
+import { Providers } from '@app/providers'
 
 const ClientWrapper = dynamic<{ children: ReactNode }>(() =>
   import('./ClientWrapper').then(mod => mod.default), {

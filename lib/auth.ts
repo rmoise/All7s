@@ -1,6 +1,6 @@
 import { createClient } from '@sanity/client'
-import { getConfig } from '@/lib/config'
-import { Environment, getCurrentEnvironment } from '@/lib/environment'
+import { getConfig } from '@lib/config'
+import { Environment, getCurrentEnvironment } from '@lib/environment'
 
 export class AuthManager {
   private static instance: AuthManager

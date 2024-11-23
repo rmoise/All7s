@@ -2,12 +2,12 @@
 
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { urlFor } from '@/lib/sanity'
+import { urlFor } from '@lib/sanity'
 import { useStateContext } from '../../context/StateContext'
 import { useRouter } from 'next/navigation'
 import type { CartItem } from '../../types/cart'
 import type { Product, ProductsProps } from '../../types/shop'
-import Grid from '@/components/common/grid/Grid'
+import Grid from '@components/common/grid/Grid'
 
 const Products: React.FC<ProductsProps> = React.memo(({ product }) => {
   const [mounted, setMounted] = useState(false)

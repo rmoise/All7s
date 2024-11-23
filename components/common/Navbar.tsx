@@ -1,8 +1,8 @@
 'use client';
 
-import { ErrorBoundary } from '@/components/common/ErrorBoundary';
+import { ErrorBoundary } from '@components/common/ErrorBoundary';
 import { NavbarContent } from './NavbarContent';
-import { NavbarData } from '@/types'
+import { NavbarData } from '@types'
 
 const Navbar: React.FC<{ navbarData?: NavbarData }> = ({ navbarData: externalNavbarData }) => {
   return (

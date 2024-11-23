@@ -1,11 +1,11 @@
 import React from "react";
-import { getClient } from '@/lib/sanity';
+import { getClient } from '@lib/sanity';
 import { Metadata } from 'next';
 import ProductDetailsWrapper from './ProductDetailsWrapper';
 import { productsQuery, productDetailQuery } from '../queries';
-import type { Product } from '@/types/shop';
+import type { Product } from '@types/shop';
 import { notFound } from 'next/navigation';
-import { ShopPageProps } from '@/types/page';
+import { ShopPageProps } from '@types/page';
 
 export const dynamic = 'force-dynamic';
 export const dynamicParams = true;

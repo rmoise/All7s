@@ -2,10 +2,10 @@
 
 import React from 'react';
 import { default as dynamicImport } from 'next/dynamic';
-import type { Product } from '@/types/shop';
+import type { Product } from '@types/shop';
 
 const ProductDetails = dynamicImport(
-  () => import('@/components/shop/ProductDetails'),
+  () => import('@components/shop/ProductDetails'),
   {
     loading: () => (
       <div className="bg-black min-h-screen pt-24 pb-12 flex items-center justify-center">

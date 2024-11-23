@@ -1,7 +1,7 @@
 import React from 'react';
 import Image from 'next/image';
-import { urlFor } from '@/lib/sanity';
-import { SanityImage } from '@/types';
+import { urlFor } from '@lib/sanity';
+import { SanityImage } from '@types';
 
 interface HeroBannerProps {
   backgroundImage?: SanityImage;

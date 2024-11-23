@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { previewClient } from '@/lib/sanity'
+import { previewClient } from '@lib/sanity'
 
 export async function GET() {
   try {

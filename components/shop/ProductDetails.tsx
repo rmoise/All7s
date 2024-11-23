@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { urlFor } from '@/lib/sanity';
+import { urlFor } from '@lib/sanity';
 import { useRouter } from 'next/navigation';
 import { useStateContext } from '../../context/StateContext';
 import { motion } from 'framer-motion';
@@ -12,8 +12,8 @@ import type { CartItem } from '../../types/cart';
 import { PortableText, PortableTextReactComponents } from '@portabletext/react';
 import type { PortableTextComponentProps } from '@portabletext/react';
 import type { PortableTextBlock } from '@portabletext/types';
-import Grid from '@/components/common/grid/Grid'
-import Products from '@/components/shop/Products';
+import Grid from '@components/common/grid/Grid'
+import Products from '@components/shop/Products';
 
 const components: Partial<PortableTextReactComponents> = {
   block: {

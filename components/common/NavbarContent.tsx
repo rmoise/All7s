@@ -8,13 +8,13 @@ import anime from 'animejs';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import Cart from '../shop/Cart';
-import { useStateContext } from '@/context/StateContext';
-import { useNavbar } from '@/context/NavbarContext';
-import { urlFor as urlForImage } from '@/lib/sanity';
-import { SanityImage, NavigationLink, NavbarData } from '@/types';
+import { useStateContext } from '@context/StateContext';
+import { useNavbar } from '@context/NavbarContext';
+import { urlFor as urlForImage } from '@lib/sanity';
+import { SanityImage, NavigationLink, NavbarData } from '@types';
 
 // Utility functions moved to separate file
-import { generateKey, classNames } from '@/lib/utils';
+import { generateKey, classNames } from '@lib/utils';
 import debounce from 'lodash/debounce';
 
 const DEFAULT_LOGO = '/images/logo.png';

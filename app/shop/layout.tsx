@@ -1,5 +1,5 @@
-import ClientLayout from '@/components/layout/ClientLayout';
-import { getClient } from '@/lib/sanity';
+import ClientLayout from '@components/layout/ClientLayout';
+import { getClient } from '@lib/sanity';
 
 async function getSettings() {
   return await getClient().fetch(`*[_type == "siteSettings"][0]`);

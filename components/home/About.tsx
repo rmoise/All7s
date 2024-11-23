@@ -1,8 +1,8 @@
 import { PortableText, PortableTextReactComponents } from '@portabletext/react';
 import Image from 'next/image';
-import { urlForImage } from '@/lib/sanity';
+import { urlForImage } from '@lib/sanity';
 import React from 'react';
-import { SanityImage } from '@/types';
+import { SanityImage } from '@types';
 
 interface AboutProps {
   title?: string;

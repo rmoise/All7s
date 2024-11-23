@@ -1,11 +1,11 @@
 // components/blocks/MusicBlock.tsx
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
-import FlipCard from '@/components/Music/FlipCard'
-import Grid from '@/components/common/grid/Grid'
-import { Album, Song, SanityImage } from '@/types'
-import { getClient, urlFor } from '@/lib/sanity'
-import { useNavbar } from '@/context/NavbarContext'
+import FlipCard from '@components/Music/FlipCard'
+import Grid from '@components/common/grid/Grid'
+import { Album, Song, SanityImage } from '@types'
+import { getClient, urlFor } from '@lib/sanity'
+import { useNavbar } from '@context/NavbarContext'
 
 interface MusicBlockProps {
   listenTitle: string

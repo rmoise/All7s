@@ -1,10 +1,10 @@
 import React from "react";
-import { getClient, urlFor } from '@/lib/sanity'
+import { getClient, urlFor } from '@lib/sanity'
 import { Metadata } from 'next';
 import { SanityImageSource } from '@sanity/image-url/lib/types/types';
-import { Product } from '@/types/shop';
+import { Product } from '@types/shop';
 import dynamic from 'next/dynamic';
-import Grid from '@/components/common/grid/Grid';
+import Grid from '@components/common/grid/Grid';
 
 const ShopClient = dynamic(() => import('./ShopClient'), {
   loading: () => <p>Loading...</p>

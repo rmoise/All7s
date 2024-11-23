@@ -9,9 +9,9 @@ import React, {
   useRef,
 } from 'react'
 import { createClient } from '@sanity/client'
-import { getClient } from '@/lib/sanity'
+import { getClient } from '@lib/sanity'
 import { v4 as uuidv4 } from 'uuid'
-import { updateBlockTitleAction } from '@/app/actions/navbar';
+import { updateBlockTitleAction } from '@app/actions/navbar';
 import debounce from 'lodash/debounce'
 
 interface NavbarLink {

@@ -1,10 +1,10 @@
 // components/blocks/VideoBlock.tsx
 
 import React, { useRef, useEffect } from 'react'
-import YouTubeEmbed from '@/components/media/YouTubeEmbed'
-import Grid from '@/components/common/grid/Grid'
-import { extractYouTubeID } from '@/utils/extractYouTubeID'
-import { useNavbar } from '@/context/NavbarContext'
+import YouTubeEmbed from '@components/media/YouTubeEmbed'
+import Grid from '@components/common/grid/Grid'
+import { extractYouTubeID } from '@utils/extractYouTubeID'
+import { useNavbar } from '@context/NavbarContext'
 
 interface VideoBlockProps {
   lookTitle: string

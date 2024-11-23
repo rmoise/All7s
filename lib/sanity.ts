@@ -2,7 +2,7 @@ import { createClient } from '@sanity/client'
 import imageUrlBuilder from '@sanity/image-url'
 import { getConfig } from './config'
 import type { QueryParams, FilteredResponseQueryOptions } from '@sanity/client'
-import type { SanityImage } from '@/types'
+import type { SanityImage } from '@types'
 import { ImageUrlBuilder } from '@sanity/image-url/lib/types/builder'
 import type { Environment } from './environment'
 

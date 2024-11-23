@@ -12,7 +12,7 @@
 import { NextStudio } from 'next-sanity/studio'
 import { usePathname } from 'next/navigation'
 import { useEffect } from 'react'
-import config from '@/fresh_sanity_studio/sanity.config'
+import config from '@fresh_sanity_studio/sanity.config'
 import type { WorkspaceOptions } from 'sanity'
 
 type WorkspaceConfig = WorkspaceOptions & {

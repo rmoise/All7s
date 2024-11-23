@@ -1,5 +1,5 @@
 import confetti from 'canvas-confetti'
-import { NavigationLink } from '@/types/sanity'
+import { NavigationLink } from '@types/sanity'
 
 // Navigation utilities
 export const generateKey = (item: NavigationLink, index: number): string => {

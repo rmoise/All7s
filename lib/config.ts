@@ -2,7 +2,7 @@ import { ClientConfig } from '@sanity/client'
 import { RocketIcon, RobotIcon } from '@sanity/icons'
 import type { Environment } from './environment'
 
-import { SINGLETON_ACTIONS, SINGLETON_TYPES } from '@/fresh_sanity_studio/sanity.config'
+import { SINGLETON_ACTIONS, SINGLETON_TYPES } from '@fresh_sanity_studio/sanity.config'
 
 export interface EnhancedClientConfig extends ClientConfig {
   stega?: {

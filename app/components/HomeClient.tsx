@@ -1,17 +1,17 @@
 'use client'
 
-import ClientOnly from '@/components/layout/ClientOnly'
-import { ErrorBoundary } from '@/components/common/ErrorBoundary'
-import { useNavbar } from '@/context/NavbarContext'
-import MusicBlock from '@/components/blocks/MusicBlock'
-import VideoBlock from '@/components/blocks/VideoBlock'
-import BackgroundVideoBlock from '@/components/blocks/BackgroundVideoBlock'
-import HeroBanner from '@/components/home/HeroBanner'
-import About from '@/components/home/About'
-import Newsletter from '@/components/common/Newsletter'
+import ClientOnly from '@components/layout/ClientOnly'
+import { ErrorBoundary } from '@components/common/ErrorBoundary'
+import { useNavbar } from '@context/NavbarContext'
+import MusicBlock from '@components/blocks/MusicBlock'
+import VideoBlock from '@components/blocks/VideoBlock'
+import BackgroundVideoBlock from '@components/blocks/BackgroundVideoBlock'
+import HeroBanner from '@components/home/HeroBanner'
+import About from '@components/home/About'
+import Newsletter from '@components/common/Newsletter'
 import { useCallback, useEffect, useState } from 'react'
-import { getClient } from '@/lib/sanity'
-import { Album } from '@/types'
+import { getClient } from '@lib/sanity'
+import { Album } from '@types'
 
 // Define component props types
 interface MusicBlockProps {

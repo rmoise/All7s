@@ -17,6 +17,7 @@
     SANITY_STUDIO_API_TOKEN=$SANITY_STUDIO_API_TOKEN \
     NEXT_PUBLIC_SANITY_TOKEN=$NEXT_PUBLIC_SANITY_TOKEN \
     NODE_OPTIONS='--max_old_space_size=4096' \
+    DISABLE_ESLINT_PLUGIN=true \
     npm run build:production
   """
   publish = ".next"
