@@ -53,20 +53,19 @@ const nextConfig = {
   output: 'standalone',
 
   env: {
-    NEXT_PUBLIC_ENVIRONMENT: process.env.NODE_ENV === 'production'
-      ? 'production'
-      : process.env.NEXT_PUBLIC_ENVIRONMENT || 'development',
+    NEXT_PUBLIC_ENVIRONMENT: process.env.NEXT_PUBLIC_ENVIRONMENT || 'development',
     NEXT_PUBLIC_SANITY_PROJECT_ID: '1gxdk71x',
-    NEXT_PUBLIC_SANITY_DATASET: process.env.SANITY_STUDIO_DATASET || 'production',
+    NEXT_PUBLIC_SANITY_DATASET: process.env.NEXT_PUBLIC_SANITY_DATASET || 'production',
     NEXT_PUBLIC_SANITY_STUDIO_URL: process.env.NEXT_PUBLIC_SANITY_STUDIO_URL || 'http://localhost:3333',
     SANITY_TOKEN: token,
-    NEXT_PUBLIC_NETLIFY: process.env.NEXT_PUBLIC_NETLIFY || process.env.NETLIFY || 'false',
+    NEXT_PUBLIC_NETLIFY: process.env.NEXT_PUBLIC_NETLIFY || 'false',
     SANITY_API_READ_TOKEN: process.env.SANITY_API_READ_TOKEN || token,
     SANITY_STUDIO_PATH: 'fresh_sanity_studio',
     SANITY_PREVIEW_SECRET: process.env.SANITY_PREVIEW_SECRET || '',
     SANITY_AUTH_TOKEN: process.env.SANITY_AUTH_TOKEN || '',
     SANITY_STUDIO_API_TOKEN: process.env.SANITY_STUDIO_API_TOKEN || '',
     NEXT_PUBLIC_SANITY_TOKEN: process.env.NEXT_PUBLIC_SANITY_TOKEN || '',
+    NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000',
   },
 
   images: {
@@ -186,6 +185,8 @@ const nextConfig = {
       },
     ]
   },
+
+  distDir: '.next',
 };
 
 module.exports = nextConfig;
