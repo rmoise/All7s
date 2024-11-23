@@ -8,7 +8,7 @@
     "dev": "dotenv -e .env -- cross-env NODE_ENV=development NEXT_PUBLIC_ENVIRONMENT=development sanity dev",
     "dev:staging": "dotenv -e .env -- cross-env NODE_ENV=development NEXT_PUBLIC_ENVIRONMENT=staging SANITY_STUDIO_DATASET=staging sanity dev",
     "start": "dotenv -e .env -- cross-env NODE_ENV=production SANITY_STUDIO_DATASET=production sanity start",
-    "build": "dotenv -e .env -- cross-env NODE_ENV=production SANITY_STUDIO_DATASET=production sanity build",
+    "build": "NODE_ENV=production SANITY_STUDIO_DATASET=production sanity build",
     "deploy": "dotenv -e ../.env -- cross-env NODE_ENV=production NEXT_PUBLIC_ENVIRONMENT=production sanity deploy --token=$SANITY_STUDIO_API_TOKEN --no-verify",
     "deploy:staging": "dotenv -e .env -- cross-env NODE_ENV=production NEXT_PUBLIC_ENVIRONMENT=staging SANITY_STUDIO_DATASET=staging sanity deploy --token=$SANITY_AUTH_TOKEN --no-verify",
     "deploy-graphql": "sanity graphql deploy",
@@ -36,7 +36,9 @@
     "sanity-plugin-iframe-pane": "^3.1.6",
     "sanity-plugin-media": "^2.3.2",
     "styled-components": "^6.1.13",
-    "uuid": "^11.0.3"
+    "uuid": "^11.0.3",
+    "dotenv": "^16.4.5",
+    "dotenv-cli": "^7.4.1"
   },
   "devDependencies": {
     "@sanity/cli": "^3.64.2",
@@ -45,8 +47,6 @@
     "@types/react": "^18.0.25",
     "@types/styled-components": "^5.1.34",
     "cross-env": "^7.0.3",
-    "dotenv": "^16.4.5",
-    "dotenv-cli": "^7.4.4",
     "prettier": "^3.0.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.0.0"

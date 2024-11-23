@@ -1,9 +1,11 @@
 [build]
   command = """
-    corepack enable && \
-    pnpm install && \
-    pnpm --filter fresh build && \
-    pnpm --filter stak_app build:production
+    npm ci && \
+    cd fresh_sanity_studio && \
+    npm ci && \
+    NODE_ENV=production SANITY_STUDIO_DATASET=production npx sanity build && \
+    cd .. && \
+    NODE_ENV=production NEXT_PUBLIC_ENVIRONMENT=production SANITY_STUDIO_DATASET=production npm run build:production
   """
   publish = ".next"
   functions = "netlify/functions"
