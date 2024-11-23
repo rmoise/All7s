@@ -35,16 +35,16 @@ const nextConfig = {
   webpack: (config) => {
     config.resolve.alias = {
       ...config.resolve.alias,
-      '@': path.join(__dirname, './src'),
-      '@components': path.join(__dirname, './src/components'),
-      '@lib': path.join(__dirname, './src/lib'),
-      '@utils': path.join(__dirname, './src/utils'),
-      '@context': path.join(__dirname, './src/context'),
-      '@blocks': path.join(__dirname, './src/components/blocks'),
-      '@blog': path.join(__dirname, './src/components/blog'),
-      '@app': path.join(__dirname, './src/app'),
-      '@types': path.join(__dirname, './src/types'),
-      '@styles': path.join(__dirname, './src/styles'),
+      '@': path.join(__dirname, './'),
+      '@components': path.join(__dirname, './components'),
+      '@lib': path.join(__dirname, './lib'),
+      '@utils': path.join(__dirname, './utils'),
+      '@context': path.join(__dirname, './context'),
+      '@blocks': path.join(__dirname, './components/blocks'),
+      '@blog': path.join(__dirname, './components/blog'),
+      '@app': path.join(__dirname, './app'),
+      '@types': path.join(__dirname, './types'),
+      '@styles': path.join(__dirname, './styles'),
       '@fresh_sanity_studio': path.join(__dirname, './fresh_sanity_studio')
     };
     return config;
