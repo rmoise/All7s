@@ -1,6 +1,6 @@
 [build]
   command = """
-    npm ci && \
+    NODE_ENV=development npm ci && \
     cd fresh_sanity_studio && \
     NODE_ENV=development npm ci && \
     NODE_ENV=development npm install postcss@latest autoprefixer@latest tailwindcss@latest && \
@@ -51,7 +51,7 @@
 # Keep all your environment-specific configurations
 [context.production]
   command = """
-    npm ci && \
+    NODE_ENV=development npm ci && \
     cd fresh_sanity_studio && \
     NODE_ENV=development npm ci && \
     NODE_ENV=development npm install postcss@latest autoprefixer@latest tailwindcss@latest && \
