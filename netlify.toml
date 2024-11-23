@@ -6,7 +6,7 @@
     NODE_ENV=development npm install postcss@latest autoprefixer@latest tailwindcss@latest && \
     NODE_ENV=production SANITY_STUDIO_DATASET=production DISABLE_ESLINT_PLUGIN=true npm run build && \
     cd .. && \
-    NODE_ENV=development npm install react react-dom && \
+    NODE_ENV=development npm install next@latest react@latest react-dom@latest && \
     NODE_ENV=production NEXT_PUBLIC_ENVIRONMENT=production SANITY_STUDIO_DATASET=production npx next build
   """
   publish = ".next"
