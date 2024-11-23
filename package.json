@@ -14,7 +14,7 @@
     "build:production": "cross-env NODE_ENV=production NEXT_PUBLIC_ENVIRONMENT=production SANITY_STUDIO_DATASET=production NEXT_PUBLIC_SANITY_DATASET=production DISABLE_ESLINT_PLUGIN=true next build",
     "start:production": "cross-env NODE_ENV=production NEXT_PUBLIC_ENVIRONMENT=production SANITY_STUDIO_DATASET=production next start",
     "fresh-studio:dev": "cd fresh_sanity_studio && cross-env NODE_ENV=development npm run dev",
-    "fresh-studio:build": "cd fresh_sanity_studio && npm install && npm run build && cd ..",
+    "fresh-studio:build": "cd fresh_sanity_studio && SANITY_AUTH_TOKEN=$SANITY_AUTH_TOKEN SANITY_STUDIO_API_TOKEN=$SANITY_STUDIO_API_TOKEN npm install && npm run build && cd ..",
     "fresh-studio:deploy": "cd fresh_sanity_studio && npm run deploy:with-env",
     "type-check": "tsc --noEmit",
     "type-check:watch": "tsc --noEmit --watch",
