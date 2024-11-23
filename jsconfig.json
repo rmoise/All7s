@@ -4,6 +4,10 @@
     "paths": {
       "@/*": ["./*"],
       "@components/*": ["components/*"],
+      "@components/common/*": ["components/common/*"],
+      "@components/blog/*": ["components/blog/*"],
+      "@components/blocks/*": ["components/blocks/*"],
+      "@components/shop/*": ["components/shop/*"],
       "@lib/*": ["lib/*"],
       "@utils/*": ["utils/*"],
       "@context/*": ["context/*"],
@@ -14,5 +18,7 @@
       "@styles/*": ["styles/*"],
       "@fresh_sanity_studio/*": ["fresh_sanity_studio/*"]
     }
-  }
+  },
+  "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": ["node_modules"]
 }

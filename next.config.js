@@ -39,9 +39,12 @@ const nextConfig = {
     config.resolve = {
       ...config.resolve,
       alias: {
-        ...config.resolve.alias,
         '@': path.resolve(__dirname),
         '@components': path.resolve(__dirname, 'components'),
+        '@components/common': path.resolve(__dirname, 'components/common'),
+        '@components/blog': path.resolve(__dirname, 'components/blog'),
+        '@components/blocks': path.resolve(__dirname, 'components/blocks'),
+        '@components/shop': path.resolve(__dirname, 'components/shop'),
         '@lib': path.resolve(__dirname, 'lib'),
         '@utils': path.resolve(__dirname, 'utils'),
         '@context': path.resolve(__dirname, 'context'),
