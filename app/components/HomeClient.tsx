@@ -9,12 +9,19 @@ import BackgroundVideoBlock from '@/components/blocks/BackgroundVideoBlock'
 import HeroBanner from '@/components/home/HeroBanner'
 import About from '@/components/home/About'
 import Newsletter from '@/components/common/Newsletter'
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import { getClient } from '@/lib/sanity'
+import { Album } from '@/types'
 
 // Define component props types
 interface MusicBlockProps {
   listenTitle: string
-  albums: any[]
+  description?: string
+  albums?: Array<{
+    _ref: string
+    _type: 'reference'
+    _key: string
+  }>
 }
 
 interface VideoBlockProps {
@@ -48,7 +55,13 @@ interface BaseContentBlock {
 interface MusicBlockContent extends BaseContentBlock {
   _type: 'musicBlock'
   listenTitle: string
-  albums: any[]
+  description?: string
+  albums: Array<{
+    _ref: string
+    _type: 'reference'
+    _key: string
+  }>
+  resolvedAlbums?: Album[]
 }
 
 interface VideoBlockContent extends BaseContentBlock {
@@ -117,6 +130,8 @@ interface HomeClientProps {
 
 export default function HomeClient({ contentBlocks }: HomeClientProps) {
   const { refs } = useNavbar()
+  const [resolvedBlocks, setResolvedBlocks] = useState<ContentBlock[]>(contentBlocks)
+  const [isLoading, setIsLoading] = useState(true)
 
   const newsletterBlock = contentBlocks.find(block => block._type === 'newsletter') as NewsletterContent
 
@@ -136,6 +151,76 @@ export default function HomeClient({ contentBlocks }: HomeClientProps) {
     }
   }, [contentBlocks])
 
+  const resolveAlbumReferences = async (block: MusicBlockContent) => {
+    if (block._type !== 'musicBlock' || !block.albums?.length) {
+      console.log('No albums to resolve:', block)
+      return block
+    }
+
+    const refs = block.albums.map(album => album._ref)
+    console.log('Resolving album refs:', refs)
+
+    const query = `*[_type == "album" && _id in $refs]{
+      _id,
+      _key,
+      albumSource,
+      embeddedAlbum{
+        embedUrl,
+        embedCode,
+        title,
+        artist,
+        platform,
+        releaseType,
+        imageUrl,
+        customImage,
+        processedImageUrl,
+        songs
+      },
+      customAlbum{
+        title,
+        artist,
+        releaseType,
+        customImage,
+        songs
+      }
+    }`
+    const resolvedAlbums = await getClient().fetch(query, { refs })
+    console.log('Resolved albums:', resolvedAlbums)
+
+    return {
+      ...block,
+      resolvedAlbums
+    }
+  }
+
+  useEffect(() => {
+    const resolveBlocks = async () => {
+      setIsLoading(true)
+      try {
+        const resolvedBlocks = await Promise.all(
+          contentBlocks.map(async block => {
+            if (block._type === 'musicBlock') {
+              return await resolveAlbumReferences(block)
+            }
+            return block
+          })
+        )
+        setResolvedBlocks(resolvedBlocks)
+      } catch (error) {
+        console.error('Error resolving blocks:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    resolveBlocks()
+  }, [contentBlocks])
+
+  // Add console logging to debug
+  useEffect(() => {
+    console.log('Resolved Blocks:', resolvedBlocks)
+  }, [resolvedBlocks])
+
   const renderContentBlock = useCallback(
     (block: ContentBlock) => {
       switch (block._type) {
@@ -150,7 +235,7 @@ export default function HomeClient({ contentBlocks }: HomeClientProps) {
               >
                 <MusicBlock
                   listenTitle={block.listenTitle}
-                  albums={block.albums}
+                  albums={(block.resolvedAlbums || block.albums || []) as Album[]}
                 />
               </section>
             </ClientOnly>
@@ -219,13 +304,13 @@ export default function HomeClient({ contentBlocks }: HomeClientProps) {
     >
       <main className="relative min-h-screen bg-black">
         <div className="relative z-10">
-          {contentBlocks.map((block, index) => {
+          {resolvedBlocks.map((block, index) => {
             switch (block._type) {
               case 'heroBanner':
                 return <HeroBanner key={block._key} {...block} />
 
               case 'backgroundVideoBlock':
-                const nextBlocks = contentBlocks.slice(index + 1)
+                const nextBlocks = resolvedBlocks.slice(index + 1)
                 return (
                   <div key={`section-${block._key}`} className="relative z-20">
                     <BackgroundVideoBlock key={`bg-${block._key}`} {...block} />
@@ -250,7 +335,7 @@ export default function HomeClient({ contentBlocks }: HomeClientProps) {
 
               case 'videoBlock':
               case 'musicBlock':
-                if (!contentBlocks.some(b => b._type === 'backgroundVideoBlock')) {
+                if (!resolvedBlocks.some(b => b._type === 'backgroundVideoBlock')) {
                   return <div key={`standalone-${block._key}`}>{renderContentBlock(block)}</div>
                 }
                 return null

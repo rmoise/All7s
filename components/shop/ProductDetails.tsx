@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { urlFor } from '../../lib/client';
+import { urlFor } from '@/lib/sanity';
 import { useRouter } from 'next/navigation';
 import { useStateContext } from '../../context/StateContext';
 import { motion } from 'framer-motion';
@@ -12,7 +12,7 @@ import type { CartItem } from '../../types/cart';
 import { PortableText, PortableTextReactComponents } from '@portabletext/react';
 import type { PortableTextComponentProps } from '@portabletext/react';
 import type { PortableTextBlock } from '@portabletext/types';
-import Grid from '@/components/common/Grid/Grid';
+import Grid from '@/components/common/grid/Grid';
 import Products from '@/components/shop/Products';
 
 const components: Partial<PortableTextReactComponents> = {
@@ -123,7 +123,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product, products }) =>
                         <div className="absolute inset-0 flex items-center justify-center p-4">
                           <div className="relative w-[85%] h-[85%] rounded-lg overflow-hidden bg-white/[0.02]">
                             <img
-                              src={urlFor(image[index]).url()}
+                              src={image[index] ? urlFor(image[index]) : '/images/placeholder.png'}
                               alt={image[index]?.alt || name}
                               className="w-full h-full object-contain"
                             />
@@ -149,7 +149,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product, products }) =>
                         >
                           <div className="flex items-center justify-center h-full p-2">
                             <img
-                              src={urlFor(item).url()}
+                              src={urlFor(item)}
                               alt={item?.alt || `${name} thumbnail ${i + 1}`}
                               className="max-w-[85%] max-h-[85%] object-contain"
                             />

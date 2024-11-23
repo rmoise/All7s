@@ -24,6 +24,7 @@ export default defineType({
   name: 'home',
   title: 'Home',
   type: 'document',
+  // @ts-ignore -- experimental actions are valid but not typed
   __experimental_actions: ['update', 'publish'],
   groups: [
     {
@@ -129,11 +130,11 @@ export default defineType({
 
         // Preserve existing content blocks and ensure both LISTEN and LOOK sections are properly handled
         const preservedData = {
-          contentBlocks: currentDoc.contentBlocks?.map((block: any) => ({
+          contentBlocks: currentDoc.contentBlocks?.map((block: any, index: number) => ({
             ...block,
             _key: block._key,
-            order: block.order || 0
-          })).sort((a: any, b: any) => (a.order || 0) - (b.order || 0)) || []
+            order: block.order ?? index
+          })) || []
         }
 
         // Create new document data

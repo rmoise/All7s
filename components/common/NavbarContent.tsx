@@ -10,8 +10,8 @@ import { useRouter, usePathname } from 'next/navigation';
 import Cart from '../shop/Cart';
 import { useStateContext } from '@/context/StateContext';
 import { useNavbar } from '@/context/NavbarContext';
-import { urlFor as urlForImage } from '@/lib/client';
-import { SanityImage, NavigationLink, NavbarData } from '@/types/sanity';
+import { urlFor as urlForImage } from '@/lib/sanity';
+import { SanityImage, NavigationLink, NavbarData } from '@/types';
 
 // Utility functions moved to separate file
 import { generateKey, classNames } from '@/lib/utils';
@@ -169,7 +169,7 @@ export const NavbarContent: React.FC<{ navbarData?: NavbarData }> = ({ navbarDat
   const getLogo = (logo: string | SanityImage | undefined): string => {
     if (!logo) return DEFAULT_LOGO;
     if (typeof logo === 'string') return logo;
-    return urlForImage(logo).url();
+    return urlForImage(logo);
   };
 
   const logoUrl = !logoError ? getLogo(finalNavbarData.logo) : DEFAULT_LOGO;

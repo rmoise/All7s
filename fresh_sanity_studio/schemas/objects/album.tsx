@@ -3,25 +3,10 @@
 import React from 'react'
 import {Box} from '@sanity/ui'
 import {defineField, defineType} from 'sanity'
+import {Rule} from '@sanity/types'
 import ReleaseInfoInput from '../../components/ReleaseInfoInput'
 import {urlFor} from '../../utils/imageUrlBuilder'
 import type {SanityImage} from '../../../types/sanity'
-
-interface ValidationRule {
-  required: () => ValidationRule
-  custom: (fn: (value: unknown, context: ValidationContext) => true | string) => ValidationRule
-  uri: (options: {scheme: string[]}) => ValidationRule
-  warning: (message: string) => ValidationRule
-}
-
-interface ValidationContext {
-  document?: {
-    albumSource?: string
-    [key: string]: unknown
-  }
-  parent?: Record<string, unknown>
-  path?: string[]
-}
 
 interface ParentType {
   albumSource?: string
@@ -34,7 +19,13 @@ interface AlbumSelection {
   embeddedImageUrl?: string
   customTitle?: string
   customArtist?: string
-  customImage?: SanityImage
+  customImage?: {
+    _type: 'image'
+    asset: {
+      _ref: string
+      _type: 'reference'
+    }
+  }
 }
 
 const albumSchema = defineType({
@@ -53,7 +44,7 @@ const albumSchema = defineType({
         ],
         layout: 'radio',
       },
-      validation: (rule: ValidationRule) => rule.required(),
+      validation: Rule => Rule.required(),
       initialValue: 'embedded',
     }),
     defineField({
@@ -67,35 +58,12 @@ const albumSchema = defineType({
           type: 'text',
           description: 'Enter Spotify or SoundCloud URL or iframe embed code',
           readOnly: false,
-          validation: (rule: ValidationRule) =>
-            rule.custom((value: unknown) => {
+          validation: Rule =>
+            Rule.custom((value, context) => {
               if (!value || typeof value !== 'string' || !value.trim()) {
                 return 'Embed code is required'
               }
-
-              const embedString = value.trim()
-              const lowerCaseEmbedCode = embedString.toLowerCase()
-
-              if (
-                lowerCaseEmbedCode.includes('<iframe') &&
-                (lowerCaseEmbedCode.includes('soundcloud.com') ||
-                  lowerCaseEmbedCode.includes('spotify.com'))
-              ) {
-                return true
-              }
-
-              const isValidUrl =
-                embedString.startsWith('http://') || embedString.startsWith('https://')
-              const isSpotifyUrl = lowerCaseEmbedCode.includes('spotify.com')
-              const isSoundCloudUrl =
-                lowerCaseEmbedCode.includes('soundcloud.com') ||
-                lowerCaseEmbedCode.includes('api.soundcloud.com')
-
-              if (isValidUrl && (isSpotifyUrl || isSoundCloudUrl)) {
-                return true
-              }
-
-              return 'Please provide a valid Spotify/SoundCloud URL or iframe embed code'
+              return true
             }),
         }),
         defineField({name: 'title', title: 'Release Title', type: 'string', readOnly: true}),
@@ -106,8 +74,7 @@ const albumSchema = defineType({
           name: 'imageUrl',
           title: 'Album Image URL',
           type: 'url',
-          validation: (rule: ValidationRule) =>
-            rule.uri({scheme: ['http', 'https']}).warning('Ensure image URL is an external link.'),
+          validation: Rule => Rule.required(),
         }),
         defineField({
           name: 'customImage',
@@ -136,7 +103,7 @@ const albumSchema = defineType({
           name: 'title',
           title: 'Release Title',
           type: 'string',
-          validation: (rule: ValidationRule) => rule.required(),
+          validation: Rule => Rule.required(),
           initialValue: 'Untitled',
         }),
         defineField({
@@ -144,7 +111,7 @@ const albumSchema = defineType({
           title: 'Artist',
           type: 'string',
           initialValue: 'Stak',
-          validation: (rule: ValidationRule) => rule.required(),
+          validation: Rule => Rule.required(),
         }),
         defineField({
           name: 'releaseType',
@@ -157,13 +124,7 @@ const albumSchema = defineType({
               {title: 'Compilation', value: 'compilation'},
             ],
           },
-          validation: (rule: ValidationRule) =>
-            rule.custom((value: unknown, context: ValidationContext) => {
-              if (context?.document?.albumSource === 'custom' && !value) {
-                return 'Release Type is required for custom albums'
-              }
-              return true
-            }),
+          validation: Rule => Rule.required(),
         }),
         defineField({
           name: 'customImage',

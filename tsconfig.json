@@ -20,23 +20,23 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./*"],
-      "@components/*": [
-        "components/*"
-      ],
       "@lib/*": [
         "lib/*"
+      ],
+      "@components/*": [
+        "components/*"
       ],
       "@utils/*": [
         "utils/*"
       ],
-      "@pages/*": [
-        "pages/*"
-      ],
-      "@styles/*": [
-        "styles/*"
+      "@types/*": [
+        "types/*"
       ],
       "@context/*": [
         "context/*"
+      ],
+      "@sanity/*": [
+        "fresh_sanity_studio/*"
       ]
     },
     "typeRoots": [

@@ -4,7 +4,7 @@ import Head from 'next/head';
 import Navbar from '@components/common/Navbar';
 import Footer from '@components/common/Footer';
 import { motion } from 'framer-motion';
-import { SiteSettings } from '../../types/sanity';
+import type { SiteSettings } from '@/types';
 
 interface LayoutProps {
   children: React.ReactNode;

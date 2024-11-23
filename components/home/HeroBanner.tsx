@@ -1,7 +1,7 @@
 import React from 'react';
 import Image from 'next/image';
-import { urlFor } from '../../lib/client';
-import { SanityImage } from '../../types/sanity';
+import { urlFor } from '@/lib/sanity';
+import { SanityImage } from '@/types';
 
 interface HeroBannerProps {
   backgroundImage?: SanityImage;
@@ -25,7 +25,7 @@ const HeroBanner: React.FC<HeroBannerProps> = ({
       {backgroundImage && (
         <div className="absolute inset-0 w-full h-full">
           <Image
-            src={urlFor(backgroundImage).url()}
+            src={urlFor(backgroundImage)}
             alt="Hero Banner Background"
             fill
             sizes="100vw"

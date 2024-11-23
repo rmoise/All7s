@@ -1,4 +1,4 @@
-import { getClient } from '@/lib/client'
+import { getClient } from '@/lib/sanity'
 import Navbar from '@/components/common/Navbar'
 import Footer from '@/components/common/Footer'
 import { Toaster } from 'react-hot-toast'
@@ -15,6 +15,14 @@ import { getPreviewToken } from '@/lib/preview'
 FontAwesome.config.autoAddCss = false
 FontAwesome.library.add(faUser, faShoppingCart)
 
+async function getFavicon() {
+  const query = `*[_type == "settings"][0] {
+    "favicon": favicon.asset->url
+  }`
+  const { favicon } = await getClient().fetch(query)
+  return favicon
+}
+
 export default async function RootLayout({
   children,
 }: {
@@ -30,6 +38,8 @@ export default async function RootLayout({
     }
   `)
 
+  const favicon = await getFavicon()
+
   return (
     <html lang="en">
       <head>
@@ -37,6 +47,12 @@ export default async function RootLayout({
         <meta
           name="format-detection"
           content="telephone=no, date=no, email=no, address=no"
+        />
+        <link
+          rel="icon"
+          type="image/x-icon"
+          href={favicon}
+          sizes="any"
         />
       </head>
       <body className="font-headline" suppressHydrationWarning>

@@ -2,12 +2,12 @@
 
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { urlFor } from '../../lib/client'
+import { urlFor } from '@/lib/sanity'
 import { useStateContext } from '../../context/StateContext'
 import { useRouter } from 'next/navigation'
 import type { CartItem } from '../../types/cart'
 import type { Product, ProductsProps } from '../../types/shop'
-import Grid from '@/components/common/Grid/Grid'
+import Grid from '@/components/common/grid/Grid'
 
 const Products: React.FC<ProductsProps> = React.memo(({ product }) => {
   const [mounted, setMounted] = useState(false)
@@ -65,10 +65,7 @@ const Products: React.FC<ProductsProps> = React.memo(({ product }) => {
                 className="relative w-auto h-auto max-w-full max-h-full rounded-lg overflow-hidden bg-white/[0.02]"
               >
                 <img
-                  src={productImage ? urlFor(productImage)
-                    .auto('format')
-                    .quality(100)
-                    .url() : '/images/placeholder.png'}
+                  src={productImage?.asset?.url || '/images/placeholder.png'}
                   alt={name}
                   className="w-auto h-auto max-w-full max-h-full object-contain"
                 />

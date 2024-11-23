@@ -1,21 +1,43 @@
-// @ts-check
-import {createClient} from '@sanity/client'
-import {sanityConfig} from '../../lib/config'
+import { createClient } from '@sanity/client'
 import dotenv from 'dotenv'
+import { environments } from '../sanity.config'
 
+// Load environment variables
 dotenv.config()
 
-const token = process.env.SANITY_AUTH_TOKEN
-console.log('Token present:', !!token)
-console.log('Token length:', token?.length)
+type Environment = 'production' | 'staging' | 'development'
 
-if (!token) {
+// Type guard to ensure valid environment
+function isValidEnvironment(env: string): env is Environment {
+  return ['production', 'staging', 'development'].includes(env)
+}
+
+// Determine environment from command line argument or default to production
+const rawDataset = process.env.SANITY_STUDIO_DATASET || 'production'
+if (!isValidEnvironment(rawDataset)) {
+  throw new Error(`Invalid dataset: ${rawDataset}. Must be one of: production, staging, development`)
+}
+
+const dataset = rawDataset
+console.log('Using dataset:', dataset)
+
+// Get environment configuration
+const envConfig = {
+  projectId: process.env.SANITY_STUDIO_PROJECT_ID!,
+  dataset,
+  apiVersion: '2024-03-19',
+}
+
+console.log('Token present:', !!process.env.SANITY_AUTH_TOKEN)
+
+if (!process.env.SANITY_AUTH_TOKEN) {
   throw new Error('SANITY_AUTH_TOKEN is not set in .env')
 }
 
 const client = createClient({
-  ...sanityConfig,
-  token: token,
+  ...envConfig,
+  token: process.env.SANITY_AUTH_TOKEN,
+  useCdn: false,
 })
 
 async function testConnection() {
@@ -70,4 +92,17 @@ async function createSingletons() {
   }
 }
 
-createSingletons()
+// Execute if this file is run directly
+if (require.main === module) {
+  createSingletons()
+    .then(() => {
+      console.log('✓ All singletons created successfully')
+      process.exit(0)
+    })
+    .catch((err) => {
+      console.error('Failed to create singletons:', err)
+      process.exit(1)
+    })
+}
+
+export default createSingletons

@@ -1,5 +1,4 @@
-import { SiteSettings } from './sanity';
-import { ContentBlock } from './sanity';
+import type { SiteSettings, ContentBlock } from './index'
 
 // Base types
 type SearchParamsType = { [key: string]: string | string[] | undefined };

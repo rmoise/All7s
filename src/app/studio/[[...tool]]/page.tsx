@@ -10,10 +10,10 @@
 'use client'
 
 import { NextStudio } from 'next-sanity/studio'
-import config from '@/fresh_sanity_studio/sanity.config'
-import { StudioProvider, StudioLayout, WorkspaceOptions } from 'sanity'
 import { usePathname } from 'next/navigation'
 import { useEffect } from 'react'
+import config from '@/fresh_sanity_studio/sanity.config'
+import type { WorkspaceOptions } from 'sanity'
 
 type WorkspaceConfig = WorkspaceOptions & {
   name: string
@@ -29,11 +29,13 @@ export default function StudioPage() {
   ) || workspaces[0]) as WorkspaceConfig
 
   useEffect(() => {
+    // Clear any stale dataset from localStorage
     if (typeof window !== 'undefined') {
       localStorage.removeItem('sanityDataset')
     }
   }, [])
 
+  // Log environment info for debugging
   console.log('Studio Environment:', {
     NODE_ENV: process.env.NODE_ENV,
     NEXT_PUBLIC_ENVIRONMENT: process.env.NEXT_PUBLIC_ENVIRONMENT,
@@ -43,10 +45,9 @@ export default function StudioPage() {
   })
 
   return (
-    <StudioProvider
+    <NextStudio
       config={currentWorkspace}
-    >
-      <StudioLayout />
-    </StudioProvider>
+      unstable_noAuthBoundary
+    />
   )
 }

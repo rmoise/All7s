@@ -1,8 +1,13 @@
 import { NextResponse } from 'next/server'
-import { previewClient } from '@/lib/client'
+import { previewClient } from '@/lib/sanity'
 
 export async function GET() {
   try {
+    const environment = process.env.NEXT_PUBLIC_ENVIRONMENT || 'production'
+    if (environment === 'production') {
+      return NextResponse.json({ error: 'Preview not available in production' }, { status: 403 })
+    }
+
     const data = await previewClient.fetch(`
       *[_type == "home" && (_id == "drafts.singleton-home" || _id == "singleton-home")] | order(_id desc)[0] {
         contentBlocks[] {

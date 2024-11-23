@@ -1,7 +1,7 @@
 // components/blocks/BackgroundVideoBlock.tsx
 
 import React from 'react';
-import { getClient } from '@/lib/client';
+import { getClient } from '@/lib/sanity';
 
 interface BackgroundVideoBlockProps {
   backgroundVideoUrl?: string;

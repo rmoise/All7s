@@ -6,7 +6,7 @@ import { AiOutlineMinus, AiOutlinePlus, AiOutlineLeft, AiOutlineShopping } from 
 import { TiDeleteOutline } from 'react-icons/ti';
 import toast from 'react-hot-toast';
 import { useStateContext } from '../../context/StateContext';
-import { urlFor } from '../../lib/client';
+import { urlFor } from '@/lib/sanity';
 import { useRouter } from 'next/navigation';
 import getStripe from '../../lib/getStripe';
 import type { CartItem } from '../../types/cart';
@@ -75,11 +75,7 @@ const Cart: React.FC = () => {
           currency: 'usd',
           product_data: {
             name: item.name,
-            images: item.image?.map(img => {
-              const imageUrl = urlFor(img).url();
-              console.log('Processing image URL:', imageUrl);
-              return imageUrl;
-            }).filter(Boolean) || [],
+            images: item.image?.map(img => urlFor(img)).filter(Boolean) || [],
           },
           unit_amount: Math.round(item.price * 100),
         },
@@ -276,7 +272,7 @@ const Cart: React.FC = () => {
                         <TiDeleteOutline size={20} />
                       </button>
                       <img
-                        src={item?.image?.[0] ? urlFor(item.image[0]).url() : '/images/placeholder.png'}
+                        src={item?.image?.[0] ? urlFor(item.image[0]) : '/images/placeholder.png'}
                         alt={item.name}
                         className="w-full h-40 object-cover rounded-md"
                       />

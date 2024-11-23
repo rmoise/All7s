@@ -1,22 +1,14 @@
 import React from "react";
-import { getClient } from '../../lib/client';
-import imageUrlBuilder from '@sanity/image-url';
+import { getClient, urlFor } from '@/lib/sanity'
 import { Metadata } from 'next';
 import { SanityImageSource } from '@sanity/image-url/lib/types/types';
-import { Product } from '../../types/shop';
+import { Product } from '@/types/shop';
 import dynamic from 'next/dynamic';
-import Grid from '@/components/common/Grid/Grid';
+import Grid from '@/components/common/grid/Grid';
 
 const ShopClient = dynamic(() => import('./ShopClient'), {
   loading: () => <p>Loading...</p>
 });
-
-const builder = imageUrlBuilder(getClient());
-
-function urlFor(source: SanityImageSource): string {
-  if (!source) return '/images/placeholder.png';
-  return builder.image(source).url();
-}
 
 export const fetchCache = 'force-no-store';
 export const revalidate = 10;

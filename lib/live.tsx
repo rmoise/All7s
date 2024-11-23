@@ -7,7 +7,9 @@ interface PreviewProviderProps {
 }
 
 export function PreviewProvider({ children, preview }: PreviewProviderProps) {
-  return <SanityLive enabled={preview}>{children}</SanityLive>
+  const isProduction = process.env.NEXT_PUBLIC_ENVIRONMENT === 'production'
+  return <SanityLive enabled={preview && !isProduction}>{children}</SanityLive>
 }
+
 export { SanityLive } from './live-client'
 

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { previewClient } from '@/lib/client'
+import { previewClient } from '@/lib/sanity'
 import { WebSocket, WebSocketServer } from 'ws'
 
 // Extend global to include our WebSocket server

@@ -1,8 +1,8 @@
 import { PortableText, PortableTextReactComponents } from '@portabletext/react';
 import Image from 'next/image';
-import { urlFor } from '../../lib/client';
+import { urlForImage } from '@/lib/sanity';
 import React from 'react';
-import { SanityImage } from '../../types/sanity';
+import { SanityImage } from '@/types';
 
 interface AboutProps {
   title?: string;
@@ -39,7 +39,7 @@ const components: Partial<PortableTextReactComponents> = {
       return (
         <div className="relative w-full h-48 md:h-96">
           <Image
-            src={urlFor(value).url()}
+            src={urlForImage(value)}
             alt={value.alt || ' '}
             fill
             style={{ objectFit: 'cover' }}
@@ -58,12 +58,12 @@ const About: React.FC<AboutProps> = (props) => {
       <div className="relative w-full aspect-[16/9] sm:h-auto">
         <Image
           alt="About Image"
-          src={urlFor(props.image).width(2048).url()}
+          src={urlForImage(props.image, { width: 2048 })}
           fill
           sizes="100vw"
           priority
           placeholder="blur"
-          blurDataURL={urlFor(props.image).width(50).quality(1).blur(50).url()}
+          blurDataURL={urlForImage(props.image, { width: 50, quality: 1, blur: 50 })}
           style={{ objectFit: 'cover' }}
           className="w-full h-full object-cover"
         />

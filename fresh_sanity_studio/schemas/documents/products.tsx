@@ -26,7 +26,7 @@ export default defineType({
       name: 'name',
       title: 'Product Name',
       type: 'string',
-      validation: (Rule: Rule) => Rule.required(),
+      validation: Rule => Rule.required(),
       group: 'content'
     }),
     defineField({
@@ -37,7 +37,7 @@ export default defineType({
         source: 'name',
         maxLength: 90,
       },
-      validation: (Rule: Rule) => Rule.required(),
+      validation: Rule => Rule.required(),
       group: 'content'
     }),
     defineField({
@@ -51,7 +51,7 @@ export default defineType({
       name: 'price',
       title: 'Price',
       type: 'number',
-      validation: (Rule: Rule) => Rule.required().positive(),
+      validation: Rule => Rule.required().positive(),
       group: 'content'
     }),
     defineField({
@@ -59,7 +59,7 @@ export default defineType({
       title: 'Category',
       type: 'reference',
       to: [{ type: 'category' }],
-      validation: (Rule: Rule) => Rule.required(),
+      validation: Rule => Rule.required(),
       group: 'content'
     }),
     defineField({
@@ -77,11 +77,11 @@ export default defineType({
             type: 'string',
             title: 'Alternative Text',
             description: 'Important for SEO and accessibility.',
-            validation: (rule: Rule) => rule.required()
+            validation: Rule => Rule.required()
           }
         ]
       }],
-      validation: (rule: Rule) => rule.required(),
+      validation: Rule => Rule.required(),
       group: 'media'
     }),
     defineField({
@@ -94,13 +94,13 @@ export default defineType({
           name: 'metaTitle',
           title: 'Meta Title',
           type: 'string',
-          validation: (Rule: Rule) => Rule.max(60),
+          validation: Rule => Rule.max(60),
         },
         {
           name: 'metaDescription',
           title: 'Meta Description',
           type: 'text',
-          validation: (Rule: Rule) => Rule.max(160),
+          validation: Rule => Rule.max(160),
         }
       ]
     })

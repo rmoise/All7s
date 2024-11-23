@@ -1,4 +1,4 @@
-import type { SanityImageType } from '../fresh_sanity_studio/types/sanity';
+import type { SanityImage } from './sanity';
 
 export interface CartItem {
   _id: string;

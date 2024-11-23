@@ -1,327 +1,183 @@
-import type {
-  Color as SanityColor,
-  Footer,
-  Navbar,
-  SanityImageHotspot,
-  SanityImageCrop
-} from '../fresh_sanity_studio/sanity.types';
+import type { SanityImageSource } from '@sanity/image-url/lib/types/types'
 
-export type { SanityColor };
+// Base Document Type
+export interface SanityBaseDocument {
+  _id: string
+  _type: string
+  _rev: string
+  _createdAt: string
+  _updatedAt: string
+}
 
-// Define SanityImage since it's not exported from sanity.types.ts
+// Base Sanity Image types
+export interface SanityImageHotspot {
+  _type: 'sanity.imageHotspot'
+  x: number
+  y: number
+  height: number
+  width: number
+}
+
+export interface SanityImageCrop {
+  _type: 'sanity.imageCrop'
+  top: number
+  bottom: number
+  left: number
+  right: number
+}
+
 export interface SanityImage {
-  _type: string;
+  _type: 'image'
   asset: {
-    _ref?: string;
-    url?: string;
-    metadata?: {
-      dimensions?: {
-        width: number;
-        height: number;
-        aspectRatio: number;
-      };
-    };
-  };
+    _ref: string
+    _type: 'reference'
+  }
+  hotspot?: SanityImageHotspot
+  crop?: SanityImageCrop
 }
 
-export interface FooterLink {
-  text: string;
-  url: string;
-}
-
-export interface SocialLink {
-  platform: string;
-  url: string;
-  iconUrl: string;
-}
-
+// Navigation types
 export interface NavigationLink {
-  name: string;
-  href: string;
-  _key?: string;
+  name: string
+  href: string
+  _key?: string
 }
 
 export interface NavbarData {
-  logo?: string | SanityImage;
-  navigationLinks: NavigationLink[];
-  backgroundColor?: { hex: string };
-  isTransparent?: boolean;
+  navigationLinks?: NavigationLink[]
+  logo?: string | SanityImage
+  isTransparent?: boolean
+  backgroundColor?: {
+    hex: string
+  }
 }
 
-export interface FooterSettings {
-  copyrightText: string;
-  footerLinks?: Array<{
-    text: string;
-    url: string;
-    _key: string;
-  }>;
-  socialLinks?: Array<{
-    platform: string;
-    url: string;
-    iconUrl?: string;
-    _key: string;
-  }>;
-  fontColor: SanityColor;
-  alignment?: 'left' | 'center' | 'right';
-}
-
-export interface SiteSettings {
-  title: string;
-  seo?: {
-    metaTitle?: string;
-    metaDescription?: string;
-    openGraphImage?: {
-      asset: {
-        url: string;
-      };
-    };
-  };
-  favicon?: SanityImage;
-  navbar?: {
-    logo?: SanityImage;
-    navigationLinks: Array<{
-      name: string;
-      href: string;
-      _key?: string;
-    }>;
-    backgroundColor?: {
-      hex: string;
-    };
-    isTransparent?: boolean;
-  };
-  footer: {
-    copyrightText: string;
-    footerLinks?: Array<{
-      _key: string;
-      text: string;
-      url: string;
-    }>;
-    socialLinks?: Array<{
-      _key: string;
-      platform: string;
-      url: string;
-      iconUrl?: string;
-    }>;
-    fontColor: SanityColor;
-    alignment?: 'left' | 'center' | 'right';
-  };
-}
-
-export interface LayoutProps {
-  children: React.ReactNode;
-  settings?: SiteSettings;
-}
-
-export interface AboutBlock {
-  _type: 'about';
-  title?: string;
-  description?: string;
-  // ... other fields
-}
-
-export interface HeroBannerBlock {
-  _type: 'heroBanner';
-  title?: string;
-  subtitle?: string;
-  backgroundImage?: {
-    asset?: {
-      url?: string;
-    };
-  };
-  cta?: {
-    text?: string;
-    link?: string;
-  };
-}
-
-export interface BackgroundVideoBlock {
-  _type: 'backgroundVideoBlock';
-  backgroundVideoUrl?: string;
-  backgroundVideoFile?: {
-    asset?: {
-      _ref?: string;
-      url?: string;
-      _type?: 'reference';
-    };
-    _type?: 'file';
-  };
-  posterImage?: {
-    asset?: {
-      url?: string;
-    };
-  };
-}
-
-export interface VideoBlock {
-  _type: 'videoBlock';
-  lookTitle?: string;
-  heroVideoLink?: string;
-  additionalVideos?: Array<{
-    url: string;
-  }>;
-}
-
-export interface MusicBlock {
-  _type: 'musicBlock';
-  listenTitle: string;
-  description: string;
-  albums?: Album[];
-}
-
-export interface NewsletterBlock {
-  _type: 'newsletter';
-  headline: string;
-  description: string;
-  ctaText: string;
-  placeholderText: string;
-  formName: string;
-}
-
-export type ContentBlock =
-  | AboutBlock
-  | HeroBannerBlock
-  | BackgroundVideoBlock
-  | VideoBlock
-  | MusicBlock
-  | NewsletterBlock;
-
-export interface HomeProps {
-  contentBlocks: ContentBlock[];
-  metaTitle: string | null;
-  metaDescription: string | null;
-  siteSettings: SiteSettings | null;
-}
-
-// Add the Song interface first since it's needed by both album types
-export interface Song {
-  trackTitle: string;
-  url: string;
-  duration: number;
-  _key?: string;
-  file: {
-    _type: 'file';
-    asset: {
-      _ref: string;
-      _type: 'reference';
-      url: string;
-    };
-  };
-}
-
-// Add CustomAlbum interface
-export interface CustomAlbum {
-  title: string;
-  artist: string;
-  songs: Song[];
-  customImage?: {
-    asset: {
-      url: string;
-    };
-  };
-}
-
-// Add EmbeddedAlbum interface
-export interface EmbeddedAlbum {
-  title: string;
-  artist: string;
-  platform?: string;
-  embedCode?: string;
-  embedUrl?: string;
-  imageUrl?: string;
-  processedImageUrl?: string;
-  songs?: Song[];
-  customImage?: {
-    asset: {
-      url: string;
-    };
-  };
-}
-
-// Add Album interface
-export interface Album {
-  _id: string;
-  albumId: string;
-  albumSource: 'embedded' | 'custom';
-  embeddedAlbum?: EmbeddedAlbum;
-  customAlbum?: CustomAlbum;
-}
-
-// For FlipCard component
-export interface FlipCardAlbum {
-  albumId: string;
-  title: string;
-  artist: string;
-  imageUrl: string;
-  songs: Song[];
-  embedUrl?: string;
-  albumSource: 'embedded' | 'custom';
-  customAlbum?: CustomAlbum;
-  embeddedAlbum?: EmbeddedAlbum;
-}
-
-// Add or update these interfaces
-export interface SanityImageAsset {
-  _id?: string;
-  url?: string;
-  metadata?: {
-    dimensions?: {
-      width: number;
-      height: number;
-      aspectRatio: number;
-    };
-  };
-}
-
-// Add this interface for the raw song format from Sanity
-export interface SanityRawSong {
-  _type: 'song';
-  _key: string;
-  trackTitle: string;
-  duration: number;
-  file: {
-    _type: 'file';
-    asset: {
-      _ref: string;
-      _type: 'reference';
-      url?: string;
-    };
-  };
-}
-
-// Add BlockTitles interface
-export interface BlockTitles {
-  listen: string;
-  look: string;
-}
-
-// Update NavbarContextType
-export interface NavbarContextType {
-  navbarData: NavbarData | null;
-  blockTitles: BlockTitles;
-  updateBlockTitle: (type: 'listen' | 'look', newTitle: string) => Promise<void>;
-  loading: boolean;
-  error: Error | null;
-}
-
-interface NewsletterNotification {
-  title?: string
+// Add SiteSettings
+export interface SiteSettings extends SanityBaseDocument {
+  _type: 'settings'
+  title: string
   description?: string
-  showSocialLinks?: boolean
-  socialLinksTitle?: string
-  socialLinks?: Array<{
-    platform: string
-    url: string
-    color?: {
-      hex?: string
-    }
-  }>
+  navbar?: NavbarData
+  footer?: FooterSettings
 }
 
-interface Newsletter {
+// Footer types
+export interface FooterSettings {
+  footerLinks: FooterLink[]
+  socialLinks: SocialLink[]
+  backgroundColor: SanityColor
+  copyrightText?: string
+  fontColor?: SanityColor
+  alignment?: 'left' | 'center' | 'right'
+}
+
+export interface FooterLink {
+  _key: string
+  text: string
+  url: string
+}
+
+export interface SocialLink {
+  _key: string
+  platform: string
+  url: string
+  iconUrl?: string
+}
+
+export interface SanityColor {
+  hex: string
+}
+
+// Media types
+export interface Song {
+  _key: string
+  title: string
+  trackTitle?: string
+  duration?: number
+  url?: string
+  file?: {
+    asset?: {
+      _ref: string
+      url?: string
+    }
+  }
+}
+
+// Product types (referenced in lib/sanity.ts)
+export interface ProductImage {
+  asset: {
+    _id: string
+    url: string
+    metadata?: {
+      dimensions: {
+        width: number
+        height: number
+        aspectRatio: number
+      }
+    }
+  }
+  alt?: string
+}
+
+// Add SanityRawSong type
+export interface SanityRawSong {
+  _key: string
+  title: string
+  trackTitle?: string
+  duration?: number
+  url?: string
+  file?: {
+    asset?: {
+      _ref: string
+      url?: string
+    }
+  }
+}
+
+export interface ContentBlock extends SanityBaseDocument {
+  _type: string
+  _key: string
+}
+
+// Content Block Types
+export interface NewsletterContent extends ContentBlock {
+  _type: 'newsletter'
   headline?: string
   description?: string
-  placeholderText?: string
   ctaText?: string
+  placeholderText?: string
   formName?: string
-  notification?: NewsletterNotification
 }
+
+// Album Types
+export interface Album {
+  _id: string
+  _key?: string
+  albumSource: string
+  embeddedAlbum?: {
+    embedUrl: string
+    title: string
+    artist: string
+    platform: string
+    releaseType: string
+    imageUrl: string
+    customImage?: {
+      asset?: {
+        url?: string
+      }
+    }
+    songs: Song[]
+  }
+  customAlbum?: {
+    title: string
+    artist: string
+    releaseType: string
+    customImage?: {
+      asset?: {
+        url?: string
+      }
+    }
+    songs: Song[]
+  }
+}
+

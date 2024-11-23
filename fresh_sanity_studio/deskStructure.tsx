@@ -3,6 +3,7 @@ import {FaMusic} from 'react-icons/fa'
 import {MdPerson, MdArticle} from 'react-icons/md'
 import type {StructureBuilder} from 'sanity/desk'
 import {Iframe} from 'sanity-plugin-iframe-pane'
+import { environments } from './sanity.config'
 
 interface SanityDocument {
   _type: string
@@ -14,18 +15,17 @@ interface SanityDocument {
 const getPreviewUrl = (doc: SanityDocument | null) => {
   if (!doc) return ''
 
-  const secret = process.env.SANITY_STUDIO_PREVIEW_SECRET || process.env.NEXT_PUBLIC_PREVIEW_SECRET
-  const baseUrl =
-    window.location.hostname === 'localhost'
-      ? 'http://localhost:3000'
-      : window.location.pathname.includes('/staging')
-        ? 'https://staging--all7z.netlify.app'
-        : process.env.SANITY_STUDIO_PREVIEW_URL || 'https://all7z.com'
+  const envConfig = environments[
+    window.location.pathname.includes('/staging') ? 'staging' : 'production'
+  ]
+
+  const secret = process.env.SANITY_STUDIO_PREVIEW_SECRET
+  if (!secret) return ''
 
   if (doc._type === 'home') {
     const timestamp = new Date().getTime()
     const isDraft = doc._id.startsWith('drafts.')
-    return `${baseUrl}/api/preview?secret=${secret}&type=${doc._type}&id=${doc._id}&preview=1&timestamp=${timestamp}&draft=${isDraft}`
+    return `${envConfig.baseUrl}/api/preview?secret=${secret}&type=${doc._type}&id=${doc._id}&preview=1&timestamp=${timestamp}&draft=${isDraft}`
   }
 
   return null

@@ -1,25 +1,35 @@
 // components/blocks/MusicBlock.tsx
 
-import React, { useState, useRef, useCallback, useEffect } from 'react'
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import FlipCard from '@components/Music/FlipCard'
-import Grid from '@components/common/Grid/Grid'
-import type {
-  Album,
-  Song,
-  MusicBlock as MusicBlockType,
-} from '../../types/sanity'
-import { urlFor } from '@/lib/client'
+import Grid from '@/components/common/grid/Grid'
+import { Album, Song, SanityImage } from '@/types'
+import { getClient, urlFor } from '@/lib/sanity'
 import { useNavbar } from '@/context/NavbarContext'
 
 interface MusicBlockProps {
-  listenTitle: string;
-  albums?: Album[];
+  listenTitle: string
+  description?: string
+  albums?: Album[]
+}
+
+// Add this interface for processed albums
+interface ProcessedAlbum {
+  id: string
+  embedUrl: string
+  imageUrl: string
+  title: string
+  artist: string
+  songs: Song[]
+  albumSource: 'custom' | 'embedded'
 }
 
 const MusicBlock: React.FC<MusicBlockProps> = ({
   listenTitle,
   albums = [],
 }) => {
+  console.log('MusicBlock props:', { listenTitle, albums })
+
   const [flippedAlbums, setFlippedAlbums] = useState<Set<string>>(new Set())
   const flipCardRefs = useRef<{ [key: string]: HTMLDivElement | null }>({})
   const [loadedAlbums, setLoadedAlbums] = useState<Album[]>([])
@@ -34,15 +44,15 @@ const MusicBlock: React.FC<MusicBlockProps> = ({
 
   const handleFlip = useCallback((albumId: string) => {
     setFlippedAlbums((prev) => {
-      const newFlipped = new Set(prev);
+      const newFlipped = new Set(prev)
       if (newFlipped.has(albumId)) {
-        newFlipped.delete(albumId);
+        newFlipped.delete(albumId)
       } else {
-        newFlipped.add(albumId);
+        newFlipped.add(albumId)
       }
-      return newFlipped;
-    });
-  }, []);
+      return newFlipped
+    })
+  }, [])
 
   const addFlipCardRef = useCallback(
     (albumId: string, ref: HTMLDivElement | null) => {
@@ -54,19 +64,23 @@ const MusicBlock: React.FC<MusicBlockProps> = ({
   )
 
   const handleOutsideClick = useCallback((e: MouseEvent) => {
-    const target = e.target as HTMLElement;
+    const target = e.target as HTMLElement
 
     // Check if click is inside any card or control
-    const isInsideCard = target.closest('.flip-back, .mobile-back, .flip-front, .mobile-front');
-    const isControl = target.closest('.track-item, .player-control, .music-embed');
+    const isInsideCard = target.closest(
+      '.flip-back, .mobile-back, .flip-front, .mobile-front'
+    )
+    const isControl = target.closest(
+      '.track-item, .player-control, .music-embed'
+    )
 
     if (isInsideCard || isControl) {
-      return; // Don't close if clicking inside any card or control
+      return // Don't close if clicking inside any card or control
     }
 
     // Only close if clicking completely outside
-    setFlippedAlbums(new Set());
-  }, []);
+    setFlippedAlbums(new Set())
+  }, [])
 
   useEffect(() => {
     if (flippedAlbums.size > 0) {
@@ -78,56 +92,64 @@ const MusicBlock: React.FC<MusicBlockProps> = ({
     return () => document.removeEventListener('mousedown', handleOutsideClick)
   }, [flippedAlbums.size, handleOutsideClick])
 
-  const listenId = listenTitle ? listenTitle.replace(/\s+/g, '-') : 'LISTEN'
-
   const getSongs = (album: Album): Song[] => {
     if (album.albumSource === 'custom' && album.customAlbum?.songs) {
       return album.customAlbum.songs
     }
-    if (album.albumSource === 'embedded' && album.embeddedAlbum?.songs) {
-      return album.embeddedAlbum.songs
-    }
     return []
   }
 
-  const getEmbedUrl = (
-    embedCode: string | undefined,
-    platform: string | undefined
-  ): string => {
-    if (!embedCode) return ''
+  const getEmbedUrl = useCallback((album: Album): string => {
+    if (!album.embeddedAlbum?.embedCode) return ''
 
-    if (platform === 'soundcloud') {
-      const match = embedCode.match(/src="([^"]+)"/)
-      return match ? match[1] : ''
-    }
-
-    if (platform === 'spotify') {
-      const match = embedCode.match(/src="([^"]+)"/)
+    if (album.embeddedAlbum.platform === 'soundcloud' || album.embeddedAlbum.platform === 'spotify') {
+      const match = album.embeddedAlbum.embedCode.match(/src="([^"]+)"/)
       return match ? match[1] : ''
     }
 
     return ''
-  }
+  }, [])
 
-  const getImageUrl = (album: Album): string => {
+  const getImageUrl = useCallback((album: Album): string => {
     if (!album) return '/images/placeholder.png'
 
     if (album.albumSource === 'embedded' && album.embeddedAlbum) {
+      const customImageUrl = album.embeddedAlbum.customImage?.asset
+        ? urlFor(album.embeddedAlbum.customImage)?.toString() || ''
+        : ''
+
       return (
         album.embeddedAlbum.processedImageUrl ||
         album.embeddedAlbum.imageUrl ||
-        (album.embeddedAlbum.customImage?.asset &&
-          urlFor(album.embeddedAlbum.customImage).url()) ||
+        customImageUrl ||
         '/images/placeholder.png'
       )
     }
 
     if (album.customAlbum?.customImage?.asset) {
-      return urlFor(album.customAlbum.customImage).url()
+      return (
+        urlFor(album.customAlbum.customImage)?.toString() ||
+        '/images/placeholder.png'
+      )
     }
 
     return '/images/placeholder.png'
-  }
+  }, [])
+
+  // Memoize album processing
+  const processedAlbums = useMemo(
+    () =>
+      loadedAlbums?.map((album: Album) => ({
+        id: album._id,
+        embedUrl: getEmbedUrl(album),
+        imageUrl: getImageUrl(album),
+        title: album.embeddedAlbum?.title || album.customAlbum?.title || 'Untitled Album',
+        artist: album.embeddedAlbum?.artist || album.customAlbum?.artist || 'Unknown Artist',
+        songs: getSongs(album),
+        albumSource: album.albumSource,
+      })) || [],
+    [loadedAlbums, getEmbedUrl, getImageUrl, getSongs]
+  )
 
   if (isLoading) {
     return <div>Loading albums...</div>
@@ -152,16 +174,10 @@ const MusicBlock: React.FC<MusicBlockProps> = ({
         </h2>
 
         <Grid columns={1} gap={32} className="w-full max-w-6xl mx-auto pb-32">
-          {loadedAlbums.map((album, index) => {
+          {processedAlbums.map((album, index) => {
             if (!album) return null
 
-            const albumId = album._id || `album-${index}`
-            const embedUrl = getEmbedUrl(
-              album.embeddedAlbum?.embedCode,
-              album.embeddedAlbum?.platform
-            )
-
-            console.log('Extracted Embed URL:', embedUrl)
+            const albumId = album.id || `album-${index}`
 
             return (
               <div
@@ -171,18 +187,12 @@ const MusicBlock: React.FC<MusicBlockProps> = ({
                 <FlipCard
                   album={{
                     albumId,
-                    title:
-                      album.embeddedAlbum?.title ||
-                      album.customAlbum?.title ||
-                      'Untitled Album',
-                    artist:
-                      album.embeddedAlbum?.artist ||
-                      album.customAlbum?.artist ||
-                      'Unknown Artist',
-                    imageUrl: getImageUrl(album),
-                    songs: getSongs(album),
-                    embedUrl: embedUrl,
-                    albumSource: album.embeddedAlbum ? 'embedded' : 'custom',
+                    title: album.title,
+                    artist: album.artist,
+                    imageUrl: album.imageUrl,
+                    songs: album.songs,
+                    embedUrl: album.embedUrl,
+                    albumSource: album.albumSource,
                   }}
                   isFlipped={flippedAlbums.has(albumId)}
                   toggleFlip={handleFlip}

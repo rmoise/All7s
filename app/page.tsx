@@ -1,70 +1,49 @@
-import { getClient } from '@/lib/client'
 import { Metadata } from 'next'
 import HomeClient from './components/HomeClient'
 import { getPreviewToken } from '@/lib/preview'
+import { fetchSanity } from '@/lib/sanity'
 import { HomePageProps } from '@/types/page'
-
-interface ContentBlock {
-  _type: string;
-  _key: string;
-  headline?: string;
-  description?: string;
-  ctaText?: string;
-  placeholderText?: string;
-  formName?: string;
-  notification?: {
-    title?: string;
-    description?: string;
-    showSocialLinks?: boolean;
-    socialLinksTitle?: string;
-    socialLinks?: Array<{
-      platform: string;
-      url: string;
-      color?: {
-        hex?: string;
-      }
-    }>;
-  };
-}
+import { HomeData } from '@/types/index'
 
 export async function generateMetadata(): Promise<Metadata> {
-  const homeData = await getClient().fetch(`*[_type == "home"][0]`)
+  const homeData = await fetchSanity<HomeData>(`*[_type == "home"][0]`, undefined, false)
   return {
-    title: homeData?.metaTitle || 'All7Z',
-    description: homeData?.metaDescription || 'Welcome to All7Z',
+    title: homeData?.metaTitle ?? 'All7Z',
+    description: homeData?.metaDescription ?? 'Welcome to All7Z',
   }
 }
 
-export default async function HomePage(
-  props: HomePageProps
-): Promise<JSX.Element> {
+export default async function HomePage(props: HomePageProps): Promise<JSX.Element> {
   const searchParams = await props.searchParams;
   const preview = searchParams?.preview === '1'
   const token = await getPreviewToken()
-  const isPreview = Boolean(preview && token)
-
-  console.log('Preview Debug:', {
-    searchParams,
-    preview,
-    hasToken: !!token,
-    tokenLength: token?.length,
-    isPreview
-  })
-
-  const client = getClient(isPreview)
+  const isPreview = Boolean(preview && token && process.env.NEXT_PUBLIC_ENVIRONMENT === 'production')
 
   try {
-    const homeData = await client.fetch(`
-      *[_type == "home" && (_id == "drafts.singleton-home" || _id == "singleton-home")] {
+    const homeData = await fetchSanity<HomeData>(
+      `*[_type == "home" && (_id == "singleton-home")] {
         _id,
         _type,
         title,
         metaTitle,
         metaDescription,
-        contentBlocks[] {
+        "contentBlocks": contentBlocks[] | order(order asc) {
           _key,
           _type,
+          order,
           ...select(
+            _type == 'heroBanner' => {
+              backgroundImage,
+              smallText,
+              midText,
+              largeText1,
+              cta
+            },
+            _type == 'about' => {
+              body,
+              image,
+              alignment
+            },
             _type == 'musicBlock' => {
               listenTitle,
               description,
@@ -79,18 +58,6 @@ export default async function HomePage(
               backgroundVideoUrl,
               backgroundVideoFile,
               posterImage
-            },
-            _type == 'heroBanner' => {
-              backgroundImage,
-              smallText,
-              midText,
-              largeText1,
-              cta
-            },
-            _type == 'about' => {
-              body,
-              image,
-              alignment
             },
             _type == 'newsletter' => {
               headline,
@@ -114,48 +81,18 @@ export default async function HomePage(
             }
           )
         }
-      }[0]
-    `, undefined, {
-      cache: isPreview ? 'no-store' : 'force-cache',
-      perspective: isPreview ? 'previewDrafts' : 'published'
-    })
+      }[0]`,
+      undefined,
+      isPreview
+    )
 
-    const newsletterBlock = homeData?.contentBlocks?.find((block: ContentBlock) => block._type === 'newsletter')
-    console.log('Newsletter Block:', {
-      hasNewsletter: !!newsletterBlock,
-      notification: newsletterBlock?.notification,
-      headline: newsletterBlock?.headline
-    })
-
-    console.log('Query Result:', {
-      hasData: !!homeData,
-      id: homeData?._id,
-      blockCount: homeData?.contentBlocks?.length
-    })
-
-    if (!homeData) {
+    if (!homeData || !homeData.contentBlocks) {
       console.error('No home data found')
       return <div>No content available</div>
     }
 
     return (
-      <>
-        {isPreview && (
-          <div style={{
-            position: 'fixed',
-            bottom: '1rem',
-            right: '1rem',
-            background: '#000',
-            color: '#fff',
-            padding: '0.5rem',
-            zIndex: 100,
-            borderRadius: '0.25rem'
-          }}>
-            Preview Mode
-          </div>
-        )}
-        <HomeClient contentBlocks={homeData?.contentBlocks || []} />
-      </>
+      <HomeClient contentBlocks={homeData.contentBlocks} />
     )
   } catch (error) {
     console.error('Error fetching home data:', error)

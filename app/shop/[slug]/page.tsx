@@ -1,5 +1,5 @@
 import React from "react";
-import { getClient } from '../../../lib/client';
+import { getClient } from '@/lib/sanity';
 import { Metadata } from 'next';
 import ProductDetailsWrapper from './ProductDetailsWrapper';
 import { productsQuery, productDetailQuery } from '../queries';

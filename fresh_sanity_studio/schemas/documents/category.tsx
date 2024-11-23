@@ -1,6 +1,5 @@
 import { defineType, defineField } from 'sanity'
 import { TagIcon } from '@sanity/icons'
-import { Rule } from '@sanity/types'
 
 export default defineType({
   name: 'category',
@@ -22,7 +21,7 @@ export default defineType({
       name: 'title',
       title: 'Category Name',
       type: 'string',
-      validation: (Rule: Rule) => Rule.required(),
+      validation: Rule => Rule.required(),
       group: 'content'
     }),
     defineField({
@@ -33,7 +32,7 @@ export default defineType({
         source: 'title',
         maxLength: 90,
       },
-      validation: (Rule: Rule) => Rule.required(),
+      validation: Rule => Rule.required(),
       group: 'content'
     }),
     defineField({
@@ -48,18 +47,18 @@ export default defineType({
       type: 'object',
       group: 'seo',
       fields: [
-        {
+        defineField({
           name: 'metaTitle',
           title: 'Meta Title',
           type: 'string',
-          validation: (Rule: Rule) => Rule.max(60),
-        },
-        {
+          validation: Rule => Rule.max(60),
+        }),
+        defineField({
           name: 'metaDescription',
           title: 'Meta Description',
           type: 'text',
-          validation: (Rule: Rule) => Rule.max(160),
-        }
+          validation: Rule => Rule.max(160),
+        })
       ]
     })
   ]

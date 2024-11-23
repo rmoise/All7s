@@ -1,6 +1,6 @@
 'use server'
 
-import { getClient } from '@/lib/client'
+import { getClient } from '@/lib/sanity'
 import { revalidatePath } from 'next/cache'
 
 // Define types

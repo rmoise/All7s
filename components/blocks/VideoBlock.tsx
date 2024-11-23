@@ -1,32 +1,32 @@
 // components/blocks/VideoBlock.tsx
 
-import React, { useRef, useEffect } from 'react';
-import YouTubeEmbed from '@components/media/YouTubeEmbed';
-import Grid from '@components/common/Grid/Grid';
-import { extractYouTubeID } from '@utils/extractYouTubeID';
-import { useNavbar } from '@/context/NavbarContext';
+import React, { useRef, useEffect } from 'react'
+import YouTubeEmbed from '@components/media/YouTubeEmbed'
+import Grid from '@/components/common/grid/Grid'
+import { extractYouTubeID } from '@utils/extractYouTubeID'
+import { useNavbar } from '@/context/NavbarContext'
 
 interface VideoBlockProps {
-  lookTitle: string;
-  heroVideoLink: string;
+  lookTitle: string
+  heroVideoLink: string
   additionalVideos?: Array<{
-    _key: string;
-    url: string;
-  }>;
+    _key: string
+    url: string
+  }>
 }
 
 const VideoBlock: React.FC<VideoBlockProps> = ({
   lookTitle,
   heroVideoLink,
-  additionalVideos
+  additionalVideos,
 }) => {
   if (!lookTitle || !heroVideoLink) {
-    console.warn('VideoBlock: Missing required props');
-    return null;
+    console.warn('VideoBlock: Missing required props')
+    return null
   }
 
-  const heroVideoID = extractYouTubeID(heroVideoLink);
-  const lookId = lookTitle.replace(/\s+/g, '-');
+  const heroVideoID = extractYouTubeID(heroVideoLink)
+  const lookId = lookTitle.replace(/\s+/g, '-')
 
   const sectionId = lookTitle.replace(/[^a-zA-Z0-9]/g, '')
 
@@ -43,12 +43,7 @@ const VideoBlock: React.FC<VideoBlockProps> = ({
 
         {/* Hero Video */}
         {heroVideoID && (
-          <Grid
-            columns={{ default: 1 }}
-            maxWidth="5xl"
-            center
-            gap={32}
-          >
+          <Grid columns={{ default: 1 }} maxWidth="5xl" center gap={32}>
             <div className="border-8 border-black/50 rounded-lg overflow-hidden">
               <YouTubeEmbed
                 embedId={heroVideoID}
@@ -62,15 +57,10 @@ const VideoBlock: React.FC<VideoBlockProps> = ({
         {/* Additional Videos */}
         {additionalVideos && additionalVideos.length > 0 && (
           <div className="mt-32">
-            <Grid
-              columns={{ default: 1 }}
-              maxWidth="5xl"
-              center
-              gap={32}
-            >
+            <Grid columns={{ default: 1 }} maxWidth="5xl" center gap={32}>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full">
                 {additionalVideos.map((videoObj, i) => {
-                  const videoId = extractYouTubeID(videoObj.url);
+                  const videoId = extractYouTubeID(videoObj.url)
                   return videoId ? (
                     <div
                       key={`vid-${i}`}
@@ -82,7 +72,7 @@ const VideoBlock: React.FC<VideoBlockProps> = ({
                         className="w-full"
                       />
                     </div>
-                  ) : null;
+                  ) : null
                 })}
               </div>
             </Grid>
@@ -90,7 +80,7 @@ const VideoBlock: React.FC<VideoBlockProps> = ({
         )}
       </div>
     </section>
-  );
-};
+  )
+}
 
-export default VideoBlock;
+export default VideoBlock

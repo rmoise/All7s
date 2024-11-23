@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react'
 import { Transition } from '@headlessui/react'
 import { CheckCircleIcon, XMarkIcon } from '@heroicons/react/24/outline'
-import Grid from './Grid/Grid'
+import Grid from './grid/Grid'
 import useOnClickOutside from '../../hooks/useOnClickOutside'
 
 interface NewsletterProps {
@@ -37,28 +37,33 @@ const defaultSocialLinks = [
   {
     platform: 'X',
     url: 'https://x.com/all7z',
-    color: { hex: '#FFFFFF' }
+    color: { hex: '#FFFFFF' },
   },
   {
     platform: 'Instagram',
     url: 'https://instagram.com/all7z',
-    color: { hex: '#E1306C' }
-  }
-];
+    color: { hex: '#E1306C' },
+  },
+]
 
 const Newsletter: React.FC<NewsletterProps> = ({ newsletter }) => {
   console.log('Newsletter props:', {
     newsletter,
     hasNotification: !!newsletter?.notification,
-    notificationContent: newsletter?.notification
+    notificationContent: newsletter?.notification,
   })
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [email, setEmail] = useState('')
-  const [notification, setNotification] = useState({ show: false, error: false })
+  const [notification, setNotification] = useState({
+    show: false,
+    error: false,
+  })
   const modalRef = useRef<HTMLDivElement>(null)
 
-  useOnClickOutside(modalRef, () => setNotification({ show: false, error: false }))
+  useOnClickOutside(modalRef, () =>
+    setNotification({ show: false, error: false })
+  )
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -74,7 +79,7 @@ const Newsletter: React.FC<NewsletterProps> = ({ newsletter }) => {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: encodedData.toString()
+        body: encodedData.toString(),
       })
 
       if (response.ok) {
@@ -105,7 +110,7 @@ const Newsletter: React.FC<NewsletterProps> = ({ newsletter }) => {
       <Grid
         columns={{
           default: 1,
-          lg: 2
+          lg: 2,
         }}
         gap={32}
         maxWidth="7xl"
@@ -148,7 +153,9 @@ const Newsletter: React.FC<NewsletterProps> = ({ newsletter }) => {
                   required
                   disabled={isSubmitting}
                   className="w-full h-[46px] rounded-md border border-transparent px-4 placeholder-gray-500 focus:border-white focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 disabled:opacity-50"
-                  placeholder={newsletter?.placeholderText || 'Enter your email'}
+                  placeholder={
+                    newsletter?.placeholderText || 'Enter your email'
+                  }
                 />
               </div>
 
@@ -159,7 +166,9 @@ const Newsletter: React.FC<NewsletterProps> = ({ newsletter }) => {
                   className="w-full h-[46px] rounded-md border border-transparent text-base font-medium text-white bg-gray-700 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:ring-offset-gray-800 disabled:opacity-50 transition-colors duration-200"
                 >
                   <span className="whitespace-nowrap">
-                    {isSubmitting ? 'Signing Up...' : (newsletter?.ctaText || 'Sign Up')}
+                    {isSubmitting
+                      ? 'Signing Up...'
+                      : newsletter?.ctaText || 'Sign Up'}
                   </span>
                 </button>
               </div>
@@ -192,7 +201,9 @@ const Newsletter: React.FC<NewsletterProps> = ({ newsletter }) => {
           >
             <div
               className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-              onClick={() => setNotification(prev => ({ ...prev, show: false }))}
+              onClick={() =>
+                setNotification((prev) => ({ ...prev, show: false }))
+              }
             />
           </Transition.Child>
 
@@ -208,13 +219,13 @@ const Newsletter: React.FC<NewsletterProps> = ({ newsletter }) => {
               ref={modalRef}
               className="relative w-full max-w-[calc(100%-32px)] sm:max-w-md transform-gpu"
             >
-              <div
-                className="w-full shadow-2xl rounded-lg pointer-events-auto ring-1 ring-white/10 bg-gradient-to-br from-gray-900 to-gray-800 text-white"
-              >
+              <div className="w-full shadow-2xl rounded-lg pointer-events-auto ring-1 ring-white/10 bg-gradient-to-br from-gray-900 to-gray-800 text-white">
                 <div className="p-8">
                   <button
                     className="absolute top-4 right-4 p-1.5 rounded-full hover:bg-black/10 transition-colors duration-200 text-gray-400"
-                    onClick={() => setNotification(prev => ({ ...prev, show: false }))}
+                    onClick={() =>
+                      setNotification((prev) => ({ ...prev, show: false }))
+                    }
                   >
                     <span className="sr-only">Close</span>
                     <XMarkIcon className="h-4 w-4" aria-hidden="true" />
@@ -232,32 +243,42 @@ const Newsletter: React.FC<NewsletterProps> = ({ newsletter }) => {
 
                     <div className="space-y-4">
                       <p className="text-xl font-bold">
-                        {newsletter?.notification?.title || 'Successfully subscribed!'}
+                        {newsletter?.notification?.title ||
+                          'Successfully subscribed!'}
                       </p>
                       <p className="opacity-80">
-                        {newsletter?.notification?.description || 'Thanks for joining our newsletter.'}
+                        {newsletter?.notification?.description ||
+                          'Thanks for joining our newsletter.'}
                       </p>
 
                       {/* Only show social links if enabled */}
                       {newsletter?.notification?.showSocialLinks !== false && (
                         <div className="pt-4">
-                          <p className="text-sm font-semibold mb-3">Follow us:</p>
+                          <p className="text-sm font-semibold mb-3">
+                            Follow us:
+                          </p>
                           <div className="flex justify-center space-x-6">
-                            {(newsletter?.notification?.socialLinks || defaultSocialLinks).map((link, index) => (
+                            {(
+                              newsletter?.notification?.socialLinks ||
+                              defaultSocialLinks
+                            ).map((link, index) => (
                               <a
                                 key={index}
                                 href={link.url}
                                 className="transition-all duration-200 hover:opacity-100 hover:scale-110"
                                 style={{
                                   color: link.color?.hex || '#FFFFFF',
-                                  opacity: 0.9
+                                  opacity: 0.9,
                                 }}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 aria-label={`Follow us on ${link.platform}`}
                               >
-                                {link.platform.toLowerCase() === 'x' && <XIcon />}
-                                {link.platform.toLowerCase() === 'instagram' && <InstagramIcon />}
+                                {link.platform.toLowerCase() === 'x' && (
+                                  <XIcon />
+                                )}
+                                {link.platform.toLowerCase() ===
+                                  'instagram' && <InstagramIcon />}
                               </a>
                             ))}
                           </div>
@@ -275,4 +296,3 @@ const Newsletter: React.FC<NewsletterProps> = ({ newsletter }) => {
   )
 }
 export default Newsletter
-
