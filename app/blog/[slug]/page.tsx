@@ -2,7 +2,7 @@ import { getClient } from '@lib/sanity'
 import { Metadata } from 'next'
 import BlogPost from '@components/blog/BlogPost'
 import { notFound } from 'next/navigation'
-import { BlogPageProps } from '@types/page'
+import { BlogPageProps } from '@types'
 
 export async function generateMetadata(
   props: BlogPageProps
