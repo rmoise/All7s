@@ -2,6 +2,9 @@
   "name": "stak_app",
   "version": "0.1.0",
   "private": true,
+  "workspaces": [
+    "fresh_sanity_studio"
+  ],
   "scripts": {
     "clean": "rimraf .next fresh_sanity_studio/dist .netlify/cache",
     "dev": "cross-env NODE_ENV=development next dev",

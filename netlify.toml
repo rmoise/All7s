@@ -1,11 +1,9 @@
 [build]
   command = """
-    npm ci && \
-    cd fresh_sanity_studio && \
-    npm ci && \
-    npm run build && \
-    cd .. && \
-    NODE_ENV=production NEXT_PUBLIC_ENVIRONMENT=production SANITY_STUDIO_DATASET=production npm run build
+    corepack enable && \
+    pnpm install && \
+    pnpm --filter fresh build && \
+    pnpm --filter stak_app build:production
   """
   publish = ".next"
   functions = "netlify/functions"
@@ -17,6 +15,8 @@
   SANITY_STUDIO_PATH = "fresh_sanity_studio"
   NETLIFY_NEXT_PLUGIN_SKIP = "true"
   NODE_VERSION = "20.11.1"
+  NPM_FLAGS = "--no-audit --no-fund"
+  USE_PNPM = "true"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
