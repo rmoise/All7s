@@ -28,7 +28,7 @@
       "@components/*": ["components/*"],
       "@lib/*": ["lib/*"],
       "@utils/*": ["utils/*"],
-      "@/*": ["./*"]
+      "@app/*": ["app/*"]
     }
   },
   "include": [

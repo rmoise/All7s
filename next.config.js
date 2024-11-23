@@ -57,30 +57,14 @@ const nextConfig = {
     ],
   },
 
-  webpack: (config, { isServer, dev }) => {
+  webpack: (config) => {
     config.resolve.alias = {
       ...config.resolve.alias,
-      '@': path.resolve(__dirname),
       '@components': path.join(__dirname, 'components'),
-      '@lib': path.resolve(__dirname, './lib'),
-      '@utils': path.resolve(__dirname, './utils'),
-      '@context': path.resolve(__dirname, './context'),
-      '@sanity': path.join(__dirname, 'node_modules/@sanity'),
+      '@lib': path.join(__dirname, 'lib'),
+      '@utils': path.join(__dirname, 'utils'),
+      '@app': path.join(__dirname, 'app')
     };
-
-    if (dev && !isServer) {
-      config.optimization = {
-        minimize: false,
-        splitChunks: {
-          chunks: 'all',
-          cacheGroups: {
-            default: false,
-            vendors: false,
-          },
-        },
-      };
-    }
-
     return config;
   },
 
