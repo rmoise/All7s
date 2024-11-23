@@ -12,7 +12,7 @@ import type { CartItem } from '../../types/cart';
 import { PortableText, PortableTextReactComponents } from '@portabletext/react';
 import type { PortableTextComponentProps } from '@portabletext/react';
 import type { PortableTextBlock } from '@portabletext/types';
-import Grid from '@/components/common/grid/Grid';
+import Grid from '@components/common/grid/Grid'
 import Products from '@/components/shop/Products';
 
 const components: Partial<PortableTextReactComponents> = {
