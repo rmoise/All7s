@@ -61,11 +61,9 @@ const nextConfig = {
     config.resolve.alias = {
       ...config.resolve.alias,
       '@components': path.join(__dirname, 'components'),
-      '@utils': path.join(__dirname, 'utils'),
-      '@pages': path.join(__dirname, 'pages'),
-      '@styles': path.join(__dirname, 'styles'),
       '@lib': path.join(__dirname, 'lib'),
-      '@context': path.join(__dirname, 'context'),
+      '@utils': path.join(__dirname, 'utils'),
+      '@styles': path.join(__dirname, 'styles'),
     };
 
     if (dev && !isServer) {

@@ -31,7 +31,8 @@
       "@utils/*": ["utils/*"],
       "@types/*": ["types/*"],
       "@context/*": ["context/*"],
-      "@sanity/*": ["fresh_sanity_studio/*"]
+      "@sanity/*": ["fresh_sanity_studio/*"],
+      "@styles/*": ["styles/*"]
     },
     "typeRoots": [
       "./node_modules/@types",
