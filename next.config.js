@@ -78,7 +78,8 @@ const nextConfig = {
     NEXT_FORCE_EDGE_IMAGES: process.env.NEXT_FORCE_EDGE_IMAGES || 'true',
     STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY || '',
     NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || ''
-  }
+  },
+  transpilePackages: ['@sanity/client', '@sanity/preview-kit'],
 };
 
 module.exports = nextConfig;
