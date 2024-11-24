@@ -19,6 +19,8 @@ dist
 # Local Netlify folder
 .netlify
 
+.env.deploy
+
 .env.development
 
 .env.production.notes

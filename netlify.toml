@@ -16,8 +16,8 @@
   NEXT_PUBLIC_SANITY_PROJECT_ID = "1gxdk71x"
   NEXT_PUBLIC_SITE_URL = "https://all7z.com"
   SANITY_PREVIEW_TOKEN = "env(SANITY_PREVIEW_TOKEN)"
-  NEXT_USE_NETLIFY_EDGE = "true"
-  NEXT_FORCE_EDGE_IMAGES = "true"
+  SANITY_STUDIO_PROJECT_ID = "1gxdk71x"
+  SANITY_STUDIO_DATASET = "production"
 
 [context.production]
   [context.production.environment]
@@ -30,6 +30,8 @@
     STRIPE_SECRET_KEY = "env(STRIPE_SECRET_KEY)"
     NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY = "env(NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)"
     SANITY_PREVIEW_TOKEN = "env(SANITY_PREVIEW_TOKEN)"
+    SANITY_STUDIO_PROJECT_ID = "1gxdk71x"
+    SANITY_STUDIO_DATASET = "production"
 
 [context.staging]
   [context.staging.environment]
@@ -39,6 +41,8 @@
     NEXT_PUBLIC_NETLIFY = "true"
     NEXT_PUBLIC_SANITY_STUDIO_URL = "https://all7z.sanity.studio"
     NEXT_PUBLIC_SITE_URL = "https://staging.all7z.com"
+    SANITY_STUDIO_PROJECT_ID = "1gxdk71x"
+    SANITY_STUDIO_DATASET = "production"
 
 [context.deploy-preview]
   [context.deploy-preview.environment]
