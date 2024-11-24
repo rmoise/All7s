@@ -35,9 +35,9 @@ const nextConfig = {
   experimental: {
     serverActions: {
       allowedOrigins: ['localhost:3000', 'all7z.com', '*.netlify.app']
-    },
-    serverComponentsExternalPackages: ['@sanity/client']
+    }
   },
+  serverExternalPackages: ['@sanity/client'],
   generateBuildId: async () => {
     return process.env.BUILD_ID || 'development'
   },
