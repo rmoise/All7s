@@ -1,5 +1,5 @@
 [build]
-  command = "NODE_OPTIONS='--max_old_space_size=4096' SANITY_AUTH_TOKEN=$SANITY_AUTH_TOKEN SANITY_STUDIO_API_TOKEN=$SANITY_STUDIO_API_TOKEN npm ci && npm run fresh-studio:build && npm run build"
+  command = "NODE_OPTIONS='--max_old_space_size=8192' NODE_ENV=production SANITY_AUTH_TOKEN=$SANITY_AUTH_TOKEN SANITY_STUDIO_API_TOKEN=$SANITY_STUDIO_API_TOKEN npm ci && npm run fresh-studio:build && npm run build"
   publish = ".next"
   functions = "netlify/functions"
 
@@ -47,7 +47,7 @@
   status = 200
 
 [context.production]
-  command = "NODE_OPTIONS='--max_old_space_size=4096' SANITY_AUTH_TOKEN=$SANITY_AUTH_TOKEN SANITY_STUDIO_API_TOKEN=$SANITY_STUDIO_API_TOKEN npm ci && npm run fresh-studio:build && npm run build"
+  command = "NODE_OPTIONS='--max_old_space_size=8192' NODE_ENV=production SANITY_AUTH_TOKEN=$SANITY_AUTH_TOKEN SANITY_STUDIO_API_TOKEN=$SANITY_STUDIO_API_TOKEN npm ci && npm run fresh-studio:build && npm run build"
   publish = ".next"
   [context.production.environment]
     NEXT_PUBLIC_ENVIRONMENT = "production"
