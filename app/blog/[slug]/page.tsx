@@ -1,6 +1,6 @@
 import { getClient } from '@lib/sanity'
 import { Metadata } from 'next'
-import { BlogPost } from '@/components/blog'
+import { BlogPost } from '@/components/Blog'
 import { notFound } from 'next/navigation'
 import { BlogPageProps } from '@types'
 
