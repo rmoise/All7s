@@ -1,71 +1,57 @@
 'use client'
 
+import React from 'react'
 import { PortableText } from '@portabletext/react'
-import imageUrlBuilder from '@sanity/image-url'
-import { useState, useEffect } from 'react'
-import type { PortableTextBlock, PortableTextComponentProps } from '@portabletext/react'
-import type { SanityImageSource } from '@sanity/image-url/lib/types/types'
-
-// Create image URL builder
-const builder = imageUrlBuilder({
-  projectId: '1gxdk71x',
-  dataset: 'production',
-})
-
-function urlFor(source: SanityImageSource) {
-  return builder.image(source)
-}
+import Link from 'next/link'
+import { urlFor } from '@/lib/sanity'
+import type { Post } from '@/types'
+import type { SanityImage } from '@/types/sanity'
 
 interface BlogPostProps {
-  title: string
-  body: PortableTextBlock[]
-  mainImage: SanityImageSource
-  seo?: {
-    metaTitle?: string
-    metaDescription?: string
-    openGraphImage?: {
-      asset?: {
-        url?: string
-      }
-    }
-  }
+  post: Post
 }
 
-const components = {
-  types: {
-    image: ({ value }: { value: { asset: SanityImageSource } }) => (
-      <img className="mt-8" src={urlFor(value.asset).url()} alt="" />
-    ),
-  },
-  block: {
-    h1: ({ children }: PortableTextComponentProps<PortableTextBlock>) => (
-      <h1 className="text-7xl">{children}</h1>
-    ),
-    normal: ({ children }: PortableTextComponentProps<PortableTextBlock>) => (
-      <p className="text-xl mt-12">{children}</p>
-    ),
-  },
+interface ProductImage {
+  asset: {
+    _id: string;
+    url: string;
+    metadata?: {
+      dimensions: {
+        width: number;
+        height: number;
+        aspectRatio: number;
+      };
+    };
+  };
 }
 
-export default function BlogPost({ title, body, mainImage }: BlogPostProps) {
-  const [imageUrl, setImageUrl] = useState('')
-
-  useEffect(() => {
-    if (mainImage) {
-      setImageUrl(urlFor(mainImage).url())
-    }
-  }, [mainImage])
-
+const BlogPost: React.FC<BlogPostProps> = ({ post }) => {
   return (
-    <div className="flex flex-col items-center mt-28">
-      <h1 className="text-9xl font-Headline">{title}</h1>
-      {imageUrl && <img className="mt-8 w-3/4" src={imageUrl} alt={title} />}
-      <div className="mt-20 portable-text flex flex-col gap-y-30">
-        <PortableText
-          value={body}
-          components={components}
-        />
+    <article className="bg-black text-white">
+      <div className="relative px-4 py-16 sm:px-6 lg:px-8">
+        <div className="text-lg max-w-prose mx-auto">
+          <h1>
+            <span className="block text-base text-center text-indigo-600 font-semibold tracking-wide uppercase">
+              Blog
+            </span>
+            <span className="mt-2 block text-3xl text-center leading-8 font-extrabold tracking-tight text-white sm:text-4xl">
+              {post.title}
+            </span>
+          </h1>
+          {post.mainImage && (
+            <img
+              className="w-full rounded-lg mt-8"
+              src={urlFor(post.mainImage as unknown as (string | SanityImage | ProductImage | null | undefined))}
+              alt={post.title}
+            />
+          )}
+          <div className="mt-8 text-xl text-gray-300 leading-8">
+            <PortableText value={post.body} />
+          </div>
+        </div>
       </div>
-    </div>
+    </article>
   )
 }
+
+export default BlogPost

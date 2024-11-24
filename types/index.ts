@@ -18,6 +18,9 @@ import type {
   MusicAlbum
 } from './music'
 
+import type { PortableTextBlock } from '@portabletext/react'
+import type { SanityImageSource } from '@sanity/image-url/lib/types/types'
+
 // Re-export types
 export type {
   // Sanity types
@@ -193,4 +196,14 @@ export * from './sanity'
 // If you have any types defined directly in index.ts, keep them:
 export interface SomeType {
   // ...
+}
+
+export interface Post {
+  _id: string
+  title: string
+  slug: {
+    current: string
+  }
+  mainImage?: SanityImageSource
+  body: PortableTextBlock[]
 }

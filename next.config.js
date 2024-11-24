@@ -32,6 +32,9 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true
   },
+  experimental: {
+    serverActions: true
+  },
   generateBuildId: async () => {
     return process.env.BUILD_ID || 'development'
   },
