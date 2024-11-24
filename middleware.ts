@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-// Named export
+// Middleware function (named export)
 export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
 
@@ -18,6 +18,9 @@ export function middleware(request: NextRequest) {
 
   return NextResponse.next()
 }
+
+// Default export of the middleware function
+export default middleware
 
 // Configure paths that should use this middleware
 export const config = {
