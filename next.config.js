@@ -71,11 +71,11 @@ const nextConfig = {
     config.resolve.alias = {
       ...config.resolve.alias,
       '@': path.join(__dirname, './'),
-      '@components': path.join(__dirname, 'components'),
+      '@components': path.join(__dirname, './components'),
+      '@lib': path.join(__dirname, './lib'),
       '@utils': path.join(__dirname, 'utils'),
       '@pages': path.join(__dirname, 'pages'),
       '@styles': path.join(__dirname, 'styles'),
-      '@lib': path.join(__dirname, 'lib'),
       '@context': path.join(__dirname, 'context'),
     };
 
