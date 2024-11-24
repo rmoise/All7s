@@ -3,22 +3,34 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./*"],
-      "@components/*": ["components/*"],
-      "@components/common/*": ["components/common/*"],
-      "@components/blog/*": ["components/blog/*"],
-      "@components/blocks/*": ["components/blocks/*"],
-      "@components/shop/*": ["components/shop/*"],
-      "@lib/*": ["lib/*"],
-      "@utils/*": ["utils/*"],
-      "@context/*": ["context/*"],
-      "@blocks/*": ["components/blocks/*"],
-      "@blog/*": ["components/blog/*"],
-      "@app/*": ["app/*"],
-      "@types/*": ["types/*"],
-      "@styles/*": ["styles/*"],
-      "@fresh_sanity_studio/*": ["fresh_sanity_studio/*"]
+      "@components/*": ["./components/*"],
+      "@components/common/*": ["./components/common/*"],
+      "@components/blog/*": ["./components/blog/*"],
+      "@components/blocks/*": ["./components/blocks/*"],
+      "@components/shop/*": ["./components/shop/*"],
+      "@components/Music/*": ["./components/Music/*"],
+      "@components/media/*": ["./components/media/*"],
+      "@lib/*": ["./lib/*"],
+      "@utils/*": ["./utils/*"],
+      "@context/*": ["./context/*"],
+      "@blocks/*": ["./components/blocks/*"],
+      "@blog/*": ["./components/blog/*"],
+      "@app/*": ["./app/*"],
+      "@types": ["types/index.ts"],
+      "@types/*": ["./types/*"],
+      "@styles/*": ["./styles/*"],
+      "@fresh_sanity_studio/*": ["./fresh_sanity_studio/*"]
     }
   },
-  "include": ["**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules"]
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "**/*.js",
+    "**/*.jsx"
+  ],
+  "exclude": [
+    "node_modules",
+    ".next",
+    "out"
+  ]
 }
