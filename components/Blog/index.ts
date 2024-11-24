@@ -1,2 +1,4 @@
-export { default as BlogPost } from './BlogPost'
-export { default as AllPosts } from './AllPosts' 
+import BlogPost from './BlogPost'
+import AllPosts from './AllPosts'
+
+export { BlogPost, AllPosts } 
