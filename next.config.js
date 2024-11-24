@@ -72,7 +72,7 @@ const nextConfig = {
       ...config.resolve,
       alias: {
         ...config.resolve.alias,
-        '@': path.join(__dirname, '.'),
+        '@': path.join(__dirname),
         '@components': path.join(__dirname, 'components'),
         '@lib': path.join(__dirname, 'lib'),
         '@utils': path.join(__dirname, 'utils'),
@@ -85,24 +85,13 @@ const nextConfig = {
         '@fresh_sanity_studio': path.join(__dirname, 'fresh_sanity_studio'),
       },
       modules: [
-        path.join(__dirname, '.'),
-        path.join(__dirname, 'components'),
-        'node_modules'
-      ]
+        'node_modules',
+        path.resolve(__dirname),
+        path.resolve(__dirname, 'components'),
+        path.resolve(__dirname, 'components/blog')
+      ],
+      extensions: ['.js', '.jsx', '.ts', '.tsx']
     };
-
-    if (dev && !isServer) {
-      config.optimization = {
-        minimize: false,
-        splitChunks: {
-          chunks: 'all',
-          cacheGroups: {
-            default: false,
-            vendors: false,
-          },
-        },
-      };
-    }
 
     return config;
   },
