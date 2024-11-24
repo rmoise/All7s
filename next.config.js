@@ -67,30 +67,23 @@ const nextConfig = {
     ],
   },
 
-  webpack: (config, { isServer, dev }) => {
+  webpack: (config) => {
     config.resolve = {
       ...config.resolve,
       alias: {
         ...config.resolve.alias,
-        '@': path.join(__dirname),
-        '@components': path.join(__dirname, 'components'),
-        '@lib': path.join(__dirname, 'lib'),
-        '@utils': path.join(__dirname, 'utils'),
-        '@pages': path.join(__dirname, 'pages'),
-        '@styles': path.join(__dirname, 'styles'),
-        '@context': path.join(__dirname, 'context'),
-        '@blog': path.join(__dirname, 'components/blog'),
-        '@app': path.join(__dirname, 'app'),
-        '@types': path.join(__dirname, 'types'),
-        '@fresh_sanity_studio': path.join(__dirname, 'fresh_sanity_studio'),
-      },
-      modules: [
-        'node_modules',
-        path.resolve(__dirname),
-        path.resolve(__dirname, 'components'),
-        path.resolve(__dirname, 'components/blog')
-      ],
-      extensions: ['.js', '.jsx', '.ts', '.tsx']
+        '@': path.resolve(__dirname),
+        '@components': path.resolve(__dirname, 'components'),
+        '@lib': path.resolve(__dirname, 'lib'),
+        '@utils': path.resolve(__dirname, 'utils'),
+        '@context': path.resolve(__dirname, 'context'),
+        '@blocks': path.resolve(__dirname, 'components/blocks'),
+        '@blog': path.resolve(__dirname, 'components/blog'),
+        '@app': path.resolve(__dirname, 'app'),
+        '@types': path.resolve(__dirname, 'types'),
+        '@styles': path.resolve(__dirname, 'styles'),
+        '@fresh_sanity_studio': path.resolve(__dirname, 'fresh_sanity_studio')
+      }
     };
 
     return config;
