@@ -1,6 +1,6 @@
 import { getClient } from '@lib/sanity'
 import { Metadata } from 'next'
-import { AllPosts } from '../../components/blog'
+import { AllPosts } from '@/components/blog'
 
 export const metadata: Metadata = {
   title: 'Blog - All7Z Brand',
