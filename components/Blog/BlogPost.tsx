@@ -4,25 +4,10 @@ import React from 'react'
 import { PortableText } from '@portabletext/react'
 import Link from 'next/link'
 import { urlFor } from '@/lib/sanity'
-import type { Post } from '@/types'
-import type { SanityImage } from '@/types/sanity'
+import type { Post } from '@/types/sanity'
 
 interface BlogPostProps {
   post: Post
-}
-
-interface ProductImage {
-  asset: {
-    _id: string;
-    url: string;
-    metadata?: {
-      dimensions: {
-        width: number;
-        height: number;
-        aspectRatio: number;
-      };
-    };
-  };
 }
 
 const BlogPost: React.FC<BlogPostProps> = ({ post }) => {
@@ -41,7 +26,7 @@ const BlogPost: React.FC<BlogPostProps> = ({ post }) => {
           {post.mainImage && (
             <img
               className="w-full rounded-lg mt-8"
-              src={urlFor(post.mainImage as unknown as (string | SanityImage | ProductImage | null | undefined))}
+              src={urlFor(post.mainImage)}
               alt={post.title}
             />
           )}

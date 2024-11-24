@@ -181,3 +181,18 @@ export interface Album {
   }
 }
 
+export interface SanityReference {
+  _ref: string;
+  _type: 'reference';
+}
+
+export interface Post {
+  _id: string;
+  title: string;
+  slug: {
+    current: string;
+  };
+  mainImage?: SanityImage;
+  body: any[]; // or use proper PortableText type
+}
+
