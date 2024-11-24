@@ -74,7 +74,7 @@ const nextConfig = {
         ...config.resolve.alias,
         '@': path.resolve(__dirname),
         '@components': path.resolve(__dirname, 'components'),
-        '@components/blog': path.resolve(__dirname, 'components/blog'),
+        '@components/blog': path.resolve(__dirname, 'components', 'blog'),
         '@components/blocks': path.resolve(__dirname, 'components/blocks'),
         '@components/Music': path.resolve(__dirname, 'components/Music'),
         '@components/media': path.resolve(__dirname, 'components/media'),
