@@ -33,7 +33,9 @@ const nextConfig = {
     ignoreDuringBuilds: true
   },
   experimental: {
-    serverActions: true,
+    serverActions: {
+      allowedOrigins: ['localhost:3000', 'all7z.com', '*.netlify.app']
+    },
     serverComponentsExternalPackages: ['@sanity/client']
   },
   generateBuildId: async () => {
@@ -72,135 +74,11 @@ const nextConfig = {
     SANITY_STUDIO_API_TOKEN: process.env.SANITY_STUDIO_API_TOKEN || '',
     NEXT_PUBLIC_SANITY_TOKEN: process.env.NEXT_PUBLIC_SANITY_TOKEN || '',
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000',
-  },
-
-  images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'cdn.sanity.io',
-        pathname: '/images/**',
-      },
-    ],
-    domains: ['cdn.sanity.io', 'i.scdn.co', 'i1.sndcdn.com', 'i2.sndcdn.com', 'i3.sndcdn.com', 'i4.sndcdn.com'],
-    formats: ['image/avif', 'image/webp'],
-    dangerouslyAllowSVG: true,
-    contentDispositionType: 'attachment',
-    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
-  },
-
-  async headers() {
-    return [
-      {
-        source: '/:path*',
-        headers: [
-          {
-            key: 'Content-Security-Policy',
-            value: [
-              "default-src 'self'",
-              // Scripts
-              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://apis.google.com https://*.youtube.com http://*.youtube.com https://*.stripe.com https://*.typekit.net",
-              // Styles
-              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://*.typekit.net",
-              "style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com https://*.typekit.net",
-              // Images
-              "img-src 'self' data: blob: https: http:",
-              // Media
-              "media-src 'self' https://*.scdn.co https://*.spotify.com https://*.ytimg.com https://*.imagekit.io https://*.sanity.io blob:",
-              // Fonts
-              "font-src 'self' data: https://fonts.gstatic.com https://*.typekit.net",
-              // Connect
-              "connect-src 'self' https: wss: https://*.sanity.io https://*.apicdn.sanity.io",
-              // Frames
-              [
-                "frame-src 'self'",
-                "https://www.youtube.com",
-                "https://youtube.com",
-                "https://*.youtube.com",
-                "http://*.youtube.com",
-                "https://open.spotify.com",
-                "https://*.stripe.com",
-                "https://js.stripe.com",
-                "https://w.soundcloud.com",
-                "https://*.soundcloud.com"
-              ].join(' '),
-              // Objects
-              "object-src 'none'",
-              // Manifests
-              "manifest-src 'self'"
-            ].join('; ')
-          }
-        ]
-      },
-      {
-        source: '/studio/:path*',
-        headers: [
-          { key: 'Access-Control-Allow-Credentials', value: 'true' },
-          { key: 'Access-Control-Allow-Origin', value: '*' },
-          { key: 'Access-Control-Allow-Methods', value: 'GET,OPTIONS,PATCH,DELETE,POST,PUT' },
-          { key: 'Access-Control-Allow-Headers', value: 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version' },
-        ],
-      },
-      {
-        source: '/api/:path*',
-        headers: [
-          { key: 'Access-Control-Allow-Credentials', value: 'true' },
-          { key: 'Access-Control-Allow-Origin', value: 'https://all7z.com' },
-          { key: 'Access-Control-Allow-Methods', value: 'GET,OPTIONS,PATCH,DELETE,POST,PUT' },
-          { key: 'Access-Control-Allow-Headers', value: 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version' },
-        ],
-      },
-      {
-        source: '/api/sanity/:path*',
-        headers: [
-          { key: 'Access-Control-Allow-Credentials', value: 'true' },
-          { key: 'Access-Control-Allow-Origin', value: '*' },
-          { key: 'Access-Control-Allow-Methods', value: 'GET,OPTIONS,PATCH,DELETE,POST,PUT' },
-          { key: 'Access-Control-Allow-Headers', value: 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization' },
-        ],
-      },
-    ]
-  },
-
-  compiler: {
-    styledComponents: true,
-  },
-
-  publicRuntimeConfig: {
-    SANITY_PREVIEW_SECRET: process.env.SANITY_PREVIEW_SECRET
-  },
-
-  async redirects() {
-    return [
-      {
-        source: '/store',
-        destination: '/shop',
-        permanent: true,
-      },
-      {
-        source: '/blog',
-        destination: '/blog/posts',
-        permanent: true,
-      },
-    ]
-  },
-
-  rewrites: async () => {
-    return [
-      {
-        source: '/studio/:path*',
-        destination: '/studio/[[...index]]/page',
-      },
-    ]
-  },
-
-  distDir: '.next',
-
-  experimental: {
-    serverActions: {
-      bodySizeLimit: '2mb'
-    }
-  },
+    NEXT_USE_NETLIFY_EDGE: process.env.NEXT_USE_NETLIFY_EDGE || 'true',
+    NEXT_FORCE_EDGE_IMAGES: process.env.NEXT_FORCE_EDGE_IMAGES || 'true',
+    STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY || '',
+    NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || ''
+  }
 };
 
 module.exports = nextConfig;
