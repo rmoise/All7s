@@ -192,7 +192,17 @@ export interface Post {
   slug: {
     current: string;
   };
-  mainImage?: SanityImage;
-  body: any[]; // or use proper PortableText type
+  mainImage: any;
+  body: any;
+  excerpt?: string;
+  seo?: {
+    metaTitle?: string;
+    metaDescription?: string;
+    openGraphImage?: {
+      asset: {
+        url: string;
+      };
+    };
+  };
 }
 

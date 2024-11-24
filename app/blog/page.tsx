@@ -8,7 +8,13 @@ export const metadata: Metadata = {
 }
 
 export default async function BlogPage() {
-  const allPosts = await getClient().fetch(`*[_type == "post"]`)
+  const allPosts = await getClient().fetch(`*[_type == "post"]{
+    _id,
+    title,
+    slug,
+    mainImage,
+    excerpt
+  }`)
 
   return <AllPosts postInfo={allPosts} />
 }

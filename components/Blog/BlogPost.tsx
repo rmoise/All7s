@@ -2,15 +2,10 @@
 
 import React from 'react'
 import { PortableText } from '@portabletext/react'
-import Link from 'next/link'
 import { urlFor } from '@/lib/sanity'
 import type { Post } from '@/types/sanity'
 
-interface BlogPostProps {
-  post: Post
-}
-
-const BlogPost: React.FC<BlogPostProps> = ({ post }) => {
+const BlogPost: React.FC<Post> = ({ title, mainImage, body }) => {
   return (
     <article className="bg-black text-white">
       <div className="relative px-4 py-16 sm:px-6 lg:px-8">
@@ -20,18 +15,18 @@ const BlogPost: React.FC<BlogPostProps> = ({ post }) => {
               Blog
             </span>
             <span className="mt-2 block text-3xl text-center leading-8 font-extrabold tracking-tight text-white sm:text-4xl">
-              {post.title}
+              {title}
             </span>
           </h1>
-          {post.mainImage && (
+          {mainImage && (
             <img
               className="w-full rounded-lg mt-8"
-              src={urlFor(post.mainImage)}
-              alt={post.title}
+              src={urlFor(mainImage)}
+              alt={title}
             />
           )}
           <div className="mt-8 text-xl text-gray-300 leading-8">
-            <PortableText value={post.body} />
+            <PortableText value={body} />
           </div>
         </div>
       </div>
