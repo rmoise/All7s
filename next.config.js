@@ -68,21 +68,27 @@ const nextConfig = {
   },
 
   webpack: (config, { isServer, dev }) => {
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      '@': path.join(__dirname, '.'),
-      '@components': path.join(__dirname, 'components'),
-      '@lib': path.join(__dirname, 'lib'),
-      '@utils': path.join(__dirname, 'utils'),
-      '@pages': path.join(__dirname, 'pages'),
-      '@styles': path.join(__dirname, 'styles'),
-      '@context': path.join(__dirname, 'context'),
-      '@blog': path.join(__dirname, 'components/blog'),
-      '@app': path.join(__dirname, 'app'),
-      '@types': path.join(__dirname, 'types'),
-      '@fresh_sanity_studio': path.join(__dirname, 'fresh_sanity_studio'),
-      '@components/common': path.join(__dirname, 'components/common'),
-      '@components/blog': path.join(__dirname, 'components/blog'),
+    config.resolve = {
+      ...config.resolve,
+      alias: {
+        ...config.resolve.alias,
+        '@': path.join(__dirname, '.'),
+        '@components': path.join(__dirname, 'components'),
+        '@lib': path.join(__dirname, 'lib'),
+        '@utils': path.join(__dirname, 'utils'),
+        '@pages': path.join(__dirname, 'pages'),
+        '@styles': path.join(__dirname, 'styles'),
+        '@context': path.join(__dirname, 'context'),
+        '@blog': path.join(__dirname, 'components/blog'),
+        '@app': path.join(__dirname, 'app'),
+        '@types': path.join(__dirname, 'types'),
+        '@fresh_sanity_studio': path.join(__dirname, 'fresh_sanity_studio'),
+      },
+      modules: [
+        path.join(__dirname, '.'),
+        path.join(__dirname, 'components'),
+        'node_modules'
+      ]
     };
 
     if (dev && !isServer) {
