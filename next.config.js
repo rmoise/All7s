@@ -192,8 +192,7 @@ const nextConfig = {
   },
 
   experimental: {
-    serverActions: true,
-    ...nextConfig.experimental
+    serverActions: true
   },
 };
 
