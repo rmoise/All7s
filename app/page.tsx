@@ -1,5 +1,5 @@
 import { Metadata } from 'next'
-import HomeClient from './components/HomeClient'
+import HomeClient from './HomeClient'
 import { getPreviewToken } from '@lib/preview'
 import { fetchSanity } from '@lib/sanity'
 import type { HomePageProps, HomeData } from '@/types'

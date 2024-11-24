@@ -4,6 +4,7 @@ import React from 'react'
 import { PortableText } from '@portabletext/react'
 import { urlFor } from '@/lib/sanity'
 import type { Post } from '@/types/sanity'
+import Image from 'next/image'
 
 const BlogPost: React.FC<Post> = ({ title, mainImage, body }) => {
   return (
@@ -19,10 +20,12 @@ const BlogPost: React.FC<Post> = ({ title, mainImage, body }) => {
             </span>
           </h1>
           {mainImage && (
-            <img
+            <Image
               className="w-full rounded-lg mt-8"
               src={urlFor(mainImage)}
-              alt={title}
+              alt={title || 'Blog post image'}
+              width={800}
+              height={500}
             />
           )}
           <div className="mt-8 text-xl text-gray-300 leading-8">
