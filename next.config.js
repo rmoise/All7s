@@ -33,7 +33,9 @@ const nextConfig = {
     ignoreDuringBuilds: true
   },
   experimental: {
-    serverActions: true
+    serverActions: {
+      allowedOrigins: ['localhost:3000', 'all7z.com', '*.netlify.app']
+    }
   },
   generateBuildId: async () => {
     return process.env.BUILD_ID || 'development'
