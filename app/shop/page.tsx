@@ -113,7 +113,7 @@ export default async function ShopPage() {
             {shopPage?.heroImage && (
               <div className="absolute inset-0">
                 <img
-                  src={urlFor(shopPage.heroImage)}
+                  src={urlFor(shopPage.heroImage).url()}
                   alt={shopPage.heroImage.alt || 'Shop Banner'}
                   className="w-full h-full object-cover"
                 />

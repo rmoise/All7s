@@ -32,6 +32,7 @@ const Cart: React.FC = () => {
   const [itemsToRemove, setItemsToRemove] = useState<Set<string>>(new Set());
   const [inputValues, setInputValues] = useState<{ [key: string]: string }>({});
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
+  const checkoutHandledRef = useRef(false);
 
   useEffect(() => {
     setMounted(true);
@@ -61,6 +62,18 @@ const Cart: React.FC = () => {
     };
   }, [showCart, setShowCart]);
 
+  useEffect(() => {
+    const handleRouteChange = () => {
+      setShowCart(false);
+    };
+
+    window.addEventListener('popstate', handleRouteChange);
+
+    return () => {
+      window.removeEventListener('popstate', handleRouteChange);
+    };
+  }, [setShowCart]);
+
   const handleCheckout = async () => {
     try {
       if (!cartItems?.length) {
@@ -75,7 +88,7 @@ const Cart: React.FC = () => {
           currency: 'usd',
           product_data: {
             name: item.name,
-            images: item.image?.map(img => urlFor(img)).filter(Boolean) || [],
+            images: item.image?.map(img => urlFor(img).url()).filter(Boolean) || [],
           },
           unit_amount: Math.round(item.price * 100),
         },
@@ -103,6 +116,8 @@ const Cart: React.FC = () => {
       if (!data.sessionId) {
         throw new Error('No session ID returned from checkout API');
       }
+
+      sessionStorage.setItem('previousPath', window.location.pathname);
 
       const stripe = await getStripe();
       if (!stripe) {
@@ -140,6 +155,34 @@ const Cart: React.FC = () => {
       setIsCheckoutLoading(false);
     }
   };
+
+  useEffect(() => {
+    const query = new URLSearchParams(window.location.search);
+    const isSuccess = query.get('success');
+    const isCanceled = query.get('canceled');
+
+    if (!isSuccess && !isCanceled) return;
+    if (checkoutHandledRef.current) return;
+
+    const handleCheckoutResult = () => {
+      if (isSuccess === 'true') {
+        checkoutHandledRef.current = true;
+        setCartItems([]);
+        setTotalPrice(0);
+        setTotalQuantities(0);
+        toast.success('Payment successful! Thank you for your purchase.');
+      } else if (isCanceled === 'true') {
+        checkoutHandledRef.current = true;
+        toast.error('Payment canceled. Your cart items are still saved.');
+      }
+
+      const previousPath = sessionStorage.getItem('previousPath') || '/';
+      sessionStorage.removeItem('previousPath');
+      router.replace(previousPath);
+    };
+
+    handleCheckoutResult();
+  }, [router, setCartItems, setTotalPrice, setTotalQuantities]);
 
   const handleQuantityChange = (id: string, action: 'inc' | 'dec') => {
     const item = cartItems.find(item => item._id === id);
@@ -272,7 +315,7 @@ const Cart: React.FC = () => {
                         <TiDeleteOutline size={20} />
                       </button>
                       <img
-                        src={item?.image?.[0] ? urlFor(item.image[0]) : '/images/placeholder.png'}
+                        src={item?.image?.[0] ? urlFor(item.image[0]).url() : '/images/placeholder.png'}
                         alt={item.name}
                         className="w-full h-40 object-cover rounded-md"
                       />

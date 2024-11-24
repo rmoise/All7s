@@ -12,11 +12,11 @@ import clsx from 'clsx'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPlay, faPause, faSyncAlt } from '@fortawesome/free-solid-svg-icons'
 import anime from 'animejs'
-import { useAudio } from '@/context/AudioContext'
-import MusicEmbed from '@/components/MusicEmbed'
+import { useAudio } from '@context/AudioContext'
+import MusicEmbed from '@components/MusicEmbed'
 import { debounce } from 'lodash'
 import Image from 'next/image'
-import type { Song, SanityRawSong } from '@/types'
+import type { Song, SanityRawSong } from '@types'
 
 interface CustomImage {
   asset: {

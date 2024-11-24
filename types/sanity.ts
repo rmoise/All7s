@@ -1,4 +1,5 @@
 import type { SanityImageSource } from '@sanity/image-url/lib/types/types'
+import type { PortableTextBlock } from '@portabletext/types'
 
 // Base Document Type
 export interface SanityBaseDocument {
@@ -186,23 +187,21 @@ export interface SanityReference {
   _type: 'reference';
 }
 
-export interface Post {
-  _id: string;
-  title: string;
+export interface Post extends SanityBaseDocument {
+  _type: 'post'
+  title: string
   slug: {
-    current: string;
-  };
-  mainImage: any;
-  body: any;
-  excerpt?: string;
-  seo?: {
-    metaTitle?: string;
-    metaDescription?: string;
-    openGraphImage?: {
-      asset: {
-        url: string;
-      };
-    };
-  };
+    _type: 'slug'
+    current: string
+  }
+  mainImage: {
+    _type: 'image'
+    asset: {
+      _ref: string
+      _type: 'reference'
+    }
+  }
+  body: PortableTextBlock[]
+  excerpt?: string
 }
 

@@ -169,7 +169,7 @@ export const NavbarContent: React.FC<{ navbarData?: NavbarData }> = ({ navbarDat
   const getLogo = (logo: string | SanityImage | undefined): string => {
     if (!logo) return DEFAULT_LOGO;
     if (typeof logo === 'string') return logo;
-    return urlForImage(logo);
+    return urlForImage(logo).url();
   };
 
   const logoUrl = !logoError ? getLogo(finalNavbarData.logo) : DEFAULT_LOGO;

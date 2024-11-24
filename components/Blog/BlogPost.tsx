@@ -2,22 +2,21 @@
 
 import React from 'react'
 import { PortableText } from '@portabletext/react'
-import { urlFor } from '@/lib/sanity'
-import type { Post } from '@/types/sanity'
+import { urlFor } from '@lib/sanity'
+import type { Post } from '@types'
 import Image from 'next/image'
 
-interface BlogPostProps extends Post {
-  // Add any additional props if needed
-}
+type BlogPostProps = Post
 
 const BlogPost: React.FC<BlogPostProps> = ({
   title,
   mainImage,
   body,
-  // Destructure other props you might need
 }) => {
-  // Add error boundary for image loading
-  const imageUrl = mainImage ? urlFor(mainImage) : '';
+  const imageUrl = React.useMemo(() => {
+    if (!mainImage) return ''
+    return urlFor(mainImage).url()
+  }, [mainImage])
 
   return (
     <article className="bg-black text-white">
@@ -44,12 +43,14 @@ const BlogPost: React.FC<BlogPostProps> = ({
             </div>
           )}
           <div className="mt-8 text-xl text-gray-300 leading-8">
-            <PortableText
-              value={body}
-              components={{
-                // Add any custom components for PortableText if needed
-              }}
-            />
+            {body && (
+              <PortableText
+                value={body}
+                components={{
+                  // Add any custom components for PortableText if needed
+                }}
+              />
+            )}
           </div>
         </div>
       </div>

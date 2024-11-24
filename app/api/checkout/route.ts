@@ -6,7 +6,9 @@ if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error('STRIPE_SECRET_KEY is not set');
 }
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+  apiVersion: '2024-10-28.acacia',
+});
 
 const stripeCountryCodes = stripeCountryObjs.map(country =>
   country.code as Stripe.Checkout.SessionCreateParams.ShippingAddressCollection.AllowedCountry
@@ -44,8 +46,8 @@ export async function POST(request: Request) {
         allowed_countries: stripeCountryCodes,
       },
       line_items: line_items,
-      success_url: `${origin}/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/cart`,
+      success_url: `${origin}/?success=true`,
+      cancel_url: `${origin}/?canceled=true`,
     });
 
     console.log('Stripe session created:', session.id);

@@ -1,20 +1,28 @@
-import { updateBlockTitleAction } from '@/app/actions/navbar'
-import { NextResponse } from 'next/server'
+import { NextResponse } from 'next/server';
+import { getClient } from '@lib/sanity';
 
 export async function POST(request: Request) {
   try {
-    const { type, newTitle } = await request.json()
-    const result = await updateBlockTitleAction(type, newTitle)
+    const { title } = await request.json();
 
-    if (!result.success) {
-      return NextResponse.json(result, { status: 400 })
+    if (!title) {
+      return NextResponse.json(
+        { message: 'Title is required' },
+        { status: 400 }
+      );
     }
 
-    return NextResponse.json(result)
-  } catch (error) {
+    const client = getClient();
+    await client.patch('navbar')
+      .set({ title })
+      .commit();
+
+    return NextResponse.json({ message: 'Title updated successfully' });
+  } catch (error: any) {
+    console.error('Error updating navbar title:', error);
     return NextResponse.json(
-      { success: false, error: 'Internal Server Error' },
+      { message: error.message || 'Failed to update title' },
       { status: 500 }
-    )
+    );
   }
-} 
+}

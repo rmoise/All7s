@@ -18,7 +18,7 @@ import type {
   MusicAlbum
 } from './music'
 
-import type { PortableTextBlock } from '@portabletext/react'
+import type { PortableTextBlock } from '@portabletext/types'
 import type { SanityImageSource } from '@sanity/image-url/lib/types/types'
 
 // Re-export types
@@ -202,13 +202,10 @@ export interface Post {
   _id: string
   _createdAt: string
   title: string
-  slug: string
-  mainImage?: {
-    asset: {
-      _ref: string
-      _type: 'reference'
-    }
+  slug: {
+    current: string
   }
+  mainImage?: SanityImage
+  body?: PortableTextBlock[]
   excerpt?: string
-  content: any[] // For PortableText content
 }

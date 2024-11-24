@@ -151,7 +151,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({
                             <img
                               src={
                                 image[index]
-                                  ? urlFor(image[index])
+                                  ? urlFor(image[index]).url()
                                   : '/images/placeholder.png'
                               }
                               alt={image[index]?.alt || name}
@@ -179,7 +179,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({
                         >
                           <div className="flex items-center justify-center h-full p-2">
                             <img
-                              src={urlFor(item)}
+                              src={urlFor(item).url()}
                               alt={item?.alt || `${name} thumbnail ${i + 1}`}
                               className="max-w-[85%] max-h-[85%] object-contain"
                             />

@@ -23,7 +23,7 @@ const HeroBanner: React.FC<HeroBannerProps> = ({
   const imageUrl = React.useMemo(() => {
     if (!backgroundImage) return null;
     try {
-      return urlFor(backgroundImage);
+      return urlFor(backgroundImage).url();
     } catch (error) {
       console.error('Error generating image URL:', error);
       return null;

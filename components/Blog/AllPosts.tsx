@@ -2,8 +2,8 @@
 
 import React from 'react'
 import Link from 'next/link'
-import { urlFor } from '@/lib/sanity'
-import type { Post } from '@/types/sanity'
+import { urlFor } from '@lib/sanity'
+import type { Post } from '@types'
 
 interface AllPostsProps {
   postInfo: Post[]
@@ -23,7 +23,7 @@ const AllPosts: React.FC<AllPostsProps> = ({ postInfo }) => {
               <div className="bg-gray-900 rounded-lg overflow-hidden">
                 {post.mainImage && (
                   <img
-                    src={urlFor(post.mainImage)}
+                    src={urlFor(post.mainImage).url()}
                     alt={post.title}
                     className="w-full h-48 object-cover"
                   />

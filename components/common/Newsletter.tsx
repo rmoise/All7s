@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react'
 import { Transition } from '@headlessui/react'
 import { CheckCircleIcon, XMarkIcon } from '@heroicons/react/24/outline'
-import Grid from '@/components/common/Grid/Grid'
+import Grid from '@components/common/Grid/Grid'
 import useOnClickOutside from '../../hooks/useOnClickOutside'
 
 interface NewsletterProps {
@@ -25,6 +25,22 @@ interface NewsletterProps {
       }>
     }
   }
+}
+
+interface NotificationState {
+  show: boolean;
+  error: boolean;
+  title?: string;
+  description?: string;
+  showSocialLinks?: boolean;
+  socialLinks?: Array<{
+    platform: string;
+    url: string;
+    color?: {
+      hex?: string;
+    }
+  }>;
+  socialLinksTitle?: string;
 }
 
 const XIcon: React.FC = () => (
@@ -55,9 +71,9 @@ const Newsletter: React.FC<NewsletterProps> = ({ newsletter }) => {
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [email, setEmail] = useState('')
-  const [notification, setNotification] = useState({
+  const [notification, setNotification] = useState<NotificationState>({
     show: false,
-    error: false,
+    error: false
   })
   const modalRef = useRef<HTMLDivElement>(null)
 
@@ -66,35 +82,48 @@ const Newsletter: React.FC<NewsletterProps> = ({ newsletter }) => {
   )
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSubmitting(true)
+    e.preventDefault();
+
+    if (isSubmitting) return;
 
     try {
-      const encodedData = new URLSearchParams()
-      encodedData.append('form-name', 'newsletter')
-      encodedData.append('email', email)
+      setIsSubmitting(true);
+      const formData = new FormData();
+      formData.append('email', email);
+      formData.append('form-name', newsletter?.formName || 'newsletter');
 
-      const response = await fetch('/api/form-submission', {
+      const response = await fetch('/.netlify/functions/form-submission', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: encodedData.toString(),
-      })
+        body: formData,
+      });
 
-      if (response.ok) {
-        setEmail('')
-        setNotification({ show: true, error: false })
-      } else {
-        throw new Error(`Form submission failed: ${await response.text()}`)
+      if (!response.ok) {
+        throw new Error('Failed to submit form');
       }
+
+      setEmail('');
+      setNotification({
+        show: true,
+        error: false,
+        title: newsletter?.notification?.title || 'Thank you for signing up!',
+        description: newsletter?.notification?.description || 'You will receive our newsletter shortly.',
+        showSocialLinks: newsletter?.notification?.showSocialLinks ?? true,
+        socialLinks: newsletter?.notification?.socialLinks || defaultSocialLinks,
+        socialLinksTitle: newsletter?.notification?.socialLinksTitle || 'Follow us on social media',
+      });
+
     } catch (error) {
-      console.error('Newsletter submission error:', error)
-      setNotification({ show: true, error: true })
+      setNotification({
+        show: true,
+        error: true,
+        title: 'Error',
+        description: 'Failed to sign up for newsletter. Please try again later.',
+        showSocialLinks: false,
+      });
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   const InstagramIcon: React.FC = () => (
     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">

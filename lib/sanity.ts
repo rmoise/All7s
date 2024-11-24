@@ -5,6 +5,7 @@ import type { QueryParams, FilteredResponseQueryOptions } from '@sanity/client'
 import type { SanityImage } from '@types'
 import { ImageUrlBuilder } from '@sanity/image-url/lib/types/builder'
 import type { Environment } from './environment'
+import type { SanityImageSource } from '@sanity/image-url/lib/types/types'
 
 // Type guard to ensure valid environment
 function isValidEnvironment(env: string): env is Environment {
@@ -68,28 +69,12 @@ interface ProductImage {
   alt?: string;
 }
 
-export const urlFor = (source: string | SanityImage | ProductImage | null | undefined): string => {
-  if (!source) return ''
-  if (typeof source === 'string') return source
-
-  // Handle ProductImage type (from shop/cart)
-  if (source.asset && 'url' in source.asset) {
-    return source.asset.url || ''
-  }
-
-  // Handle SanityImage type
-  if (source.asset && '_ref' in source.asset) {
-    try {
-      const imageUrl = imageBuilder.image(source).url()
-      // Ensure the URL is absolute
-      return imageUrl.startsWith('http') ? imageUrl : `https://cdn.sanity.io${imageUrl}`
-    } catch (error) {
-      console.error('Error generating URL:', error)
-      return ''
-    }
-  }
-
-  return ''
+export function urlFor(source: SanityImageSource): {
+  url: () => string;
+  width: (w: number) => { height: (h: number) => { url: () => string } };
+  // Add other builder methods as needed
+} {
+  return imageBuilder.image(source)
 }
 
 export const urlForImage = (source: string | SanityImage | null | undefined, options?: {

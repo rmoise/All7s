@@ -1,8 +1,8 @@
 // components/blocks/MusicBlock.tsx
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
-import FlipCard from '@/components/Music/FlipCard'
-import Grid from '@/components/common/Grid/Grid'
+import FlipCard from '@components/Music/FlipCard'
+import Grid from '@components/common/Grid/Grid'
 import type { MusicAlbum, Song, SanityImage } from '@/types'
 import { getClient, urlFor } from '@lib/sanity'
 import { useNavbar } from '@context/NavbarContext'
