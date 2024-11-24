@@ -24,8 +24,8 @@ const ShopClient = ({ products }: ShopClientProps) => {
     Array.from(
       new Set(
         products
-          ?.map((product) => product?.category?.title)
-          .filter(Boolean)
+          .map(product => product?.category?.title)
+          .filter((title): title is string => typeof title === 'string')
       )
     )
   );

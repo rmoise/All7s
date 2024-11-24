@@ -3,9 +3,10 @@ import { getClient } from '@lib/sanity';
 import { Metadata } from 'next';
 import ProductDetailsWrapper from './ProductDetailsWrapper';
 import { productsQuery, productDetailQuery } from '../queries';
-import type { Product } from '@types/shop';
+import type { Product } from '@/types';
 import { notFound } from 'next/navigation';
-import { ShopPageProps } from '@types/page';
+import { ShopPageProps } from '@/types';
+import { fetchWithRetry } from '@/lib/fetchWithRetry'
 
 export const dynamic = 'force-dynamic';
 export const dynamicParams = true;
@@ -18,11 +19,21 @@ async function getProductData(slug: string) {
 
   try {
     const [products, product] = await Promise.all([
-      getClient().fetch<Product[]>(productsQuery),
-      getClient().fetch<Product>(
-        productDetailQuery,
-        { slug: slug.toString() },
-        { next: { tags: ['products'], revalidate: 10 } }
+      fetchWithRetry(() =>
+        getClient().fetch<Product[]>(productsQuery, {}, {
+          cache: 'force-cache',
+          next: { tags: ['products'], revalidate: 60 }
+        })
+      ),
+      fetchWithRetry(() =>
+        getClient().fetch<Product>(
+          productDetailQuery,
+          { slug: slug.toString() },
+          {
+            cache: 'force-cache',
+            next: { tags: [`product-${slug}`], revalidate: 60 }
+          }
+        )
       )
     ]);
 

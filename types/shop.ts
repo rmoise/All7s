@@ -6,14 +6,14 @@ export interface Product {
   _id: string;
   name: string;
   price: number;
-  slug: {
+  slug: string | {
     current: string;
   };
-  image: Array<{
+  mainImage?: {
     asset: {
       _id: string;
       url: string;
-      metadata: {
+      metadata?: {
         dimensions: {
           width: number;
           height: number;
@@ -21,13 +21,27 @@ export interface Product {
         }
       }
     };
-    alt: string;
+    alt?: string;
+  };
+  image?: Array<{
+    asset: {
+      _id: string;
+      url: string;
+      metadata?: {
+        dimensions: {
+          width: number;
+          height: number;
+          aspectRatio: number;
+        }
+      }
+    };
+    alt?: string;
   }>;
-  category: {
+  category?: {
     title: string;
     description?: string;
   };
-  description: PortableTextBlock[];
+  description?: any[];
   seo?: {
     metaTitle?: string;
     metaDescription?: string;

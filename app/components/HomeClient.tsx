@@ -11,7 +11,7 @@ import About from '@components/home/About'
 import Newsletter from '@components/common/Newsletter'
 import { useCallback, useEffect, useState } from 'react'
 import { getClient } from '@lib/sanity'
-import { Album } from '@types'
+import { Album, MusicAlbum } from '@types'
 
 // Define component props types
 interface MusicBlockProps {
@@ -61,7 +61,7 @@ interface MusicBlockContent extends BaseContentBlock {
     _type: 'reference'
     _key: string
   }>
-  resolvedAlbums?: Album[]
+  resolvedAlbums?: MusicAlbum[]
 }
 
 interface VideoBlockContent extends BaseContentBlock {
@@ -235,7 +235,7 @@ export default function HomeClient({ contentBlocks }: HomeClientProps) {
               >
                 <MusicBlock
                   listenTitle={block.listenTitle}
-                  albums={(block.resolvedAlbums || block.albums || []) as Album[]}
+                  albums={(block.resolvedAlbums || block.albums || []) as MusicAlbum[]}
                 />
               </section>
             </ClientOnly>

@@ -7,7 +7,7 @@ import { useStateContext } from '../../context/StateContext'
 import { useRouter } from 'next/navigation'
 import type { CartItem } from '../../types/cart'
 import type { Product, ProductsProps } from '../../types/shop'
-import Grid from '@components/common/grid/Grid'
+import Grid from '@/components/common/Grid/Grid'
 
 const Products: React.FC<ProductsProps> = React.memo(({ product }) => {
   const [mounted, setMounted] = useState(false)
@@ -38,8 +38,9 @@ const Products: React.FC<ProductsProps> = React.memo(({ product }) => {
   };
 
   const handleProductClick = () => {
-    if (typeof slug?.current === 'string') {
-      router.push(`/shop/${encodeURIComponent(slug.current)}`);
+    const slugValue = typeof slug === 'string' ? slug : slug?.current;
+    if (slugValue) {
+      router.push(`/shop/${encodeURIComponent(slugValue)}`);
     } else {
       console.error('Invalid slug:', slug);
     }

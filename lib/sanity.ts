@@ -69,18 +69,20 @@ interface ProductImage {
 }
 
 export const urlFor = (source: string | SanityImage | ProductImage | null | undefined): string => {
+  if (!source) return ''
   if (typeof source === 'string') return source
-  if (!source?.asset) return ''
 
   // Handle ProductImage type (from shop/cart)
-  if ('url' in source.asset) {
+  if (source.asset && 'url' in source.asset) {
     return source.asset.url || ''
   }
 
   // Handle SanityImage type
-  if ('_ref' in source.asset) {
+  if (source.asset && '_ref' in source.asset) {
     try {
-      return imageBuilder.image(source).url()
+      const imageUrl = imageBuilder.image(source).url()
+      // Ensure the URL is absolute
+      return imageUrl.startsWith('http') ? imageUrl : `https://cdn.sanity.io${imageUrl}`
     } catch (error) {
       console.error('Error generating URL:', error)
       return ''
@@ -111,7 +113,9 @@ export const urlForImage = (source: string | SanityImage | null | undefined, opt
       imageUrl = imageUrl.blur(options.blur)
     }
 
-    return imageUrl.url()
+    const url = imageUrl.url()
+    // Ensure the URL is absolute and includes the CDN domain
+    return url.startsWith('http') ? url : `https://cdn.sanity.io${url}`
   } catch (error) {
     console.error('Error generating URL:', error)
     return ''

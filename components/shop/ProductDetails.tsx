@@ -1,25 +1,23 @@
-'use client';
+'use client'
 
-import React, { useState } from 'react';
-import { urlFor } from '@lib/sanity';
-import { useRouter } from 'next/navigation';
-import { useStateContext } from '../../context/StateContext';
-import { motion } from 'framer-motion';
-import { AiOutlineMinus, AiOutlinePlus } from 'react-icons/ai';
-import { IoArrowBack } from 'react-icons/io5';
-import type { Product } from '../../types/shop';
-import type { CartItem } from '../../types/cart';
-import { PortableText, PortableTextReactComponents } from '@portabletext/react';
-import type { PortableTextComponentProps } from '@portabletext/react';
-import type { PortableTextBlock } from '@portabletext/types';
-import Grid from '@components/common/grid/Grid'
-import Products from '@components/shop/Products';
+import React, { useState } from 'react'
+import { urlFor } from '@lib/sanity'
+import { useRouter } from 'next/navigation'
+import { useStateContext } from '../../context/StateContext'
+import { motion } from 'framer-motion'
+import { AiOutlineMinus, AiOutlinePlus } from 'react-icons/ai'
+import { IoArrowBack } from 'react-icons/io5'
+import type { Product } from '../../types/shop'
+import type { CartItem } from '../../types/cart'
+import { PortableText, PortableTextReactComponents } from '@portabletext/react'
+import type { PortableTextComponentProps } from '@portabletext/react'
+import type { PortableTextBlock } from '@portabletext/types'
+import Grid from '@/components/common/Grid/Grid'
+import Products from '@components/shop/Products'
 
 const components: Partial<PortableTextReactComponents> = {
   block: {
-    normal: ({ children }) => (
-      <p className="text-gray-300 mb-4">{children}</p>
-    ),
+    normal: ({ children }) => <p className="text-gray-300 mb-4">{children}</p>,
     h1: ({ children }) => (
       <h1 className="text-2xl font-bold mb-4 text-white">{children}</h1>
     ),
@@ -31,53 +29,56 @@ const components: Partial<PortableTextReactComponents> = {
     ),
   },
   marks: {
-    strong: ({ children }) => (
-      <strong className="font-bold">{children}</strong>
-    ),
-    em: ({ children }) => (
-      <em className="italic">{children}</em>
-    ),
-  }
-};
-
-interface ProductDetailsProps {
-  product: Product;
-  products: Product[];
+    strong: ({ children }) => <strong className="font-bold">{children}</strong>,
+    em: ({ children }) => <em className="italic">{children}</em>,
+  },
 }
 
-const ProductDetails: React.FC<ProductDetailsProps> = ({ product, products }) => {
-  const { onAdd } = useStateContext();
-  const router = useRouter();
-  const [index, setIndex] = useState(0);
-  const [localQty, setLocalQty] = useState('1');
+interface ProductDetailsProps {
+  product: Product
+  products: Product[]
+}
 
-  const incLocalQty = () => setLocalQty(prev => (parseInt(prev) + 1).toString());
-  const decLocalQty = () => setLocalQty(prev => (parseInt(prev) > 1 ? (parseInt(prev) - 1).toString() : '1'));
+const ProductDetails: React.FC<ProductDetailsProps> = ({
+  product,
+  products,
+}) => {
+  const { onAdd } = useStateContext()
+  const router = useRouter()
+  const [index, setIndex] = useState(0)
+  const [localQty, setLocalQty] = useState('1')
+
+  const incLocalQty = () =>
+    setLocalQty((prev) => (parseInt(prev) + 1).toString())
+  const decLocalQty = () =>
+    setLocalQty((prev) =>
+      parseInt(prev) > 1 ? (parseInt(prev) - 1).toString() : '1'
+    )
   const handleQtyChange = (value: string) => {
-    const num = parseInt(value);
+    const num = parseInt(value)
     if (!isNaN(num) && num > 0) {
-      setLocalQty(num.toString());
+      setLocalQty(num.toString())
     }
-  };
+  }
 
   if (!product) {
     return (
       <div className="bg-black min-h-screen pt-24 pb-12 flex items-center justify-center">
         <div className="text-white text-xl">Loading...</div>
       </div>
-    );
+    )
   }
 
-  const { image = [], name, price, description, _id, category } = product;
+  const { image = [], name, price, description, _id, category } = product
 
   console.log('Description data:', {
     type: typeof description,
     value: description,
     isArray: Array.isArray(description),
-    firstItem: Array.isArray(description) ? description[0] : null
-  });
+    firstItem: Array.isArray(description) ? description[0] : null,
+  })
 
-  console.log('Current image:', image && image.length > 0 ? image[index] : null);
+  console.log('Current image:', image && image.length > 0 ? image[index] : null)
 
   const handleAddToCart = () => {
     const cartItem: CartItem = {
@@ -85,19 +86,44 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product, products }) =>
       name,
       price,
       quantity: parseInt(localQty) || 1,
-      image: image || [],
+      image: image?.map(img => ({
+        ...img,
+        asset: {
+          _id: img.asset._id,
+          url: img.asset.url,
+          metadata: {
+            dimensions: {
+              width: img.asset.metadata?.dimensions?.width || 0,
+              height: img.asset.metadata?.dimensions?.height || 0,
+              aspectRatio: img.asset.metadata?.dimensions ?
+                img.asset.metadata.dimensions.width / img.asset.metadata.dimensions.height :
+                1
+            }
+          }
+        }
+      })) || [],
       details: description,
-      slug: product.slug
+      slug: typeof product.slug === 'string' ? product.slug : product.slug.current,
     };
     onAdd(cartItem, parseInt(localQty) || 1);
-  };
+  }
 
   const recommendations = React.useMemo(() => {
     return products
-      .filter(p => p._id !== product._id)
+      .filter((p) => p._id !== product._id)
       .sort(() => Math.random() - 0.5)
-      .slice(0, 4);
-  }, [products, product._id]);
+      .slice(0, 4)
+  }, [products, product._id])
+
+  const getProductImage = (product: Product) => {
+    if (product.mainImage?.asset?.url) {
+      return product.mainImage.asset.url;
+    }
+    if (product.image?.[0]?.asset?.url) {
+      return product.image[0].asset.url;
+    }
+    return '/images/placeholder.png';
+  };
 
   return (
     <div className="min-h-screen bg-black">
@@ -123,7 +149,11 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product, products }) =>
                         <div className="absolute inset-0 flex items-center justify-center p-4">
                           <div className="relative w-[85%] h-[85%] rounded-lg overflow-hidden bg-white/[0.02]">
                             <img
-                              src={image[index] ? urlFor(image[index]) : '/images/placeholder.png'}
+                              src={
+                                image[index]
+                                  ? urlFor(image[index])
+                                  : '/images/placeholder.png'
+                              }
                               alt={image[index]?.alt || name}
                               className="w-full h-full object-contain"
                             />
@@ -233,13 +263,30 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product, products }) =>
               </div>
 
               {/* Recommendations */}
-              <div>
-                <h2 className="text-white text-2xl md:text-3xl font-bold mb-8">
-                  You may also like
-                </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+              <div className="mt-16">
+                <h3 className="text-2xl font-bold text-white mb-8">You May Also Like</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                   {recommendations.map((product) => (
-                    <Products key={product._id} product={product} />
+                    <motion.div
+                      key={product._id}
+                      whileHover={{ scale: 1.05 }}
+                      className="cursor-pointer"
+                      onClick={() => router.push(`/shop/${typeof product.slug === 'string' ? product.slug : product.slug.current}`)}
+                    >
+                      <div className="relative pt-[100%] border border-gray-800 rounded-lg overflow-hidden">
+                        <div className="absolute inset-0 flex items-center justify-center p-4">
+                          <div className="relative w-[85%] h-[85%] rounded-lg overflow-hidden bg-white/[0.02]">
+                            <img
+                              src={getProductImage(product)}
+                              alt={product.name}
+                              className="w-full h-full object-contain"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      <h4 className="text-white mt-4 font-medium">{product.name}</h4>
+                      <p className="text-gray-400">${product.price}</p>
+                    </motion.div>
                   ))}
                 </div>
               </div>
@@ -249,6 +296,6 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product, products }) =>
       </Grid>
     </div>
   )
-};
+}
 
-export default ProductDetails;
+export default ProductDetails

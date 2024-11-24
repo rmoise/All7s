@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { default as dynamicImport } from 'next/dynamic';
-import type { Product } from '@types/shop';
+import type { Product } from '@/types';
 
 const ProductDetails = dynamicImport(
   () => import('@components/shop/ProductDetails'),

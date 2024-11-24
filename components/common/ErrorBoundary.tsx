@@ -11,6 +11,7 @@ interface Props {
 interface State {
   hasError: boolean;
   error?: Error;
+  errorInfo?: React.ErrorInfo;
 }
 
 export class ErrorBoundary extends React.Component<Props, State> {
@@ -24,23 +25,48 @@ export class ErrorBoundary extends React.Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    this.setState({ error, errorInfo });
+
     if (this.props.onError) {
-      this.props.onError(error, errorInfo);
+      try {
+        this.props.onError(error, errorInfo);
+      } catch (callbackError) {
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('Error in onError callback:', callbackError);
+        }
+      }
+    }
+
+    if (process.env.NODE_ENV === 'development') {
+      try {
+        console.group('Error Boundary Caught Error:');
+        console.error('Error:', error?.message || error);
+        if (errorInfo?.componentStack) {
+          const stack = errorInfo.componentStack
+            .split('\n')
+            .filter(line => line.trim())
+            .slice(0, 3)
+            .join('\n');
+          console.error('Component Stack (truncated):', stack);
+        }
+        console.groupEnd();
+      } catch (loggingError) {
+        // Fail silently if console logging fails
+      }
     }
   }
 
   render() {
     if (this.state.hasError) {
       return this.props.fallback || (
-        <div className="min-h-screen flex items-center justify-center bg-black text-white">
-          <div className="text-center p-8">
-            <h2 className="text-xl mb-4">Something went wrong</h2>
-            <button
-              className="px-4 py-2 bg-white text-black rounded"
-              onClick={() => this.setState({ hasError: false })}
-            >
-              Try again
-            </button>
+        <div className="min-h-screen bg-black text-white flex items-center justify-center">
+          <div className="max-w-lg p-6">
+            <h2 className="text-xl font-bold mb-4">Something went wrong</h2>
+            {process.env.NODE_ENV === 'development' && this.state.error && (
+              <div className="text-sm bg-red-900/50 p-4 rounded overflow-auto">
+                <strong>Error:</strong> {this.state.error.message || 'An unknown error occurred'}
+              </div>
+            )}
           </div>
         </div>
       );

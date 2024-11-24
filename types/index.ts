@@ -5,25 +5,34 @@ import type {
   FooterSettings as SanityFooterSettings,
   SiteSettings as SanitySiteSettings,
   ContentBlock as SanityContentBlock,
-  SanityRawSong,
   NavigationLink,
-  Song,
   ProductImage
 } from './sanity'
 
 import type {
+  Song,
+  SanityRawSong,
+  Album,
   CustomAlbum,
   EmbeddedAlbum,
-  Album as MusicAlbum
+  MusicAlbum
 } from './music'
 
 // Re-export types
 export type {
+  // Sanity types
   SanityBaseDocument,
   SanityImage,
-  SanityRawSong,
   NavigationLink,
-  ProductImage
+  ProductImage,
+
+  // Music types
+  Song,
+  SanityRawSong,
+  Album,
+  CustomAlbum,
+  EmbeddedAlbum,
+  MusicAlbum
 }
 
 // Content Block Types
@@ -145,13 +154,6 @@ export interface SanityAsset {
     }
   }
 }
-
-export type {
-  Album,
-  CustomAlbum,
-  EmbeddedAlbum,
-  Song
-} from './music'
 
 // Export HomeData interface
 export interface HomeData extends SanityBaseDocument {

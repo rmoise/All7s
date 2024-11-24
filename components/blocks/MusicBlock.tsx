@@ -2,15 +2,15 @@
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import FlipCard from '@components/Music/FlipCard'
-import Grid from '../../components/common/grid/Grid'
-import { Album, Song, SanityImage } from '@types'
+import Grid from '@/components/common/Grid/Grid'
+import type { MusicAlbum, Song, SanityImage } from '@/types'
 import { getClient, urlFor } from '@lib/sanity'
 import { useNavbar } from '@context/NavbarContext'
 
 interface MusicBlockProps {
   listenTitle: string
   description?: string
-  albums?: Album[]
+  albums?: MusicAlbum[]
 }
 
 // Add this interface for processed albums
@@ -32,7 +32,7 @@ const MusicBlock: React.FC<MusicBlockProps> = ({
 
   const [flippedAlbums, setFlippedAlbums] = useState<Set<string>>(new Set())
   const flipCardRefs = useRef<{ [key: string]: HTMLDivElement | null }>({})
-  const [loadedAlbums, setLoadedAlbums] = useState<Album[]>([])
+  const [loadedAlbums, setLoadedAlbums] = useState<MusicAlbum[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
@@ -92,17 +92,20 @@ const MusicBlock: React.FC<MusicBlockProps> = ({
     return () => document.removeEventListener('mousedown', handleOutsideClick)
   }, [flippedAlbums.size, handleOutsideClick])
 
-  const getSongs = (album: Album): Song[] => {
+  const getSongs = (album: MusicAlbum): Song[] => {
     if (album.albumSource === 'custom' && album.customAlbum?.songs) {
       return album.customAlbum.songs
     }
     return []
   }
 
-  const getEmbedUrl = useCallback((album: Album): string => {
+  const getEmbedUrl = useCallback((album: MusicAlbum): string => {
     if (!album.embeddedAlbum?.embedCode) return ''
 
-    if (album.embeddedAlbum.platform === 'soundcloud' || album.embeddedAlbum.platform === 'spotify') {
+    if (
+      album.embeddedAlbum.platform === 'soundcloud' ||
+      album.embeddedAlbum.platform === 'spotify'
+    ) {
       const match = album.embeddedAlbum.embedCode.match(/src="([^"]+)"/)
       return match ? match[1] : ''
     }
@@ -110,12 +113,20 @@ const MusicBlock: React.FC<MusicBlockProps> = ({
     return ''
   }, [])
 
-  const getImageUrl = useCallback((album: Album): string => {
+  const getImageUrl = useCallback((album: MusicAlbum): string => {
     if (!album) return '/images/placeholder.png'
 
     if (album.albumSource === 'embedded' && album.embeddedAlbum) {
-      const customImageUrl = album.embeddedAlbum.customImage?.asset
-        ? urlFor(album.embeddedAlbum.customImage)?.toString() || ''
+      const customImage = album.embeddedAlbum.customImage?.asset ? {
+        _type: 'image' as const,
+        asset: {
+          _ref: album.embeddedAlbum.customImage.asset._ref,
+          _type: 'reference' as const
+        }
+      } : null
+
+      const customImageUrl = customImage
+        ? urlFor(customImage)?.toString() || ''
         : ''
 
       return (
@@ -127,10 +138,15 @@ const MusicBlock: React.FC<MusicBlockProps> = ({
     }
 
     if (album.customAlbum?.customImage?.asset) {
-      return (
-        urlFor(album.customAlbum.customImage)?.toString() ||
-        '/images/placeholder.png'
-      )
+      const customImage = {
+        _type: 'image' as const,
+        asset: {
+          _ref: album.customAlbum.customImage.asset._ref,
+          _type: 'reference' as const
+        }
+      }
+
+      return urlFor(customImage)?.toString() || '/images/placeholder.png'
     }
 
     return '/images/placeholder.png'
@@ -139,12 +155,18 @@ const MusicBlock: React.FC<MusicBlockProps> = ({
   // Memoize album processing
   const processedAlbums = useMemo(
     () =>
-      loadedAlbums?.map((album: Album) => ({
+      loadedAlbums?.map((album: MusicAlbum) => ({
         id: album._id,
         embedUrl: getEmbedUrl(album),
         imageUrl: getImageUrl(album),
-        title: album.embeddedAlbum?.title || album.customAlbum?.title || 'Untitled Album',
-        artist: album.embeddedAlbum?.artist || album.customAlbum?.artist || 'Unknown Artist',
+        title:
+          album.embeddedAlbum?.title ||
+          album.customAlbum?.title ||
+          'Untitled Album',
+        artist:
+          album.embeddedAlbum?.artist ||
+          album.customAlbum?.artist ||
+          'Unknown Artist',
         songs: getSongs(album),
         albumSource: album.albumSource,
       })) || [],

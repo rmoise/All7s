@@ -76,18 +76,18 @@ const nextConfig = {
   },
 
   images: {
-    unoptimized: process.env.NODE_ENV === 'development',
-    domains: ['cdn.sanity.io', 'i.scdn.co', 'i1.sndcdn.com', 'i2.sndcdn.com', 'i3.sndcdn.com', 'i4.sndcdn.com'],
-    formats: ['image/avif', 'image/webp'],
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: '**.sndcdn.com',
-        pathname: '/artworks-**',
+        hostname: 'cdn.sanity.io',
+        pathname: '/images/**',
       },
     ],
-    loader: 'custom',
-    loaderFile: './netlify/image-loader.js',
+    domains: ['cdn.sanity.io', 'i.scdn.co', 'i1.sndcdn.com', 'i2.sndcdn.com', 'i3.sndcdn.com', 'i4.sndcdn.com'],
+    formats: ['image/avif', 'image/webp'],
+    dangerouslyAllowSVG: true,
+    contentDispositionType: 'attachment',
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
 
   async headers() {

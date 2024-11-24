@@ -16,8 +16,7 @@ import { useAudio } from '@context/AudioContext' // Adjust the path as needed
 import MusicEmbed from '@components/MusicEmbed' // Ensure correct path
 import { debounce } from 'lodash'
 import Image from 'next/image'
-import type { Song } from '@types/sanity';
-import type { SanityRawSong } from '@types/sanity';
+import type { Song, SanityRawSong } from '@/types'
 
 interface CustomImage {
   asset: {
@@ -443,7 +442,7 @@ const FlipCard = forwardRef<HTMLDivElement, FlipCardProps>(
     const renderTrackList = useMemo(() => {
       return songs.map((song: Song, idx: number) => (
         <div
-          key={'_key' in song ? song._key : `track-${idx}`}
+          key={song._key || song._id || `track-${idx}`}
           className={clsx(
             'track-item flex justify-between items-center cursor-pointer hover:bg-gray-300 rounded-md p-3',
             {
@@ -456,7 +455,7 @@ const FlipCard = forwardRef<HTMLDivElement, FlipCardProps>(
         >
           <div className="flex items-center space-x-2">
             <span className="text-black">
-              {song.trackTitle}
+              {song.trackTitle || song.title}
             </span>
           </div>
           <span className="text-sm text-gray-500">

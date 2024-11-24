@@ -1,22 +1,17 @@
-export const productsQuery = `*[_type == "product"] {
+export const productsQuery = `*[_type == "product"] | order(_createdAt desc) {
   _id,
   name,
   price,
-  slug,
-  image[] {
+  "slug": slug.current,
+  "mainImage": image[0] {
     asset-> {
       _id,
       url,
-      metadata {
-        dimensions
-      }
+      metadata { dimensions }
     },
     alt
   },
-  category->{
-    title,
-    description
-  }
+  "category": category->title
 }`;
 
 export const productDetailQuery = `*[_type == "product" && slug.current == $slug][0] {

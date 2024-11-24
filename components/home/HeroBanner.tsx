@@ -20,17 +20,28 @@ const HeroBanner: React.FC<HeroBannerProps> = ({
   ctaText,
   ctaLink,
 }) => {
+  const imageUrl = React.useMemo(() => {
+    if (!backgroundImage) return null;
+    try {
+      return urlFor(backgroundImage);
+    } catch (error) {
+      console.error('Error generating image URL:', error);
+      return null;
+    }
+  }, [backgroundImage]);
+
   return (
     <div className="relative w-full aspect-[16/9] z-1 sm:aspect-[16/9] overflow-hidden">
-      {backgroundImage && (
+      {imageUrl && (
         <div className="absolute inset-0 w-full h-full">
           <Image
-            src={urlFor(backgroundImage)}
+            src={imageUrl}
             alt="Hero Banner Background"
             fill
             sizes="100vw"
             priority
             style={{ objectFit: 'cover' }}
+            unoptimized
           />
         </div>
       )}

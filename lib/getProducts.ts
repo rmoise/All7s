@@ -1,5 +1,5 @@
 import { getClient } from '@lib/sanity'
-import type { Product } from '@types/shop'
+import type { Product } from '@/types'
 import { productsQuery } from '@app/shop/queries'
 
 export async function getProducts(): Promise<Product[]> {

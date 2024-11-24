@@ -2,8 +2,7 @@ import { Metadata } from 'next'
 import HomeClient from './components/HomeClient'
 import { getPreviewToken } from '@lib/preview'
 import { fetchSanity } from '@lib/sanity'
-import { HomePageProps } from '@types/page'
-import { HomeData } from '@types/index'
+import type { HomePageProps, HomeData } from '@/types'
 
 export async function generateMetadata(): Promise<Metadata> {
   const homeData = await fetchSanity<HomeData>(`*[_type == "home"][0]`, undefined, false)

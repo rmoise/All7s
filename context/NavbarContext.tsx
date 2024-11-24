@@ -11,7 +11,6 @@ import React, {
 import { createClient } from '@sanity/client'
 import { getClient } from '@lib/sanity'
 import { v4 as uuidv4 } from 'uuid'
-import { updateBlockTitleAction } from '@app/actions/navbar';
 import debounce from 'lodash/debounce'
 
 interface NavbarLink {
@@ -168,57 +167,27 @@ export const NavbarProvider: React.FC<NavbarProviderProps> = ({ children }) => {
 
   const updateBlockTitle = useCallback(async (type: 'listen' | 'look', newTitle: string) => {
     try {
-      // Update local state first for immediate feedback
+      const response = await fetch('/api/navbar/update-title', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ type, newTitle }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update title');
+      }
+
       setBlockTitles(prev => ({
         ...prev,
         [type]: newTitle
-      }))
-
-      // Update URL without page reload
-      const newHash = `/#${newTitle}`
-      if (typeof window !== 'undefined') {
-        window.history.replaceState(
-          null,
-          '',
-          `${window.location.pathname}${newHash}`
-        )
-      }
-
-      // Call server action
-      const result = await updateBlockTitleAction(type, newTitle)
-
-      if (!result.success) {
-        throw new Error(result.error?.message || 'Failed to update block title')
-      }
-
-      // Update navbar links locally
-      if (navbarData?.navigationLinks) {
-        const updatedNavLinks = navbarData.navigationLinks.map((link: NavigationLink) => {
-          const isLookLink = link.href?.toLowerCase().includes('look') || link.href?.toLowerCase().includes('/#look')
-          const isListenLink = link.href?.toLowerCase().includes('listen') || link.href?.toLowerCase().includes('/#listen')
-
-          if ((isLookLink && type === 'look') || (isListenLink && type === 'listen')) {
-            return { ...link, name: newTitle }
-          }
-          return link
-        })
-
-        setNavbarData(prev => ({
-          ...prev!,
-          navigationLinks: updatedNavLinks
-        }))
-      }
-    } catch (error) {
-      console.error('Error updating block title:', error)
-      // Revert local state on error
-      setBlockTitles(prev => ({
-        ...prev,
-        [type]: prev[type]
-      }))
-      // Show error to user
-      throw new Error('Failed to update section title. Please try again.')
+      }));
+    } catch (err) {
+      console.error('Error updating title:', err);
+      setError(err instanceof Error ? err : new Error('Unknown error'));
     }
-  }, [navbarData])
+  }, []);
 
   // Add debug logging
   useEffect(() => {
