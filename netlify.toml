@@ -1,5 +1,5 @@
 [build]
-  command = "NODE_OPTIONS='--max_old_space_size=8192' NODE_ENV=production SANITY_AUTH_TOKEN=$SANITY_AUTH_TOKEN SANITY_STUDIO_API_TOKEN=$SANITY_STUDIO_API_TOKEN npm ci && npm install -D postcss@latest autoprefixer@latest tailwindcss@latest && cd fresh_sanity_studio && npm install -D postcss@latest autoprefixer@latest tailwindcss@latest && cd .. && npm run fresh-studio:build && npm run build"
+  command = "npm ci && npm run fresh-studio:build && next build"
   publish = ".next"
   functions = "netlify/functions"
 
@@ -20,8 +20,46 @@
   NEXT_USE_NETLIFY_EDGE = "true"
   NEXT_FORCE_EDGE_IMAGES = "true"
 
+[context.production]
+  [context.production.environment]
+    NEXT_PUBLIC_ENVIRONMENT = "production"
+    NEXT_PUBLIC_SANITY_DATASET = "production"
+    NEXT_PUBLIC_SANITY_PROJECT_ID = "1gxdk71x"
+    NEXT_PUBLIC_NETLIFY = "true"
+    NEXT_PUBLIC_SANITY_STUDIO_URL = "https://all7z.sanity.studio"
+    NEXT_PUBLIC_SITE_URL = "https://all7z.com"
+    STRIPE_SECRET_KEY = "env(STRIPE_SECRET_KEY)"
+    NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY = "env(NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)"
+    SANITY_PREVIEW_TOKEN = "env(SANITY_PREVIEW_TOKEN)"
+
+[context.staging]
+  [context.staging.environment]
+    NEXT_PUBLIC_ENVIRONMENT = "staging"
+    NEXT_PUBLIC_SANITY_DATASET = "staging"
+    NEXT_PUBLIC_SANITY_PROJECT_ID = "1gxdk71x"
+    NEXT_PUBLIC_NETLIFY = "true"
+    NEXT_PUBLIC_SANITY_STUDIO_URL = "https://all7z.sanity.studio"
+    NEXT_PUBLIC_SITE_URL = "https://staging.all7z.com"
+
+[context.deploy-preview]
+  [context.deploy-preview.environment]
+    NEXT_PUBLIC_SANITY_STUDIO_URL = "https://deploy-preview-${REVIEW_ID}--stak-app.netlify.app/studio"
+    NEXT_PUBLIC_SITE_URL = "https://deploy-preview-${REVIEW_ID}--stak-app.netlify.app"
+
+[context.branch-deploy]
+  [context.branch-deploy.environment]
+    NEXT_PUBLIC_SANITY_STUDIO_URL = "https://branch-${BRANCH}--stak-app.netlify.app/studio"
+    NEXT_PUBLIC_SITE_URL = "https://branch-${BRANCH}--stak-app.netlify.app"
+
 [[plugins]]
   package = "@netlify/plugin-nextjs"
+
+[[redirects]]
+  from = "/_next/image/*"
+  to = "/.netlify/images"
+  query = { url = ":url", w = ":width", q = ":quality" }
+  status = 200
+  force = true
 
 [[redirects]]
   from = "/api/form-submission"
@@ -45,45 +83,6 @@
   from = "/*"
   to = "/index.html"
   status = 200
-
-[context.production]
-  command = "NODE_OPTIONS='--max_old_space_size=8192' NODE_ENV=production SANITY_AUTH_TOKEN=$SANITY_AUTH_TOKEN SANITY_STUDIO_API_TOKEN=$SANITY_STUDIO_API_TOKEN npm ci && npm run fresh-studio:build && npm run build"
-  publish = ".next"
-  [context.production.environment]
-    NEXT_PUBLIC_ENVIRONMENT = "production"
-    NEXT_PUBLIC_SANITY_DATASET = "production"
-    NEXT_PUBLIC_SANITY_PROJECT_ID = "1gxdk71x"
-    NEXT_PUBLIC_NETLIFY = "true"
-    NEXT_PUBLIC_SANITY_STUDIO_URL = "https://all7z.sanity.studio"
-    NEXT_PUBLIC_SITE_URL = "https://all7z.com"
-    STRIPE_SECRET_KEY = "env(STRIPE_SECRET_KEY)"
-    NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY = "env(NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)"
-    SANITY_PREVIEW_TOKEN = "env(SANITY_PREVIEW_TOKEN)"
-
-[context.staging]
-  command = "npm run build:staging"
-  publish = ".next"
-  [context.staging.environment]
-    NEXT_PUBLIC_ENVIRONMENT = "staging"
-    NEXT_PUBLIC_SANITY_DATASET = "staging"
-    NEXT_PUBLIC_SANITY_PROJECT_ID = "1gxdk71x"
-    NEXT_PUBLIC_NETLIFY = "true"
-    NEXT_PUBLIC_SANITY_STUDIO_URL = "https://all7z.sanity.studio"
-    NEXT_PUBLIC_SITE_URL = "https://staging.all7z.com"
-
-[context.deploy-preview]
-  command = "npm run build"
-  publish = ".next"
-  [context.deploy-preview.environment]
-    NEXT_PUBLIC_SANITY_STUDIO_URL = "https://deploy-preview-${REVIEW_ID}--stak-app.netlify.app/studio"
-    NEXT_PUBLIC_SITE_URL = "https://deploy-preview-${REVIEW_ID}--stak-app.netlify.app"
-
-[context.branch-deploy]
-  command = "npm run build"
-  publish = ".next"
-  [context.branch-deploy.environment]
-    NEXT_PUBLIC_SANITY_STUDIO_URL = "https://branch-${BRANCH}--stak-app.netlify.app/studio"
-    NEXT_PUBLIC_SITE_URL = "https://branch-${BRANCH}--stak-app.netlify.app"
 
 [build.processing]
   skip_processing = false
