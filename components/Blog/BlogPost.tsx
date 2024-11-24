@@ -6,7 +6,19 @@ import { urlFor } from '@/lib/sanity'
 import type { Post } from '@/types/sanity'
 import Image from 'next/image'
 
-const BlogPost: React.FC<Post> = ({ title, mainImage, body }) => {
+interface BlogPostProps extends Post {
+  // Add any additional props if needed
+}
+
+const BlogPost: React.FC<BlogPostProps> = ({
+  title,
+  mainImage,
+  body,
+  // Destructure other props you might need
+}) => {
+  // Add error boundary for image loading
+  const imageUrl = mainImage ? urlFor(mainImage) : '';
+
   return (
     <article className="bg-black text-white">
       <div className="relative px-4 py-16 sm:px-6 lg:px-8">
@@ -19,17 +31,25 @@ const BlogPost: React.FC<Post> = ({ title, mainImage, body }) => {
               {title}
             </span>
           </h1>
-          {mainImage && (
-            <Image
-              className="w-full rounded-lg mt-8"
-              src={urlFor(mainImage)}
-              alt={title || 'Blog post image'}
-              width={800}
-              height={500}
-            />
+          {mainImage && imageUrl && (
+            <div className="relative w-full h-[500px] mt-8">
+              <Image
+                className="rounded-lg object-cover"
+                src={imageUrl}
+                alt={title || 'Blog post image'}
+                fill
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 800px"
+                priority
+              />
+            </div>
           )}
           <div className="mt-8 text-xl text-gray-300 leading-8">
-            <PortableText value={body} />
+            <PortableText
+              value={body}
+              components={{
+                // Add any custom components for PortableText if needed
+              }}
+            />
           </div>
         </div>
       </div>

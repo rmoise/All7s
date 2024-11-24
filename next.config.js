@@ -83,8 +83,11 @@ const nextConfig = {
         ...(isServer ? {
           'private-next-rsc-server-reference': false,
           'private-next-rsc-action-encryption': false,
-          'private-next-rsc-action-validate': false
-        } : {})
+          'private-next-rsc-action-validate': false,
+          'private-next-root-dir/middleware.ts': false
+        } : {
+          '@opentelemetry/api': path.resolve(__dirname, 'node_modules/@opentelemetry/api')
+        })
       },
       fallback: {
         fs: false,
@@ -192,7 +195,10 @@ const nextConfig = {
   },
 
   experimental: {
-    serverActions: true
+    serverActions: {
+      allowedOrigins: ['localhost:3000', 'all7z.com'],
+      bodySizeLimit: '2mb'
+    }
   },
 };
 
