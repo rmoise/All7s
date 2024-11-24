@@ -77,6 +77,12 @@ const nextConfig = {
       '@pages': path.join(__dirname, 'pages'),
       '@styles': path.join(__dirname, 'styles'),
       '@context': path.join(__dirname, 'context'),
+      '@blog': path.join(__dirname, 'components/blog'),
+      '@app': path.join(__dirname, 'app'),
+      '@types': path.join(__dirname, 'types'),
+      '@fresh_sanity_studio': path.join(__dirname, 'fresh_sanity_studio'),
+      '@components/common': path.join(__dirname, 'components/common'),
+      '@components/blog': path.join(__dirname, 'components/blog'),
     };
 
     if (dev && !isServer) {
