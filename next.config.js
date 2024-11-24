@@ -80,9 +80,13 @@ const nextConfig = {
         '@types': path.resolve(__dirname, 'types'),
         '@styles': path.resolve(__dirname, 'styles'),
         '@fresh_sanity_studio': path.resolve(__dirname, 'fresh_sanity_studio')
+      },
+      fallback: {
+        fs: false,
+        path: false,
+        os: false
       }
     };
-
     return config;
   },
 
