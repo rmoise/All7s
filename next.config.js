@@ -67,7 +67,7 @@ const nextConfig = {
     ],
   },
 
-  webpack: (config) => {
+  webpack: (config, { isServer }) => {
     config.resolve = {
       ...config.resolve,
       alias: {
@@ -79,7 +79,12 @@ const nextConfig = {
         '@app': path.resolve(__dirname, 'app'),
         '@types': path.resolve(__dirname, 'types'),
         '@styles': path.resolve(__dirname, 'styles'),
-        '@fresh_sanity_studio': path.resolve(__dirname, 'fresh_sanity_studio')
+        '@fresh_sanity_studio': path.resolve(__dirname, 'fresh_sanity_studio'),
+        ...(isServer ? {
+          'private-next-rsc-server-reference': false,
+          'private-next-rsc-action-encryption': false,
+          'private-next-rsc-action-validate': false
+        } : {})
       },
       fallback: {
         fs: false,
@@ -184,6 +189,11 @@ const nextConfig = {
         destination: '/studio/[[...index]]/page',
       },
     ]
+  },
+
+  experimental: {
+    serverActions: true,
+    ...nextConfig.experimental
   },
 };
 
