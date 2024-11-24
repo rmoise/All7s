@@ -33,31 +33,25 @@ const nextConfig = {
     ignoreDuringBuilds: true
   },
   experimental: {
-    serverActions: {
-      allowedOrigins: ['localhost:3000', 'all7z.com', '*.netlify.app']
-    }
+    serverActions: true,
+    serverComponentsExternalPackages: ['@sanity/client']
   },
   generateBuildId: async () => {
     return process.env.BUILD_ID || 'development'
   },
   webpack: (config) => {
-    config.resolve = {
-      ...config.resolve,
-      alias: {
-        '@': path.resolve(__dirname),
-        '@components': path.resolve(__dirname, './components'),
-        '@lib': path.resolve(__dirname, './lib'),
-        '@utils': path.resolve(__dirname, './utils'),
-        '@context': path.resolve(__dirname, './context'),
-        '@blocks': path.resolve(__dirname, './components/blocks'),
-        '@blog': path.resolve(__dirname, './components/blog'),
-        '@app': path.resolve(__dirname, './app'),
-        '@types': path.resolve(__dirname, './types'),
-        '@styles': path.resolve(__dirname, './styles'),
-        '@fresh_sanity_studio': path.resolve(__dirname, './fresh_sanity_studio'),
-        '@components/common': path.resolve(__dirname, './components/common'),
-        '@components/blog': path.resolve(__dirname, './components/blog')
-      }
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@': path.resolve(__dirname),
+      '@components': path.resolve(__dirname, 'components'),
+      '@lib': path.resolve(__dirname, 'lib'),
+      '@utils': path.resolve(__dirname, 'utils'),
+      '@context': path.resolve(__dirname, 'context'),
+      '@blocks': path.resolve(__dirname, 'components/blocks'),
+      '@blog': path.resolve(__dirname, 'components/blog'),
+      '@app': path.resolve(__dirname, 'app'),
+      '@types': path.resolve(__dirname, 'types'),
+      '@styles': path.resolve(__dirname, 'styles')
     };
     return config;
   },
