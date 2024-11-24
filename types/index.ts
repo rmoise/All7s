@@ -200,10 +200,15 @@ export interface SomeType {
 
 export interface Post {
   _id: string
+  _createdAt: string
   title: string
-  slug: {
-    current: string
+  slug: string
+  mainImage?: {
+    asset: {
+      _ref: string
+      _type: 'reference'
+    }
   }
-  mainImage?: SanityImageSource
-  body: PortableTextBlock[]
+  excerpt?: string
+  content: any[] // For PortableText content
 }
