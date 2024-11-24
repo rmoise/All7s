@@ -207,44 +207,41 @@ const Cart: React.FC = () => {
     toggleCartItemQuantity(id, action);
   };
 
-  const handleProductClick = async (e: React.MouseEvent, item: CartItem) => {
+  const handleProductClick = (e: React.MouseEvent, item: CartItem) => {
     e.preventDefault();
     e.stopPropagation();
 
-    // Handle both string and object slug types
     const slugValue = typeof item.slug === 'string' ? item.slug : item.slug?.current;
-
     if (slugValue) {
-      try {
-        setShowCart(false);
-        await router.push(`/shop/${slugValue}`);
-      } catch (err: unknown) {
-        console.error('Navigation error:', err);
-        window.location.href = `/shop/${slugValue}`;
-      }
-    } else {
-      console.warn('Missing slug data for item:', item);
+      setShowCart(false);
+      router.push(`/shop/${slugValue}`);
     }
   };
 
   const handleQuantityInput = (item: CartItem, value: string) => {
-    // Update the input value state
     setInputValues(prev => ({
       ...prev,
       [item._id]: value
     }));
 
-    // Convert to number for cart updates
     const numValue = value === '' ? 0 : parseInt(value);
 
     if (numValue === 0) {
       setItemsToRemove(prev => new Set(prev).add(item._id));
-      // Update cart item quantity to 0 using the context function
       updateCartItemQuantity(item._id, 0);
     } else if (!isNaN(numValue) && numValue > 0) {
       updateCartItemQuantity(item._id, numValue);
     }
   };
+
+  useEffect(() => {
+    cartItems.forEach(item => {
+      const slugValue = typeof item.slug === 'string' ? item.slug : item.slug?.current;
+      if (slugValue) {
+        router.prefetch(`/shop/${slugValue}`);
+      }
+    });
+  }, [cartItems, router]);
 
   if (!mounted) return null;
 
@@ -299,8 +296,10 @@ const Cart: React.FC = () => {
               <>
                 <div className="grid grid-cols-2 gap-4 mb-8">
                   {cartItems.map((item: CartItem) => (
-                    <div
+                    <motion.div
                       key={item._id}
+                      whileHover={{ scale: 1.02 }}
+                      transition={{ duration: 0.2 }}
                       className="bg-gray-50 rounded-lg p-4 relative cursor-pointer"
                       onClick={(e) => handleProductClick(e, item)}
                     >
@@ -344,7 +343,6 @@ const Cart: React.FC = () => {
                                     handleQuantityInput(item, value);
                                   }}
                                   onBlur={(e) => {
-                                    // Only reset to 1 if we're not about to remove the item
                                     const value = e.target.value;
                                     const numValue = parseInt(value);
                                     if ((!value || isNaN(numValue)) && !itemsToRemove.has(item._id)) {
@@ -399,7 +397,6 @@ const Cart: React.FC = () => {
                                     handleQuantityInput(item, value);
                                   }}
                                   onBlur={(e) => {
-                                    // Only reset to 1 if we're not about to remove the item
                                     const value = e.target.value;
                                     const numValue = parseInt(value);
                                     if ((!value || isNaN(numValue)) && !itemsToRemove.has(item._id)) {
@@ -427,7 +424,7 @@ const Cart: React.FC = () => {
                           </div>
                         </div>
                       </div>
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
 
