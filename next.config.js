@@ -70,6 +70,7 @@ const nextConfig = {
   webpack: (config, { isServer, dev }) => {
     config.resolve.alias = {
       ...config.resolve.alias,
+      '@': path.join(__dirname, './'),
       '@components': path.join(__dirname, 'components'),
       '@utils': path.join(__dirname, 'utils'),
       '@pages': path.join(__dirname, 'pages'),
