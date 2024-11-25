@@ -45,33 +45,6 @@ export const NavbarContent: React.FC<{ navbarData?: NavbarData }> = ({ navbarDat
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Mobile scroll animation
-  useEffect(() => {
-    if (isMobile) {
-      let lastScrollTop = 0;
-
-      const handleScroll = debounce(() => {
-        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-        if (Math.abs(scrollTop - lastScrollTop) > 10) {
-          anime({
-            targets: '#nav',
-            translateY: scrollTop > lastScrollTop ? -80 : 15,
-            duration: 300,
-            easing: 'easeOutQuad'
-          });
-          lastScrollTop = scrollTop;
-        }
-      }, 100);
-
-      window.addEventListener('scroll', handleScroll);
-      return () => {
-        lastScrollTop = 0;
-        handleScroll.cancel();
-        window.removeEventListener('scroll', handleScroll);
-      };
-    }
-  }, [isMobile]);
-
   const handleShopNavigation = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -157,7 +130,10 @@ export const NavbarContent: React.FC<{ navbarData?: NavbarData }> = ({ navbarDat
 
   if (loading || !finalNavbarData || !hydrated) {
     return (
-      <nav className="fixed top-0 w-full h-16 bg-black z-50">
+      <nav className={`
+        fixed top-0 w-full h-16 bg-black z-50
+        ${isMobile ? 'transform-none' : ''}
+      `}>
         <div className="mx-auto max-w-7xl px-4 h-full flex items-center justify-between">
           <div className="text-white">Loading...</div>
         </div>

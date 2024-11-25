@@ -190,7 +190,7 @@ const MusicBlock: React.FC<MusicBlockProps> = ({
       className="relative z-10 w-full py-16"
       data-section-type="listen"
     >
-      <div className="container mx-auto px-4 md:px-8 lg:px-16">
+      <div className="container mx-auto md:px-8 lg:px-16">
         <h2 className="mb-16 text-center text-6xl font-Headline bg-clip-text bg-gradient-to-r from-blue-300 via-pink-600 to-purple-600 text-transparent font-bold">
           {listenTitle}
         </h2>

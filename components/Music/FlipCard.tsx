@@ -507,7 +507,7 @@ const FlipCard = forwardRef<HTMLDivElement, FlipCardProps>(
     return (
       <div
         ref={ref}
-        className="relative w-full mb-8 px-4 sm:px-0"
+        className="relative w-full mb-8 sm:px-0"
         data-album-id={album.albumId}
       >
         <h2 className="text-2xl sm:text-3xl font-bold text-center text-white mb-4">
