@@ -88,13 +88,17 @@ const Newsletter: React.FC<NewsletterProps> = ({ newsletter }) => {
 
     try {
       setIsSubmitting(true);
-      const formData = new FormData();
-      formData.append('email', email);
-      formData.append('form-name', newsletter?.formName || 'newsletter');
 
-      const response = await fetch('/.netlify/functions/form-submission', {
+      // Create FormData object
+      const formData = new FormData();
+      formData.append('form-name', 'newsletter');
+      formData.append('email', email);
+
+      // Submit directly to Netlify's form handling endpoint
+      const response = await fetch('/', {
         method: 'POST',
-        body: formData,
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams(formData as any).toString()
       });
 
       if (!response.ok) {
@@ -113,6 +117,7 @@ const Newsletter: React.FC<NewsletterProps> = ({ newsletter }) => {
       });
 
     } catch (error) {
+      console.error('Newsletter submission error:', error);
       setNotification({
         show: true,
         error: true,
@@ -160,8 +165,7 @@ const Newsletter: React.FC<NewsletterProps> = ({ newsletter }) => {
             name="newsletter"
             method="POST"
             data-netlify="true"
-            netlify-honeypot="bot-field"
-            action="/.netlify/functions/newsletter"
+            data-netlify-honeypot="bot-field"
             onSubmit={handleSubmit}
             className="w-full lg:max-w-md"
           >
