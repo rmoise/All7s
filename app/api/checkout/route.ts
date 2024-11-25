@@ -19,7 +19,8 @@ export async function POST(request: Request) {
     console.log('Stripe configuration:', {
       hasSecretKey: !!process.env.STRIPE_SECRET_KEY,
       secretKeyPrefix: process.env.STRIPE_SECRET_KEY?.substring(0, 7),
-      environment: process.env.NODE_ENV
+      environment: process.env.NODE_ENV,
+      apiVersion: '2024-11-20.acacia'
     });
 
     const { line_items } = await request.json();
@@ -59,12 +60,19 @@ export async function POST(request: Request) {
     console.error('Stripe checkout error:', {
       message: error.message,
       type: error.type,
+      code: error.code,
+      statusCode: error.statusCode,
       stack: error.stack,
-      env: process.env.NODE_ENV
+      env: process.env.NODE_ENV,
+      apiVersion: '2024-11-20.acacia'
     });
 
     return NextResponse.json(
-      { error: error.message || 'Checkout failed' },
+      {
+        error: error.message || 'Checkout failed',
+        code: error.code,
+        type: error.type
+      },
       { status: error.statusCode || 500 }
     );
   }
