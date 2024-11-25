@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { urlFor } from '@lib/sanity'
 import { useRouter } from 'next/navigation'
 import { useStateContext } from '../../context/StateContext'
@@ -47,6 +47,11 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({
   const router = useRouter()
   const [index, setIndex] = useState(0)
   const [localQty, setLocalQty] = useState('1')
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const incLocalQty = () =>
     setLocalQty((prev) => (parseInt(prev) + 1).toString())
@@ -70,13 +75,6 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({
   }
 
   const { image = [], name, price, description, _id, category } = product
-
-  console.log('Description data:', {
-    type: typeof description,
-    value: description,
-    isArray: Array.isArray(description),
-    firstItem: Array.isArray(description) ? description[0] : null,
-  })
 
   console.log('Current image:', image && image.length > 0 ? image[index] : null)
 
@@ -109,11 +107,19 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({
   }
 
   const recommendations = React.useMemo(() => {
+    if (!products || !product) return []
+
     return products
       .filter((p) => p._id !== product._id)
+      .map(p => ({
+        ...p,
+        category: {
+          title: p.category?.title || product.category?.title || ''
+        }
+      }))
       .sort(() => Math.random() - 0.5)
       .slice(0, 4)
-  }, [products, product._id])
+  }, [products, product])
 
   const getProductImage = (product: Product) => {
     if (product.mainImage?.asset?.url) {
@@ -124,6 +130,34 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({
     }
     return '/images/placeholder.png';
   };
+
+  const handleRecommendationAddToCart = (recommendedProduct: Product) => {
+    const cartItem: CartItem = {
+      _id: recommendedProduct._id,
+      name: recommendedProduct.name,
+      price: recommendedProduct.price,
+      quantity: 1,
+      image: recommendedProduct.image?.map(img => ({
+        ...img,
+        asset: {
+          _id: img.asset._id,
+          url: img.asset.url,
+          metadata: {
+            dimensions: {
+              width: img.asset.metadata?.dimensions?.width || 0,
+              height: img.asset.metadata?.dimensions?.height || 0,
+              aspectRatio: img.asset.metadata?.dimensions ?
+                img.asset.metadata.dimensions.width / img.asset.metadata.dimensions.height :
+                1
+            }
+          }
+        }
+      })) || [],
+      details: recommendedProduct.description,
+      slug: typeof recommendedProduct.slug === 'string' ? recommendedProduct.slug : recommendedProduct.slug.current,
+    }
+    onAdd(cartItem, 1)
+  }
 
   return (
     <div className="min-h-screen bg-black">
@@ -263,33 +297,71 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({
               </div>
 
               {/* Recommendations */}
-              <div className="mt-16">
-                <h3 className="text-2xl font-bold text-white mb-8">You May Also Like</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                  {recommendations.map((product) => (
-                    <motion.div
-                      key={product._id}
-                      whileHover={{ scale: 1.05 }}
-                      className="cursor-pointer"
-                      onClick={() => router.push(`/shop/${typeof product.slug === 'string' ? product.slug : product.slug.current}`)}
-                    >
-                      <div className="relative pt-[100%] border border-gray-800 rounded-lg overflow-hidden">
-                        <div className="absolute inset-0 flex items-center justify-center p-4">
-                          <div className="relative w-[85%] h-[85%] rounded-lg overflow-hidden bg-white/[0.02]">
-                            <img
-                              src={getProductImage(product)}
-                              alt={product.name}
-                              className="w-full h-full object-contain"
-                            />
+              {mounted && recommendations.length > 0 && (
+                <div className="mt-16">
+                  <h3 className="text-2xl font-bold text-white mb-8">You May Also Like</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                    {recommendations.map((recommendedProduct) => (
+                      <div
+                        key={recommendedProduct._id}
+                        onClick={() => router.push(`/shop/${typeof recommendedProduct.slug === 'string' ? recommendedProduct.slug : recommendedProduct.slug.current}`)}
+                        className="cursor-pointer w-full"
+                      >
+                        <div className="flex flex-col gap-4 md:gap-8">
+                          {/* Image Container */}
+                          <div className="relative overflow-hidden">
+                            <motion.div
+                              className="relative pt-[100%] border border-gray-800 rounded-lg"
+                              whileHover={{ scale: 1.05 }}
+                              transition={{ duration: 0.2 }}
+                            >
+                              <div className="absolute inset-0 flex items-center justify-center p-4">
+                                <div className="relative w-auto h-auto max-w-full max-h-full rounded-lg overflow-hidden bg-white/[0.02]">
+                                  <img
+                                    src={getProductImage(recommendedProduct)}
+                                    alt={recommendedProduct.name}
+                                    className="w-auto h-auto max-w-full max-h-full object-contain"
+                                  />
+                                </div>
+                              </div>
+                            </motion.div>
+                          </div>
+
+                          {/* Info Container */}
+                          <div className="p-4 pt-0" onClick={e => e.stopPropagation()}>
+                            <div className="flex flex-col gap-1">
+                              {/* Category - Always show if we have it */}
+                              {recommendedProduct.category?.title && (
+                                <p className="text-sm text-gray-400">
+                                  {recommendedProduct.category.title}
+                                </p>
+                              )}
+                              <div className="group/tooltip relative">
+                                <h3 className="text-white font-semibold whitespace-nowrap overflow-hidden text-ellipsis">
+                                  {recommendedProduct.name}
+                                </h3>
+                              </div>
+                            </div>
+
+                            <div className="space-y-4 md:space-y-8 mt-4">
+                              <p className="text-white text-lg">${recommendedProduct.price}</p>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleRecommendationAddToCart(recommendedProduct);
+                                }}
+                                className="w-full bg-black text-white py-3 font-semibold rounded-lg hover:bg-gray-900 transition-colors border border-white/20"
+                              >
+                                Add to Cart
+                              </button>
+                            </div>
                           </div>
                         </div>
                       </div>
-                      <h4 className="text-white mt-4 font-medium">{product.name}</h4>
-                      <p className="text-gray-400">${product.price}</p>
-                    </motion.div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </Grid>
         </div>

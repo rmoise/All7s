@@ -41,43 +41,100 @@ const Cart: React.FC = () => {
 
   // Memoized handlers
   const handleQuantityInput = useCallback((item: CartItem, value: string) => {
+    const numValue = value === '' ? 0 : Math.max(0, parseInt(value))
+    const prevQuantity = parseInt(inputValues[item._id] ?? item.quantity.toString())
+
     setInputValues(prev => ({
       ...prev,
-      [item._id]: value
+      [item._id]: numValue.toString()
     }))
-
-    const numValue = value === '' ? 0 : parseInt(value)
 
     if (numValue === 0) {
       setItemsToRemove(prev => new Set(prev).add(item._id))
       updateCartItemQuantity(item._id, 0)
-    } else if (!isNaN(numValue) && numValue > 0) {
+    } else {
+      setItemsToRemove(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(item._id)
+        return newSet
+      })
       updateCartItemQuantity(item._id, numValue)
     }
-  }, [updateCartItemQuantity])
+
+    // Recalculate totals based on all cart items
+    const updatedTotalPrice = cartItems.reduce((total, cartItem) => {
+      if (cartItem._id === item._id) {
+        return total + (cartItem.price * numValue)
+      }
+      return total + (cartItem.price * cartItem.quantity)
+    }, 0)
+
+    const updatedTotalQuantities = cartItems.reduce((total, cartItem) => {
+      if (cartItem._id === item._id) {
+        return total + numValue
+      }
+      return total + cartItem.quantity
+    }, 0)
+
+    setTotalPrice(updatedTotalPrice)
+    setTotalQuantities(updatedTotalQuantities)
+  }, [cartItems, updateCartItemQuantity, inputValues, setTotalPrice, setTotalQuantities])
 
   const handleQuantityChange = useCallback((id: string, action: 'inc' | 'dec') => {
     const item = cartItems.find(item => item._id === id)
     if (!item) return
 
-    if (action === 'dec' && item.quantity === 1) {
-      handleQuantityInput(item, '0')
-      setItemsToRemove(prev => new Set(prev).add(id))
-      return
-    }
+    const currentValue = parseInt(inputValues[id] ?? item.quantity.toString())
 
-    if (action === 'inc' && itemsToRemove.has(id)) {
-      setItemsToRemove(prev => {
-        const newSet = new Set(prev)
-        newSet.delete(id)
-        return newSet
-      })
-      handleQuantityInput(item, '1')
-      return
+    if (action === 'dec') {
+      if (currentValue <= 1) {
+        handleQuantityInput(item, '0')
+        setItemsToRemove(prev => new Set(prev).add(id))
+        return
+      }
+      handleQuantityInput(item, Math.max(0, currentValue - 1).toString())
+    } else {
+      if (itemsToRemove.has(id)) {
+        setItemsToRemove(prev => {
+          const newSet = new Set(prev)
+          newSet.delete(id)
+          return newSet
+        })
+        handleQuantityInput(item, '1')
+        return
+      }
+      handleQuantityInput(item, (currentValue + 1).toString())
     }
+  }, [cartItems, itemsToRemove, handleQuantityInput, inputValues])
 
-    toggleCartItemQuantity(id, action)
-  }, [cartItems, itemsToRemove, toggleCartItemQuantity, handleQuantityInput])
+  // Add this function to handle product removal
+  const handleRemoveProduct = useCallback((item: CartItem) => {
+    onRemove(item)
+
+    // Recalculate totals after removing item
+    const remainingItems = cartItems.filter(cartItem => cartItem._id !== item._id)
+    const updatedTotalPrice = remainingItems.reduce((total, cartItem) =>
+      total + (cartItem.price * cartItem.quantity), 0
+    )
+    const updatedTotalQuantities = remainingItems.reduce((total, cartItem) =>
+      total + cartItem.quantity, 0
+    )
+
+    setTotalPrice(updatedTotalPrice)
+    setTotalQuantities(updatedTotalQuantities)
+
+    // Clean up input values and remove from itemsToRemove
+    setInputValues(prev => {
+      const newValues = { ...prev }
+      delete newValues[item._id]
+      return newValues
+    })
+    setItemsToRemove(prev => {
+      const newSet = new Set(prev)
+      newSet.delete(item._id)
+      return newSet
+    })
+  }, [cartItems, onRemove, setTotalPrice, setTotalQuantities])
 
   // Optimized effects
   useEffect(() => {
@@ -305,7 +362,7 @@ const Cart: React.FC = () => {
                         className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
                         onClick={(e) => {
                           e.stopPropagation()
-                          onRemove(item)
+                          handleRemoveProduct(item)
                         }}
                       >
                         <TiDeleteOutline size={20} />
@@ -334,7 +391,7 @@ const Cart: React.FC = () => {
                             {itemsToRemove.has(item._id) ? (
                               <>
                                 <button
-                                  onClick={() => onRemove(item)}
+                                  onClick={() => handleRemoveProduct(item)}
                                   className="w-6 h-6 flex items-center justify-center bg-red-500 hover:bg-red-600 text-white rounded transition-colors duration-200"
                                   title="Remove item"
                                 >
@@ -342,22 +399,21 @@ const Cart: React.FC = () => {
                                 </button>
                                 <input
                                   type="number"
-                                  value={
-                                    inputValues[item._id] ?? item.quantity
-                                  }
+                                  min="0"
+                                  value={inputValues[item._id] ?? item.quantity}
                                   onChange={(e) => {
                                     const value = e.target.value
-                                    handleQuantityInput(item, value)
+                                    if (value === '' || parseInt(value) >= 0) {
+                                      handleQuantityInput(item, value)
+                                    }
                                   }}
                                   onBlur={(e) => {
                                     const value = e.target.value
                                     const numValue = parseInt(value)
-                                    if (
-                                      (!value || isNaN(numValue)) &&
-                                      !itemsToRemove.has(item._id)
-                                    ) {
+
+                                    if (!value || isNaN(numValue) || numValue <= 0) {
                                       handleQuantityInput(item, '1')
-                                      setItemsToRemove((prev) => {
+                                      setItemsToRemove(prev => {
                                         const newSet = new Set(prev)
                                         newSet.delete(item._id)
                                         return newSet
@@ -365,9 +421,7 @@ const Cart: React.FC = () => {
                                     }
                                   }}
                                   className={`w-14 h-6 text-center bg-transparent ${
-                                    itemsToRemove.has(item._id)
-                                      ? 'text-red-500'
-                                      : 'text-black'
+                                    itemsToRemove.has(item._id) ? 'text-red-500' : 'text-black'
                                   } border border-gray-200 rounded px-1
                                     [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
                                 />
@@ -396,7 +450,7 @@ const Cart: React.FC = () => {
                                       currentValue === '' ||
                                       currentValue === '0'
                                     ) {
-                                      onRemove(item)
+                                      handleRemoveProduct(item)
                                     } else {
                                       handleQuantityChange(item._id, 'dec')
                                     }
@@ -407,22 +461,21 @@ const Cart: React.FC = () => {
                                 </button>
                                 <input
                                   type="number"
-                                  value={
-                                    inputValues[item._id] ?? item.quantity
-                                  }
+                                  min="0"
+                                  value={inputValues[item._id] ?? item.quantity}
                                   onChange={(e) => {
                                     const value = e.target.value
-                                    handleQuantityInput(item, value)
+                                    if (value === '' || parseInt(value) >= 0) {
+                                      handleQuantityInput(item, value)
+                                    }
                                   }}
                                   onBlur={(e) => {
                                     const value = e.target.value
                                     const numValue = parseInt(value)
-                                    if (
-                                      (!value || isNaN(numValue)) &&
-                                      !itemsToRemove.has(item._id)
-                                    ) {
+
+                                    if (!value || isNaN(numValue) || numValue <= 0) {
                                       handleQuantityInput(item, '1')
-                                      setItemsToRemove((prev) => {
+                                      setItemsToRemove(prev => {
                                         const newSet = new Set(prev)
                                         newSet.delete(item._id)
                                         return newSet
@@ -430,9 +483,7 @@ const Cart: React.FC = () => {
                                     }
                                   }}
                                   className={`w-14 h-6 text-center bg-transparent ${
-                                    itemsToRemove.has(item._id)
-                                      ? 'text-red-500'
-                                      : 'text-black'
+                                    itemsToRemove.has(item._id) ? 'text-red-500' : 'text-black'
                                   } border border-gray-200 rounded px-1
                                     [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
                                 />
