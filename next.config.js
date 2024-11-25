@@ -40,6 +40,8 @@ const nextConfig = {
     SANITY_AUTH_TOKEN: process.env.SANITY_AUTH_TOKEN || token,
     SANITY_STUDIO_API_TOKEN: process.env.SANITY_STUDIO_API_TOKEN || token,
     NEXT_PUBLIC_SANITY_TOKEN: process.env.NEXT_PUBLIC_SANITY_TOKEN || token,
+    NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '',
+    STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY || '',
   },
 
   images: {
