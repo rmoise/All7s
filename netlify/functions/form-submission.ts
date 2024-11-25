@@ -13,7 +13,7 @@ export const handler: Handler = async (
   }
 
   try {
-    // Check if body exists
+    // Check if body exists and parse it
     if (!event.body) {
       return {
         statusCode: 400,
@@ -21,9 +21,20 @@ export const handler: Handler = async (
       }
     }
 
-    // Parse the form data
-    const data = new URLSearchParams(event.body)
-    const email = data.get('email')
+    // Log the raw body for debugging
+    console.log('Raw form submission:', event.body);
+
+    // Parse the form data - handle both URL encoded and JSON
+    let email;
+    if (event.headers['content-type']?.includes('application/json')) {
+      const jsonData = JSON.parse(event.body);
+      email = jsonData.email;
+    } else {
+      const formData = new URLSearchParams(event.body);
+      email = formData.get('email');
+    }
+
+    console.log('Parsed email:', email);
 
     if (!email) {
       return {
@@ -52,7 +63,8 @@ export const handler: Handler = async (
       },
       body: JSON.stringify({
         error: 'Internal server error',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        details: error instanceof Error ? error.message : 'Unknown error',
+        rawBody: event.body // Include raw body in error response for debugging
       })
     }
   }

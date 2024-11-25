@@ -94,15 +94,22 @@ const Newsletter: React.FC<NewsletterProps> = ({ newsletter }) => {
       formData.append('form-name', 'newsletter');
       formData.append('email', email);
 
-      // Submit directly to Netlify's form handling endpoint
-      const response = await fetch('/', {
+      // First submit to Netlify's form handling
+      await fetch('/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams(formData as any).toString()
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to submit form');
+      // Then submit to our function for additional processing
+      const functionResponse = await fetch('/.netlify/functions/form-submission', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, formName: 'newsletter' })
+      });
+
+      if (!functionResponse.ok) {
+        throw new Error('Failed to process form submission');
       }
 
       setEmail('');
