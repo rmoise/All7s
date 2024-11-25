@@ -7,24 +7,22 @@ const getStripe = async () => {
     if (!stripePromise) {
       const key = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 
-      console.log('Stripe initialization:', {
-        hasKey: !!key,
-        keyPrefix: key?.substring(0, 7),
-        environment: process.env.NODE_ENV,
-        timestamp: new Date().toISOString(),
-        origin: typeof window !== 'undefined' ? window.location.origin : 'server',
-        isHttps: typeof window !== 'undefined' ? window.location.protocol === 'https:' : false
+      console.log('Environment check:', {
+        nodeEnv: process.env.NODE_ENV,
+        hasStripeKey: !!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
+        keyType: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY?.startsWith('pk_') ? 'valid' : 'invalid',
+        origin: typeof window !== 'undefined' ? window.location.origin : 'server'
       });
 
-      if (!key) {
-        console.error('Stripe key missing:', {
-          env: process.env.NODE_ENV,
+      if (!key || !key.startsWith('pk_')) {
+        console.error('Invalid Stripe key:', {
+          keyPrefix: key?.substring(0, 7),
+          environment: process.env.NODE_ENV,
           timestamp: new Date().toISOString()
         });
-        throw new Error('Stripe publishable key is not set');
+        throw new Error('Invalid Stripe publishable key');
       }
 
-      console.log('Loading Stripe with key prefix:', key.substring(0, 7));
       stripePromise = loadStripe(key);
     }
 

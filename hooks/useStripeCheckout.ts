@@ -21,6 +21,15 @@ export const useStripeCheckout = () => {
     try {
       setIsLoading(true);
 
+      // Verify Stripe key before proceeding
+      if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY?.startsWith('pk_')) {
+        console.error('Invalid Stripe configuration:', {
+          keyPrefix: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY?.substring(0, 7),
+          environment: process.env.NODE_ENV
+        });
+        throw new Error('Invalid Stripe configuration');
+      }
+
       const normalizedLineItems = lineItems.map(item => ({
         price_data: {
           currency: item.price_data.currency,
