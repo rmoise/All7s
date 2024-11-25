@@ -16,6 +16,12 @@ const stripeCountryCodes = stripeCountryObjs.map(country =>
 
 export async function POST(request: Request) {
   try {
+    console.log('Stripe configuration:', {
+      hasSecretKey: !!process.env.STRIPE_SECRET_KEY,
+      secretKeyPrefix: process.env.STRIPE_SECRET_KEY?.substring(0, 7),
+      environment: process.env.NODE_ENV
+    });
+
     const { line_items } = await request.json();
 
     if (!line_items || !Array.isArray(line_items)) {
@@ -27,11 +33,7 @@ export async function POST(request: Request) {
     }
 
     if (!process.env.STRIPE_SECRET_KEY) {
-      console.error('Missing Stripe secret key');
-      return NextResponse.json(
-        { message: 'Stripe configuration error' },
-        { status: 500 }
-      );
+      throw new Error('Missing Stripe secret key');
     }
 
     console.log('Creating Stripe session with line items:', JSON.stringify(line_items, null, 2));
@@ -54,23 +56,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ sessionId: session.id });
 
   } catch (error: any) {
-    console.error('Stripe API error details:', {
+    console.error('Stripe checkout error:', {
       message: error.message,
       type: error.type,
-      code: error.code,
-      param: error.param,
-      statusCode: error.statusCode,
-      raw: error
+      stack: error.stack,
+      env: process.env.NODE_ENV
     });
 
     return NextResponse.json(
-      {
-        message: error.message || 'Error creating checkout session',
-        type: error.type,
-        code: error.code,
-        param: error.param,
-        details: process.env.NODE_ENV === 'development' ? error : undefined
-      },
+      { error: error.message || 'Checkout failed' },
       { status: error.statusCode || 500 }
     );
   }
