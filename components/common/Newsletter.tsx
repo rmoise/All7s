@@ -89,28 +89,18 @@ const Newsletter: React.FC<NewsletterProps> = ({ newsletter }) => {
     try {
       setIsSubmitting(true);
 
-      // Create FormData object
       const formData = new FormData();
       formData.append('form-name', 'newsletter');
       formData.append('email', email);
 
-      // First submit to Netlify's form handling
       await fetch('/', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Accept': 'application/json',
+        },
         body: new URLSearchParams(formData as any).toString()
       });
-
-      // Then submit to our function for additional processing
-      const functionResponse = await fetch('/.netlify/functions/form-submission', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, formName: 'newsletter' })
-      });
-
-      if (!functionResponse.ok) {
-        throw new Error('Failed to process form submission');
-      }
 
       setEmail('');
       setNotification({
@@ -171,8 +161,10 @@ const Newsletter: React.FC<NewsletterProps> = ({ newsletter }) => {
           <form
             name="newsletter"
             method="POST"
+            action="/thank-you"
             data-netlify="true"
             data-netlify-honeypot="bot-field"
+            netlify-honeypot="bot-field"
             onSubmit={handleSubmit}
             className="w-full lg:max-w-md"
           >
