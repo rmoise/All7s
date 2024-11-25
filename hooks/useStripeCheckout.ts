@@ -21,9 +21,25 @@ export const useStripeCheckout = () => {
     try {
       setIsLoading(true);
 
+      const normalizedLineItems = lineItems.map(item => ({
+        price_data: {
+          currency: item.price_data.currency,
+          product_data: {
+            name: item.price_data.product_data.name,
+            images: Array.isArray(item.price_data.product_data.images)
+              ? item.price_data.product_data.images
+              : [item.price_data.product_data.images]
+          },
+          unit_amount: Number(item.price_data.unit_amount)
+        },
+        quantity: Number(item.quantity)
+      }));
+
       console.log('Starting checkout process:', {
-        itemCount: lineItems.length,
-        totalAmount: lineItems.reduce((sum, item) => sum + (item.price_data.unit_amount * item.quantity), 0) / 100
+        itemCount: normalizedLineItems.length,
+        totalAmount: normalizedLineItems.reduce((sum, item) =>
+          sum + (item.price_data.unit_amount * item.quantity), 0) / 100,
+        items: normalizedLineItems
       });
 
       const response = await fetch('/api/checkout', {
@@ -31,7 +47,7 @@ export const useStripeCheckout = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ line_items: lineItems }),
+        body: JSON.stringify({ line_items: normalizedLineItems }),
       });
 
       console.log('Checkout API response:', {
