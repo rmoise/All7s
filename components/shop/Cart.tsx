@@ -188,6 +188,13 @@ const Cart: React.FC = () => {
         environment: process.env.NODE_ENV
       });
 
+      console.log('Environment check:', {
+        isProd: process.env.NODE_ENV === 'production',
+        stripeKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY?.substring(0, 7),
+        baseUrl: window.location.origin,
+        isHttps: window.location.protocol === 'https:'
+      });
+
       if (!cartItems?.length) {
         console.log('Checkout attempted with empty cart');
         toast.error('Your cart is empty')
@@ -211,7 +218,6 @@ const Cart: React.FC = () => {
         },
         quantity: item.quantity,
       }))
-
       console.log('Prepared line items:', JSON.stringify(line_items, null, 2));
 
       const response = await fetch('/api/checkout', {
@@ -240,7 +246,13 @@ const Cart: React.FC = () => {
         throw new Error('No session ID returned from checkout API')
       }
 
-      console.log('Initializing Stripe redirect with session:', data.sessionId);
+      console.log('Initializing Stripe redirect with session:', {
+        sessionId: data.sessionId,
+        timestamp: new Date().toISOString(),
+        origin: window.location.origin,
+        pathname: window.location.pathname
+      });
+
       const stripe = await getStripe()
 
       if (!stripe) {
@@ -248,6 +260,7 @@ const Cart: React.FC = () => {
         throw new Error('Failed to load Stripe')
       }
 
+      console.log('Stripe instance loaded, proceeding with redirect');
       const { error } = await stripe.redirectToCheckout({
         sessionId: data.sessionId
       })

@@ -28,9 +28,7 @@ const nextConfig = {
   reactStrictMode: true,
 
   env: {
-    NEXT_PUBLIC_ENVIRONMENT: process.env.NODE_ENV === 'production'
-      ? 'production'
-      : process.env.NEXT_PUBLIC_ENVIRONMENT || 'development',
+    NEXT_PUBLIC_ENVIRONMENT: process.env.NEXT_PUBLIC_ENVIRONMENT,
     NEXT_PUBLIC_SANITY_PROJECT_ID: '1gxdk71x',
     NEXT_PUBLIC_SANITY_DATASET: process.env.SANITY_STUDIO_DATASET || 'production',
     NEXT_PUBLIC_SANITY_STUDIO_URL: process.env.NEXT_PUBLIC_SANITY_STUDIO_URL || 'http://localhost:3333',
