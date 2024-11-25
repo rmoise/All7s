@@ -8,6 +8,12 @@ const stripeCountryCodes = stripeCountryObjs.map(country =>
 
 export async function POST(request: Request) {
   try {
+    console.log('Checkout request received:', {
+      timestamp: new Date().toISOString(),
+      origin: request.headers.get('origin'),
+      referer: request.headers.get('referer')
+    });
+
     if (!process.env.STRIPE_SECRET_KEY) {
       throw new Error('Missing Stripe secret key');
     }
@@ -34,8 +40,21 @@ export async function POST(request: Request) {
       },
       metadata: {
         environment: process.env.NODE_ENV,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        origin: origin,
+        total_amount: line_items.reduce((sum: number, item: any) =>
+          sum + (item.price_data.unit_amount * item.quantity), 0
+        ),
+        items_count: line_items.length
       }
+    });
+
+    console.log('Stripe session created:', {
+      sessionId: session.id,
+      amount: session.amount_total,
+      currency: session.currency,
+      status: session.status,
+      timestamp: new Date().toISOString()
     });
 
     return NextResponse.json({ sessionId: session.id });
