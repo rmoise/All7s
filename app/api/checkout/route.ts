@@ -31,6 +31,10 @@ export async function POST(request: Request) {
       billing_address_collection: 'required',
       shipping_address_collection: {
         allowed_countries: stripeCountryCodes
+      },
+      metadata: {
+        environment: process.env.NODE_ENV,
+        timestamp: new Date().toISOString()
       }
     });
 
