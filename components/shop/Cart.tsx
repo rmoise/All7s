@@ -172,26 +172,30 @@ const Cart: React.FC = () => {
   const handleCheckout = async () => {
     try {
       if (!cartItems?.length) {
+        console.log('Checkout attempted with empty cart');
         toast.error('Your cart is empty')
         return
       }
 
       setIsCheckoutLoading(true)
+      console.log('Starting checkout process:', {
+        itemCount: cartItems.length,
+        totalAmount: cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+      });
 
       const line_items = cartItems.map((item) => ({
         price_data: {
           currency: 'usd',
           product_data: {
             name: item.name,
-            images:
-              item.image?.map((img) => urlFor(img).url()).filter(Boolean) || [],
+            images: item.image?.map((img) => urlFor(img).url()).filter(Boolean) || [],
           },
           unit_amount: Math.round(item.price * 100),
         },
         quantity: item.quantity,
       }))
 
-      console.log('Sending line items:', JSON.stringify(line_items, null, 2))
+      console.log('Prepared line items:', JSON.stringify(line_items, null, 2));
 
       const response = await fetch('/api/checkout', {
         method: 'POST',
@@ -201,42 +205,55 @@ const Cart: React.FC = () => {
         body: JSON.stringify({ line_items }),
       })
 
-      console.log('Response status:', response.status)
+      console.log('Checkout API response:', {
+        status: response.status,
+        ok: response.ok,
+        timestamp: new Date().toISOString()
+      });
+
       const data = await response.json()
-      console.log('Response data:', data)
+      console.log('Checkout API data:', data);
 
       if (!response.ok) {
         throw new Error(data.message || `Checkout failed: ${response.status}`)
       }
 
       if (!data.sessionId) {
+        console.error('Missing session ID in response:', data);
         throw new Error('No session ID returned from checkout API')
       }
 
-      sessionStorage.setItem('previousPath', window.location.pathname)
-
+      console.log('Initializing Stripe redirect with session:', data.sessionId);
       const stripe = await getStripe()
+
       if (!stripe) {
+        console.error('Failed to initialize Stripe');
         throw new Error('Failed to load Stripe')
       }
 
       const { error } = await stripe.redirectToCheckout({
-        sessionId: data.sessionId,
+        sessionId: data.sessionId
       })
 
       if (error) {
-        console.error('Stripe redirect error:', error)
-        throw new Error(error.message || 'Failed to redirect to checkout')
+        console.error('Stripe redirect error:', {
+          message: error.message,
+          type: error.type,
+          code: error.code,
+          timestamp: new Date().toISOString()
+        });
+        throw error
       }
+
     } catch (error: any) {
-      console.error('Full checkout error:', {
+      console.error('Checkout process failed:', {
         name: error.name,
         message: error.message,
         status: error.status,
         stack: error.stack,
         response: error.response?.data,
-        details: error,
-      })
+        timestamp: new Date().toISOString()
+      });
 
       let errorMessage = 'Something went wrong with checkout'
       if (error.message) {

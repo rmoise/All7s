@@ -16,29 +16,41 @@ const stripeCountryCodes = stripeCountryObjs.map(country =>
 
 export async function POST(request: Request) {
   try {
-    console.log('Stripe configuration:', {
-      hasSecretKey: !!process.env.STRIPE_SECRET_KEY,
-      secretKeyPrefix: process.env.STRIPE_SECRET_KEY?.substring(0, 7),
-      environment: process.env.NODE_ENV,
-      apiVersion: '2024-11-20.acacia'
+    console.log('Checkout request received:', {
+      timestamp: new Date().toISOString(),
+      headers: {
+        origin: request.headers.get('origin'),
+        referer: request.headers.get('referer'),
+      },
+      env: {
+        nodeEnv: process.env.NODE_ENV,
+        hasStripeKey: !!process.env.STRIPE_SECRET_KEY,
+        stripeKeyPrefix: process.env.STRIPE_SECRET_KEY?.substring(0, 7),
+      }
     });
 
     const { line_items } = await request.json();
 
+    console.log('Processing line items:', JSON.stringify(line_items, null, 2));
+
     if (!line_items || !Array.isArray(line_items)) {
-      console.error('Invalid line items:', line_items);
+      console.error('Invalid line items received:', line_items);
       return NextResponse.json(
-        { message: 'Invalid line items provided', details: line_items },
+        { message: 'Invalid line items provided' },
         { status: 400 }
       );
     }
 
-    if (!process.env.STRIPE_SECRET_KEY) {
-      throw new Error('Missing Stripe secret key');
-    }
+    const origin = request.headers.get('origin') ||
+                  request.headers.get('referer') ||
+                  'https://all7z.com';
 
-    console.log('Creating Stripe session with line items:', JSON.stringify(line_items, null, 2));
-    const origin = request.headers.get('origin') || request.headers.get('referer') || 'http://localhost:3000';
+    console.log('Creating Stripe session with config:', {
+      origin,
+      itemCount: line_items.length,
+      totalAmount: line_items.reduce((sum, item) =>
+        sum + (item.price_data.unit_amount * item.quantity), 0)
+    });
 
     const session = await stripe.checkout.sessions.create({
       submit_type: 'pay',
@@ -49,22 +61,26 @@ export async function POST(request: Request) {
         allowed_countries: stripeCountryCodes,
       },
       line_items: line_items,
-      success_url: `${origin}/?success=true`,
-      cancel_url: `${origin}/?canceled=true`,
+      success_url: `${origin}/shop?success=true`,
+      cancel_url: `${origin}/shop?canceled=true`,
     });
 
-    console.log('Stripe session created:', session.id);
+    console.log('Stripe session created successfully:', {
+      sessionId: session.id,
+      status: session.status,
+      timestamp: new Date().toISOString()
+    });
+
     return NextResponse.json({ sessionId: session.id });
 
   } catch (error: any) {
     console.error('Stripe checkout error:', {
       message: error.message,
-      type: error.type,
       code: error.code,
+      type: error.type,
       statusCode: error.statusCode,
       stack: error.stack,
-      env: process.env.NODE_ENV,
-      apiVersion: '2024-11-20.acacia'
+      timestamp: new Date().toISOString()
     });
 
     return NextResponse.json(
