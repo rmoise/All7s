@@ -171,6 +171,23 @@ const Cart: React.FC = () => {
 
   const handleCheckout = async () => {
     try {
+      console.log('Browser environment:', {
+        userAgent: window.navigator.userAgent,
+        language: window.navigator.language,
+        timestamp: new Date().toISOString(),
+        url: window.location.href,
+        viewport: {
+          width: window.innerWidth,
+          height: window.innerHeight
+        }
+      });
+
+      console.log('Stripe initialization:', {
+        hasPublishableKey: !!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
+        keyPrefix: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY?.substring(0, 7),
+        environment: process.env.NODE_ENV
+      });
+
       if (!cartItems?.length) {
         console.log('Checkout attempted with empty cart');
         toast.error('Your cart is empty')

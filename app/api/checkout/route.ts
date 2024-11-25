@@ -16,20 +16,25 @@ const stripeCountryCodes = stripeCountryObjs.map(country =>
 
 export async function POST(request: Request) {
   try {
-    console.log('Checkout request received:', {
+    console.log('Stripe configuration:', {
       timestamp: new Date().toISOString(),
-      headers: {
-        origin: request.headers.get('origin'),
-        referer: request.headers.get('referer'),
-      },
-      env: {
-        nodeEnv: process.env.NODE_ENV,
-        hasStripeKey: !!process.env.STRIPE_SECRET_KEY,
-        stripeKeyPrefix: process.env.STRIPE_SECRET_KEY?.substring(0, 7),
-      }
+      apiVersion: '2024-11-20.acacia',
+      environment: process.env.NODE_ENV,
+      mode: 'payment',
+      hasSecretKey: !!process.env.STRIPE_SECRET_KEY,
+      keyPrefix: process.env.STRIPE_SECRET_KEY?.substring(0, 7)
     });
 
     const { line_items } = await request.json();
+
+    console.log('Request details:', {
+      url: request.url,
+      method: request.method,
+      origin: request.headers.get('origin') ||
+              request.headers.get('referer') ||
+              'https://all7z.com',
+      headers: Object.fromEntries(request.headers.entries())
+    });
 
     console.log('Processing line items:', JSON.stringify(line_items, null, 2));
 
