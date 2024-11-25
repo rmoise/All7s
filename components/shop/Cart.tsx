@@ -16,6 +16,7 @@ import { useRouter } from 'next/navigation'
 import getStripe from '../../lib/getStripe'
 import type { CartItem } from '../../types/cart'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useStripeCheckout } from '@/hooks/useStripeCheckout';
 
 const Cart: React.FC = () => {
   const cartRef = useRef<HTMLDivElement>(null)
@@ -38,6 +39,7 @@ const Cart: React.FC = () => {
   const [inputValues, setInputValues] = useState<{ [key: string]: string }>({})
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false)
   const checkoutHandledRef = useRef(false)
+  const { redirectToCheckout } = useStripeCheckout();
 
   // Memoized handlers
   const handleQuantityInput = useCallback((item: CartItem, value: string) => {
@@ -171,41 +173,13 @@ const Cart: React.FC = () => {
 
   const handleCheckout = async () => {
     try {
-      console.log('Browser environment:', {
-        userAgent: window.navigator.userAgent,
-        language: window.navigator.language,
-        timestamp: new Date().toISOString(),
-        url: window.location.href,
-        viewport: {
-          width: window.innerWidth,
-          height: window.innerHeight
-        }
-      });
-
-      console.log('Stripe initialization:', {
-        hasPublishableKey: !!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
-        keyPrefix: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY?.substring(0, 7),
-        environment: process.env.NODE_ENV
-      });
-
-      console.log('Environment check:', {
-        isProd: process.env.NODE_ENV === 'production',
-        stripeKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY?.substring(0, 7),
-        baseUrl: window.location.origin,
-        isHttps: window.location.protocol === 'https:'
-      });
-
       if (!cartItems?.length) {
         console.log('Checkout attempted with empty cart');
         toast.error('Your cart is empty')
         return
       }
 
-      setIsCheckoutLoading(true)
-      console.log('Starting checkout process:', {
-        itemCount: cartItems.length,
-        totalAmount: cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)
-      });
+      setIsCheckoutLoading(true);
 
       const line_items = cartItems.map((item) => ({
         price_data: {
@@ -217,86 +191,16 @@ const Cart: React.FC = () => {
           unit_amount: Math.round(item.price * 100),
         },
         quantity: item.quantity,
-      }))
-      console.log('Prepared line items:', JSON.stringify(line_items, null, 2));
+      }));
 
-      const response = await fetch('/api/checkout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ line_items }),
-      })
-
-      console.log('Checkout API response:', {
-        status: response.status,
-        ok: response.ok,
-        timestamp: new Date().toISOString()
-      });
-
-      const data = await response.json()
-      console.log('Checkout API data:', data);
-
-      if (!response.ok) {
-        throw new Error(data.message || `Checkout failed: ${response.status}`)
-      }
-
-      if (!data.sessionId) {
-        console.error('Missing session ID in response:', data);
-        throw new Error('No session ID returned from checkout API')
-      }
-
-      console.log('Initializing Stripe redirect with session:', {
-        sessionId: data.sessionId,
-        timestamp: new Date().toISOString(),
-        origin: window.location.origin,
-        pathname: window.location.pathname
-      });
-
-      const stripe = await getStripe()
-
-      if (!stripe) {
-        console.error('Failed to initialize Stripe');
-        throw new Error('Failed to load Stripe')
-      }
-
-      console.log('Stripe instance loaded, proceeding with redirect');
-      const { error } = await stripe.redirectToCheckout({
-        sessionId: data.sessionId
-      })
-
-      if (error) {
-        console.error('Stripe redirect error:', {
-          message: error.message,
-          type: error.type,
-          code: error.code,
-          timestamp: new Date().toISOString()
-        });
-        throw error
-      }
-
-    } catch (error: any) {
-      console.error('Checkout process failed:', {
-        name: error.name,
-        message: error.message,
-        status: error.status,
-        stack: error.stack,
-        response: error.response?.data,
-        timestamp: new Date().toISOString()
-      });
-
-      let errorMessage = 'Something went wrong with checkout'
-      if (error.message) {
-        errorMessage = error.message
-      } else if (error.response?.data?.message) {
-        errorMessage = error.response.data.message
-      }
-
-      toast.error(errorMessage)
+      await redirectToCheckout(line_items);
+    } catch (error) {
+      console.error('Cart checkout error:', error);
+      toast.error('Failed to start checkout process');
     } finally {
-      setIsCheckoutLoading(false)
+      setIsCheckoutLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
     const query = new URLSearchParams(window.location.search)
