@@ -66,6 +66,7 @@ const About: React.FC<AboutProps> = (props) => {
           blurDataURL={urlForImage(props.image, { width: 50, quality: 1, blur: 50 })}
           style={{ objectFit: 'cover' }}
           className="w-full h-full object-cover"
+          unoptimized
         />
         <div
           className={`absolute inset-0 flex items-center justify-center p-2 sm:p-4 lg:p-8 ${alignmentClass}`}

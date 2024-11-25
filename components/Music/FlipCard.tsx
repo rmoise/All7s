@@ -543,6 +543,7 @@ const FlipCard = forwardRef<HTMLDivElement, FlipCardProps>(
                     style={{ objectFit: 'cover' }}
                     className="rounded-lg"
                     priority
+                    unoptimized
                   />
                 </div>
               </div>
@@ -593,6 +594,7 @@ const FlipCard = forwardRef<HTMLDivElement, FlipCardProps>(
                         height={64}
                         className="rounded-lg object-cover"
                         priority
+                        unoptimized
                       />
                       <div>
                         <p className="text-xl font-semibold text-black">
