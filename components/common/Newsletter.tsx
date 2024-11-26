@@ -92,29 +92,19 @@ const Newsletter: React.FC<NewsletterProps> = ({ newsletter }) => {
       const form = e.target as HTMLFormElement;
       const formData = new FormData(form);
 
-      // Convert FormData entries to string key-value pairs
+      // Convert FormData to object without iteration
       const formDataObj: Record<string, string> = {};
-      formData.forEach((value, key) => {
-        formDataObj[key] = value.toString();
-      });
+      formDataObj['form-name'] = formData.get('form-name')?.toString() || 'newsletter';
+      formDataObj['email'] = formData.get('email')?.toString() || '';
+      formDataObj['bot-field'] = formData.get('bot-field')?.toString() || '';
 
-      // Log form data for debugging
-      console.log('Submitting form data:', formDataObj);
-
-      const response = await fetch('/', {
+      const response = await fetch(form.action, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: new URLSearchParams({
-          'form-name': 'newsletter',
-          ...formDataObj
-        }).toString()
+        body: new URLSearchParams(formDataObj).toString()
       });
-
-      console.log('Response status:', response.status);
-      const responseText = await response.text();
-      console.log('Response text:', responseText);
 
       if (!response.ok) {
         throw new Error(`Form submission failed: ${response.status}`);
