@@ -92,15 +92,21 @@ const Newsletter: React.FC<NewsletterProps> = ({ newsletter }) => {
       const form = e.target as HTMLFormElement;
       const formData = new FormData(form);
 
+      // Convert FormData entries to string key-value pairs
+      const formDataObj: Record<string, string> = {};
+      formData.forEach((value, key) => {
+        formDataObj[key] = value.toString();
+      });
+
       // Log form data for debugging
-      console.log('Submitting form data:', Object.fromEntries(formData));
+      console.log('Submitting form data:', formDataObj);
 
       const response = await fetch('/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: new URLSearchParams(Array.from(formData.entries())).toString()
+        body: new URLSearchParams(formDataObj).toString()
       });
 
       console.log('Response status:', response.status);
@@ -169,8 +175,8 @@ const Newsletter: React.FC<NewsletterProps> = ({ newsletter }) => {
         <div className="self-start lg:self-center lg:flex lg:justify-center">
           <form
             name="newsletter"
-            netlify="true"
-            netlify-honeypot="bot-field"
+            data-netlify="true"
+            data-netlify-honeypot="bot-field"
             onSubmit={handleSubmit}
             className="w-full lg:max-w-md"
           >
