@@ -95,22 +95,21 @@ const Newsletter: React.FC<NewsletterProps> = ({ newsletter }) => {
       // Log form data for debugging
       console.log('Submitting form data:', Object.fromEntries(formData));
 
-      // Submit to Netlify Forms
       const response = await fetch('/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: new URLSearchParams(Array.from(formData.entries()) as [string, string][]).toString()
+        body: new URLSearchParams(Array.from(formData.entries())).toString()
       });
 
+      console.log('Response status:', response.status);
+      const responseText = await response.text();
+      console.log('Response text:', responseText);
+
       if (!response.ok) {
-        console.error('Form submission failed:', response.status, response.statusText);
         throw new Error(`Form submission failed: ${response.status}`);
       }
-
-      // Log successful submission
-      console.log('Form submitted successfully:', response.status);
 
       setEmail('');
       setNotification({
@@ -170,10 +169,8 @@ const Newsletter: React.FC<NewsletterProps> = ({ newsletter }) => {
         <div className="self-start lg:self-center lg:flex lg:justify-center">
           <form
             name="newsletter"
-            method="POST"
-            data-netlify="true"
-            data-netlify-honeypot="bot-field"
-            action="/thank-you"
+            netlify="true"
+            netlify-honeypot="bot-field"
             onSubmit={handleSubmit}
             className="w-full lg:max-w-md"
           >
