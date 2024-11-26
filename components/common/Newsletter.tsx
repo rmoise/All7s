@@ -98,7 +98,7 @@ const Newsletter: React.FC<NewsletterProps> = ({ newsletter }) => {
       formDataObj['email'] = formData.get('email')?.toString() || '';
       formDataObj['bot-field'] = formData.get('bot-field')?.toString() || '';
 
-      const response = await fetch(form.action, {
+      const response = await fetch('/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
@@ -171,7 +171,6 @@ const Newsletter: React.FC<NewsletterProps> = ({ newsletter }) => {
             method="POST"
             data-netlify="true"
             data-netlify-honeypot="bot-field"
-            action="/thank-you"
             onSubmit={handleSubmit}
             className="w-full lg:max-w-md"
           >
