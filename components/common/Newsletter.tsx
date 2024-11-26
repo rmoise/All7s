@@ -106,7 +106,10 @@ const Newsletter: React.FC<NewsletterProps> = ({ newsletter }) => {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: new URLSearchParams(formDataObj).toString()
+        body: new URLSearchParams({
+          'form-name': 'newsletter',
+          ...formDataObj
+        }).toString()
       });
 
       console.log('Response status:', response.status);
@@ -175,8 +178,10 @@ const Newsletter: React.FC<NewsletterProps> = ({ newsletter }) => {
         <div className="self-start lg:self-center lg:flex lg:justify-center">
           <form
             name="newsletter"
+            method="POST"
             data-netlify="true"
             data-netlify-honeypot="bot-field"
+            action="/thank-you"
             onSubmit={handleSubmit}
             className="w-full lg:max-w-md"
           >
