@@ -94,9 +94,12 @@ const Newsletter: React.FC<NewsletterProps> = ({ newsletter }) => {
 
       // Convert FormData to object without iteration
       const formDataObj: Record<string, string> = {};
-      formDataObj['form-name'] = formData.get('form-name')?.toString() || 'newsletter';
+      formDataObj['form-name'] = 'newsletter';
       formDataObj['email'] = formData.get('email')?.toString() || '';
       formDataObj['bot-field'] = formData.get('bot-field')?.toString() || '';
+
+      // Log the form data being sent
+      console.log('Submitting form data:', formDataObj);
 
       const response = await fetch('/', {
         method: 'POST',
@@ -105,6 +108,11 @@ const Newsletter: React.FC<NewsletterProps> = ({ newsletter }) => {
         },
         body: new URLSearchParams(formDataObj).toString()
       });
+
+      // Log response for debugging
+      console.log('Response status:', response.status);
+      const responseText = await response.text();
+      console.log('Response text:', responseText);
 
       if (!response.ok) {
         throw new Error(`Form submission failed: ${response.status}`);
@@ -171,6 +179,7 @@ const Newsletter: React.FC<NewsletterProps> = ({ newsletter }) => {
             method="POST"
             data-netlify="true"
             data-netlify-honeypot="bot-field"
+            action="/thank-you"
             onSubmit={handleSubmit}
             className="w-full lg:max-w-md"
           >
