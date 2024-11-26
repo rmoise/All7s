@@ -93,14 +93,17 @@ const Newsletter: React.FC<NewsletterProps> = ({ newsletter }) => {
       formData.append('form-name', 'newsletter');
       formData.append('email', email);
 
-      await fetch('/', {
+      const response = await fetch('/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
-          'Accept': 'application/json',
         },
         body: new URLSearchParams(formData as any).toString()
       });
+
+      if (!response.ok) {
+        throw new Error('Failed to submit form');
+      }
 
       setEmail('');
       setNotification({
@@ -146,7 +149,7 @@ const Newsletter: React.FC<NewsletterProps> = ({ newsletter }) => {
         gap={32}
         maxWidth="7xl"
         center
-        className="py-8 px-6 sm:px-8 md:px-12 lg:px-24 xl:px-16"
+        className="py-8 px-6 sm:px-0 md:px-12 lg:px-24 xl:px-16"
       >
         <div className="lg:text-center self-start">
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-Headline tracking-tight text-white mb-4">
