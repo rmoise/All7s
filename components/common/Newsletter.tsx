@@ -92,33 +92,32 @@ const Newsletter: React.FC<NewsletterProps> = ({ newsletter }) => {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: new URLSearchParams({
-          'form-name': 'newsletter',
+          'form-name': newsletter?.formName || 'newsletter',
           'email': email,
           'bot-field': '',
         }).toString()
       });
 
-      console.log('Response status:', response.status);
-      const responseText = await response.text();
-      console.log('Response body:', responseText);
-
       if (!response.ok) {
-        throw new Error(`Form submission failed: ${response.status} - ${responseText}`);
+        throw new Error(`Form submission failed: ${response.status}`);
       }
 
+      const contentType = response.headers.get('content-type');
       let jsonResponse;
-      try {
-        jsonResponse = JSON.parse(responseText);
-      } catch (e) {
-        console.warn('Response was not JSON:', responseText);
-        throw new Error('Invalid response format');
+
+      if (contentType && contentType.includes('application/json')) {
+        jsonResponse = await response.json();
+      } else {
+        const text = await response.text();
+        console.log('Non-JSON response:', text);
+        jsonResponse = { message: 'Subscription successful' };
       }
 
       setNotification({
         show: true,
         error: false,
         title: newsletter?.notification?.title || 'Successfully subscribed!',
-        description: newsletter?.notification?.description || 'Thanks for joining our newsletter.',
+        description: newsletter?.notification?.description || jsonResponse.message || 'Thanks for joining our newsletter.',
         showSocialLinks: newsletter?.notification?.showSocialLinks,
         socialLinks: newsletter?.notification?.socialLinks || defaultSocialLinks,
         socialLinksTitle: newsletter?.notification?.socialLinksTitle
@@ -127,15 +126,18 @@ const Newsletter: React.FC<NewsletterProps> = ({ newsletter }) => {
     } catch (error) {
       console.error('Form submission error:', {
         error,
-        message: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined
+        message: error instanceof Error ? error.message : 'Unknown error'
       });
 
       setNotification({
         show: true,
         error: true,
         title: 'Subscription failed',
-        description: error instanceof Error ? error.message : 'Please try again later.'
+        description: error instanceof Error
+          ? error.message.includes('Form submission failed')
+            ? 'Unable to subscribe at this time. Please try again later.'
+            : error.message
+          : 'Please try again later.'
       });
     } finally {
       setIsSubmitting(false);
