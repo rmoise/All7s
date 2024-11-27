@@ -20,8 +20,12 @@ export const handler: Handler = async (event) => {
     const formData = new URLSearchParams(event.body);
     const email = formData.get('email') || '';
 
+    // Get the site URL from environment variables and ensure it's a valid URL
+    const siteUrl = process.env.URL || process.env.DEPLOY_URL || process.env.SITE_URL || 'https://all7z.com';
+    const baseUrl = new URL(siteUrl).origin;
+
     // Submit directly to Netlify Forms
-    const response = await fetch('/', {
+    const response = await fetch(`${baseUrl}/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
