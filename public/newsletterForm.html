@@ -4,8 +4,8 @@
     <title>Newsletter Signup Form</title>
   </head>
   <body>
-    <!-- This is the hidden form that Netlify uses to detect the form -->
     <form name="newsletter" netlify netlify-honeypot="bot-field" hidden>
+      <input type="hidden" name="form-name" value="newsletter" />
       <input type="email" name="email" />
       <input name="bot-field" />
     </form>

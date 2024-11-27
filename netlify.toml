@@ -99,7 +99,7 @@
   node_bundler = "esbuild"
 
 [functions.form-submission]
-  included_files = ["lib/formHandling.js"]
+  included_files = ["lib/formHandling.js", "public/newsletterForm.html"]
 
 [functions.extract-album-durations]
   included_files = ["lib/extractDurations.js"]
