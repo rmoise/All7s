@@ -20,16 +20,8 @@ export const handler: Handler = async (event) => {
     const formData = new URLSearchParams(event.body);
     const email = formData.get('email') || '';
 
-    // Get the site URL from environment variables
-    const siteUrl = process.env.URL || process.env.DEPLOY_URL || process.env.SITE_URL;
-
-    if (!siteUrl) {
-      console.error('Site URL not found in environment variables');
-      throw new Error('Site URL configuration missing');
-    }
-
-    // Submit to Netlify Forms
-    const response = await fetch(siteUrl, {
+    // Submit directly to Netlify Forms
+    const response = await fetch('/', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -37,7 +29,6 @@ export const handler: Handler = async (event) => {
         'X-Netlify-Form-Name': 'newsletter',
         'X-Netlify-Site': process.env.SITE_ID || '',
         'X-Netlify-Form': 'true',
-        'X-Netlify-Form-Version': '2',
       },
       body: new URLSearchParams({
         'form-name': 'newsletter',
@@ -60,9 +51,6 @@ export const handler: Handler = async (event) => {
 
     return {
       statusCode: 200,
-      headers: {
-        'Content-Type': 'application/json'
-      },
       body: JSON.stringify({
         message: 'Form submitted successfully',
         email: email
@@ -72,9 +60,6 @@ export const handler: Handler = async (event) => {
     console.error('Form submission error:', error);
     return {
       statusCode: 500,
-      headers: {
-        'Content-Type': 'application/json'
-      },
       body: JSON.stringify({
         error: 'Internal server error',
         details: error instanceof Error ? error.message : 'Unknown error'
