@@ -14,6 +14,8 @@
   NEXT_PUBLIC_SITE_URL = "https://all7z.com"
   SANITY_STUDIO_PROJECT_ID = "1gxdk71x"
   SANITY_STUDIO_DATASET = "production"
+  SITE_URL = "https://all7z.com"
+  URL = "https://all7z.com"
 
 [context.production]
   [context.production.environment]
