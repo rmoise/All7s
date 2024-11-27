@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "clean": "rimraf .next fresh_sanity_studio/dist .netlify/cache",
+    "clean": "rm -rf .next && rm -rf node_modules/.cache",
     "dev": "cross-env NODE_ENV=development next dev",
     "dev:staging": "cross-env NODE_ENV=development NEXT_PUBLIC_ENVIRONMENT=staging SANITY_STUDIO_DATASET=staging next dev",
     "build": "NODE_OPTIONS='--max_old_space_size=8192' NODE_ENV=production next build",
@@ -30,7 +30,9 @@
     "create-singletons:staging": "SANITY_STUDIO_DATASET=staging node --loader ts-node/esm scripts/createSingletons.mts",
     "test-connection": "NODE_OPTIONS=\"--loader ts-node/esm\" ts-node lib/testConnection.ts",
     "deploy:with-env": "SANITY_STUDIO_API_TOKEN=${SANITY_STUDIO_API_TOKEN} sanity deploy --no-verify",
-    "dev:env": "dotenv -e .env -- cross-env SANITY_STUDIO_API_TOKEN=$SANITY_AUTH_TOKEN NODE_ENV=development next dev"
+    "dev:env": "dotenv -e .env -- cross-env SANITY_STUDIO_API_TOKEN=$SANITY_AUTH_TOKEN NODE_ENV=development next dev",
+    "build:optimized": "NODE_OPTIONS='--max_old_space_size=4096' next build",
+    "start:optimized": "NODE_ENV=production next start"
   },
   "dependencies": {
     "@eslint/config-array": "^0.18.0",

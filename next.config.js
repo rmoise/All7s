@@ -204,7 +204,10 @@ const nextConfig = {
     serverActions: {
       allowedOrigins: ['localhost:3000', 'all7z.com'],
       bodySizeLimit: '2mb'
-    }
+    },
+    optimizeCss: true,
+    memoryBasedWorkersCount: true,
+    workerThreads: true
   },
 };
 

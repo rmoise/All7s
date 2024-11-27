@@ -24,9 +24,10 @@ function createDebugLogger() {
 
 // Track processed webhooks with more metadata
 const processedWebhooks = new Map();
-const WEBHOOK_EXPIRY = 30000; // 30 seconds
-const MAX_RETRIES = 3; // Maximum number of retries per document
-const RETRY_WINDOW = 300000; // 5 minutes window for retry counting
+const WEBHOOK_EXPIRY = 60000; // 60 seconds
+const MAX_RETRIES = 5; // Increase max retries
+const RETRY_WINDOW = 600000; // 10 minutes window
+const MAX_CONCURRENT_PROCESSES = 3; // Limit concurrent processes
 
 // At the top of the file
 const processedDocs = new Map();
