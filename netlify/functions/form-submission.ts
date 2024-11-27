@@ -25,7 +25,7 @@ export const handler: Handler = async (event) => {
     const baseUrl = new URL(siteUrl).origin;
 
     // Submit directly to Netlify Forms
-    const response = await fetch(`${baseUrl}/`, {
+    const response = await fetch(`${baseUrl}/.netlify/forms/newsletter`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -33,11 +33,13 @@ export const handler: Handler = async (event) => {
         'X-Netlify-Form-Name': 'newsletter',
         'X-Netlify-Site': process.env.SITE_ID || '',
         'X-Netlify-Form': 'true',
+        'Accept': 'application/json',
       },
       body: new URLSearchParams({
         'form-name': 'newsletter',
         'email': email,
         'bot-field': '',
+        'path': '/',
       }).toString()
     });
 
@@ -53,8 +55,14 @@ export const handler: Handler = async (event) => {
       throw new Error(`Failed to submit to Netlify Forms: ${response.status}`);
     }
 
+    const responseText = await response.text();
+    console.log('Form submission response:', responseText);
+
     return {
       statusCode: 200,
+      headers: {
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify({
         message: 'Form submitted successfully',
         email: email
@@ -64,6 +72,9 @@ export const handler: Handler = async (event) => {
     console.error('Form submission error:', error);
     return {
       statusCode: 500,
+      headers: {
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify({
         error: 'Internal server error',
         details: error instanceof Error ? error.message : 'Unknown error'
