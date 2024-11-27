@@ -12,7 +12,7 @@ interface SanityDocument {
 }
 
 interface PublishContext {
-  getClient: ({ apiVersion }: { apiVersion: string }) => SanityClient
+  getClient: ({apiVersion}: {apiVersion: string}) => SanityClient
   document: SanityDocument
 }
 
@@ -34,7 +34,7 @@ export default defineType({
     {
       name: 'seo',
       title: 'SEO',
-    }
+    },
   ],
   fields: [
     defineField({
@@ -42,7 +42,7 @@ export default defineType({
       title: 'Title',
       type: 'string',
       validation: (Rule) => Rule.required(),
-      group: 'content'
+      group: 'content',
     }),
     defineField({
       name: 'contentBlocks',
@@ -53,32 +53,32 @@ export default defineType({
       of: [
         {
           type: 'splash',
-          title: 'Splash'
+          title: 'Splash',
         },
         {
           type: 'about',
-          title: 'About'
+          title: 'About',
         },
         {
           type: 'musicBlock',
-          title: 'Music Block'
+          title: 'Music Block',
         },
         {
           type: 'videoBlock',
-          title: 'Video Block'
+          title: 'Video Block',
         },
         {
           type: 'backgroundVideoBlock',
-          title: 'Background Video Block'
+          title: 'Background Video Block',
         },
         {
           type: newsletter.name,
-          title: newsletter.title
+          title: newsletter.title,
         },
         {
           type: 'heroBanner',
-          title: 'Hero Banner'
-        }
+          title: 'Hero Banner',
+        },
       ],
     }),
     defineField({
@@ -86,14 +86,14 @@ export default defineType({
       title: 'Meta Title',
       type: 'string',
       validation: (Rule) => Rule.required(),
-      group: 'seo'
+      group: 'seo',
     }),
     defineField({
       name: 'metaDescription',
       title: 'Meta Description',
       type: 'text',
       validation: (Rule) => Rule.required(),
-      group: 'seo'
+      group: 'seo',
     }),
     defineField({
       name: 'openGraphImage',
@@ -103,7 +103,7 @@ export default defineType({
       options: {
         hotspot: true,
       },
-      group: 'seo'
+      group: 'seo',
     }),
   ],
   preview: {
@@ -117,8 +117,8 @@ export default defineType({
     },
   },
   hooks: {
-    onPublish: async ({ getClient, document }: PublishContext) => {
-      const client = getClient({ apiVersion: '2024-05-28' })
+    onPublish: async ({getClient, document}: PublishContext) => {
+      const client = getClient({apiVersion: '2024-05-28'})
 
       try {
         // Get current document
@@ -130,11 +130,12 @@ export default defineType({
 
         // Preserve existing content blocks and ensure both LISTEN and LOOK sections are properly handled
         const preservedData = {
-          contentBlocks: currentDoc.contentBlocks?.map((block: any, index: number) => ({
-            ...block,
-            _key: block._key,
-            order: block.order ?? index
-          })) || []
+          contentBlocks:
+            currentDoc.contentBlocks?.map((block: any, index: number) => ({
+              ...block,
+              _key: block._key,
+              order: block.order ?? index,
+            })) || [],
         }
 
         // Create new document data
@@ -142,25 +143,30 @@ export default defineType({
           ...document,
           _id: 'singleton-home',
           _type: 'home',
-          contentBlocks: document.contentBlocks?.map((block: any) => {
-            if (block._type === 'videoBlock') {
-              return {
-                ...block,
-                lookTitle: block.lookTitle || preservedData.contentBlocks.find(
-                  (b: any) => b._type === 'videoBlock'
-                )?.lookTitle || 'LOOK'
+          contentBlocks:
+            document.contentBlocks?.map((block: any) => {
+              if (block._type === 'videoBlock') {
+                return {
+                  ...block,
+                  lookTitle:
+                    block.lookTitle ||
+                    preservedData.contentBlocks.find((b: any) => b._type === 'videoBlock')
+                      ?.lookTitle ||
+                    'LOOK',
+                }
               }
-            }
-            if (block._type === 'musicBlock') {
-              return {
-                ...block,
-                listenTitle: block.listenTitle || preservedData.contentBlocks.find(
-                  (b: any) => b._type === 'musicBlock'
-                )?.listenTitle || 'LISTEN'
+              if (block._type === 'musicBlock') {
+                return {
+                  ...block,
+                  listenTitle:
+                    block.listenTitle ||
+                    preservedData.contentBlocks.find((b: any) => b._type === 'musicBlock')
+                      ?.listenTitle ||
+                    'LISTEN',
+                }
               }
-            }
-            return block
-          }) || preservedData.contentBlocks
+              return block
+            }) || preservedData.contentBlocks,
         }
 
         const transaction = client.transaction()
@@ -168,7 +174,7 @@ export default defineType({
         transaction.createOrReplace(newDocData)
 
         await transaction.commit({
-          visibility: 'sync'
+          visibility: 'sync',
         })
 
         return true
@@ -176,7 +182,6 @@ export default defineType({
         console.error('Publish error:', error)
         throw error
       }
-    }
-  }
+    },
+  },
 })
-
