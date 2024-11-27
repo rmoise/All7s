@@ -61,12 +61,6 @@
   force = true
 
 [[redirects]]
-  from = "/api/form-submission"
-  to = "/.netlify/functions/form-submission"
-  status = 200
-  force = true
-
-[[redirects]]
   from = "/api/music-metadata"
   to = "/.netlify/functions/music-metadata"
   status = 200

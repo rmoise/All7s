@@ -4,51 +4,66 @@ export const handler: Handler = async (
   event: HandlerEvent,
   context: HandlerContext
 ) => {
-  // Validate request method
+  console.log('Form submission event:', {
+    httpMethod: event.httpMethod,
+    headers: event.headers,
+    body: event.body,
+    path: event.path
+  });
+
   if (event.httpMethod !== 'POST') {
-    return {
-      statusCode: 405,
-      body: JSON.stringify({ error: 'Method Not Allowed' })
-    }
+    return { statusCode: 405, body: JSON.stringify({ error: 'Method Not Allowed' }) }
   }
 
   try {
-    // Check if body exists and parse it
     if (!event.body) {
+      return { statusCode: 400, body: JSON.stringify({ error: 'No form data provided' }) }
+    }
+
+    const formData = new URLSearchParams(event.body);
+    const email = formData.get('email') || '';
+
+    // Check if we're in development
+    const isDevelopment = process.env.CONTEXT === 'dev' || event.headers['x-nf-deploy-context'] === 'dev';
+
+    if (isDevelopment) {
+      // In development, just return success without trying to submit to Netlify Forms
+      console.log('Development mode - skipping Netlify Forms submission');
       return {
-        statusCode: 400,
-        body: JSON.stringify({ error: 'No form data provided' })
+        statusCode: 200,
+        body: JSON.stringify({
+          message: 'Form received (development mode)',
+          email: email
+        })
       }
     }
 
-    // Log the raw body for debugging
-    console.log('Raw form submission:', event.body);
+    // Production: Submit to Netlify Forms
+    const response = await fetch(process.env.URL + '/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'X-Netlify-Original-Path': '/',
+        'X-Netlify-Form-Name': 'newsletter',
+        'X-Netlify-Site': process.env.SITE_ID || '',
+        'X-Netlify-Form': 'true',
+        'X-Netlify-Form-Version': '2',
+      },
+      body: new URLSearchParams({
+        'form-name': 'newsletter',
+        'email': email,
+        'bot-field': '',
+      }).toString()
+    });
 
-    // Parse the form data - handle both URL encoded and JSON
-    let email;
-    if (event.headers['content-type']?.includes('application/json')) {
-      const jsonData = JSON.parse(event.body);
-      email = jsonData.email;
-    } else {
-      const formData = new URLSearchParams(event.body);
-      email = formData.get('email');
+    if (!response.ok) {
+      const responseText = await response.text();
+      console.error('Netlify form submission failed:', responseText);
+      throw new Error(`Failed to submit to Netlify Forms: ${response.status}`);
     }
 
-    console.log('Parsed email:', email);
-
-    if (!email) {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({ error: 'Email is required' })
-      }
-    }
-
-    // Process the form submission
     return {
       statusCode: 200,
-      headers: {
-        'Content-Type': 'application/json'
-      },
       body: JSON.stringify({
         message: 'Form submitted successfully',
         email: email
@@ -58,13 +73,9 @@ export const handler: Handler = async (
     console.error('Form submission error:', error)
     return {
       statusCode: 500,
-      headers: {
-        'Content-Type': 'application/json'
-      },
       body: JSON.stringify({
         error: 'Internal server error',
-        details: error instanceof Error ? error.message : 'Unknown error',
-        rawBody: event.body // Include raw body in error response for debugging
+        details: error instanceof Error ? error.message : 'Unknown error'
       })
     }
   }

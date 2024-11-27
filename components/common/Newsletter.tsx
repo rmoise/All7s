@@ -83,46 +83,59 @@ const Newsletter: React.FC<NewsletterProps> = ({ newsletter }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (isSubmitting) return;
+    setIsSubmitting(true);
 
     try {
-      setIsSubmitting(true);
-
-      const response = await fetch('/', {
+      const response = await fetch('/.netlify/functions/form-submission', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: new URLSearchParams({
           'form-name': 'newsletter',
-          email,
+          'email': email,
           'bot-field': '',
-        }).toString(),
+        }).toString()
       });
 
+      console.log('Response status:', response.status);
+      const responseText = await response.text();
+      console.log('Response body:', responseText);
+
       if (!response.ok) {
-        throw new Error(`Form submission failed: ${response.status}`);
+        throw new Error(`Form submission failed: ${response.status} - ${responseText}`);
       }
 
-      setEmail('');
+      let jsonResponse;
+      try {
+        jsonResponse = JSON.parse(responseText);
+      } catch (e) {
+        console.warn('Response was not JSON:', responseText);
+        throw new Error('Invalid response format');
+      }
+
       setNotification({
         show: true,
         error: false,
-        title: newsletter?.notification?.title || 'Thank you for signing up!',
-        description: newsletter?.notification?.description || 'You will receive our newsletter shortly.',
-        showSocialLinks: newsletter?.notification?.showSocialLinks ?? true,
+        title: newsletter?.notification?.title || 'Successfully subscribed!',
+        description: newsletter?.notification?.description || 'Thanks for joining our newsletter.',
+        showSocialLinks: newsletter?.notification?.showSocialLinks,
         socialLinks: newsletter?.notification?.socialLinks || defaultSocialLinks,
-        socialLinksTitle: newsletter?.notification?.socialLinksTitle || 'Follow us on social media',
+        socialLinksTitle: newsletter?.notification?.socialLinksTitle
       });
+      setEmail('');
     } catch (error) {
-      console.error('Newsletter submission error:', error);
+      console.error('Form submission error:', {
+        error,
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined
+      });
+
       setNotification({
         show: true,
         error: true,
-        title: 'Error',
-        description: 'Failed to sign up for newsletter. Please try again later.',
-        showSocialLinks: false,
+        title: 'Subscription failed',
+        description: error instanceof Error ? error.message : 'Please try again later.'
       });
     } finally {
       setIsSubmitting(false);
