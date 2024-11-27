@@ -4,10 +4,10 @@
     <title>Newsletter Signup Form</title>
   </head>
   <body>
-    <form name="newsletter" netlify netlify-honeypot="bot-field" hidden>
-      <input type="hidden" name="form-name" value="newsletter" />
-      <input type="email" name="email" required />
+    <form name="newsletter" method="POST" netlify netlify-honeypot="bot-field" action="/form-success">
+      <input type="email" name="email" />
       <input name="bot-field" />
+      <input type="hidden" name="form-name" value="newsletter" />
     </form>
   </body>
 </html>

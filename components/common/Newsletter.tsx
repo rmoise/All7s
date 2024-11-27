@@ -89,21 +89,16 @@ const Newsletter: React.FC<NewsletterProps> = ({ newsletter }) => {
     try {
       setIsSubmitting(true);
 
-      const form = e.target as HTMLFormElement;
-      const formData = new FormData(form);
-
-      // Convert FormData to object without iteration
-      const formDataObj: Record<string, string> = {};
-      formDataObj['form-name'] = 'newsletter';
-      formDataObj['email'] = formData.get('email')?.toString() || '';
-      formDataObj['bot-field'] = formData.get('bot-field')?.toString() || '';
-
       const response = await fetch('/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: new URLSearchParams(formDataObj).toString()
+        body: new URLSearchParams({
+          'form-name': 'newsletter',
+          email,
+          'bot-field': '',
+        }).toString(),
       });
 
       if (!response.ok) {
@@ -120,7 +115,6 @@ const Newsletter: React.FC<NewsletterProps> = ({ newsletter }) => {
         socialLinks: newsletter?.notification?.socialLinks || defaultSocialLinks,
         socialLinksTitle: newsletter?.notification?.socialLinksTitle || 'Follow us on social media',
       });
-
     } catch (error) {
       console.error('Newsletter submission error:', error);
       setNotification({
