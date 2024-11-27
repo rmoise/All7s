@@ -25,21 +25,18 @@ export const handler: Handler = async (event) => {
     const baseUrl = new URL(siteUrl).origin;
 
     // Submit directly to Netlify Forms
-    const response = await fetch(`${baseUrl}/.netlify/forms/newsletter`, {
+    const response = await fetch(`${baseUrl}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
         'X-Netlify-Original-Path': '/',
         'X-Netlify-Form-Name': 'newsletter',
         'X-Netlify-Site': process.env.SITE_ID || '',
-        'X-Netlify-Form': 'true',
-        'Accept': 'application/json',
       },
       body: new URLSearchParams({
         'form-name': 'newsletter',
         'email': email,
         'bot-field': '',
-        'path': '/',
       }).toString()
     });
 
@@ -49,25 +46,29 @@ export const handler: Handler = async (event) => {
       headers: Object.fromEntries(response.headers.entries())
     });
 
-    if (!response.ok) {
-      const text = await response.text();
-      console.error('Form submission failed:', text);
-      throw new Error(`Failed to submit to Netlify Forms: ${response.status}`);
+    // If we get a 200 response with HTML, consider it successful
+    if (response.ok && response.headers.get('content-type')?.includes('text/html')) {
+      const responseText = await response.text();
+      console.log('Form submission response:', responseText);
+
+      // If the response contains "Thank you", consider it successful
+      if (responseText.includes('Thank you')) {
+        return {
+          statusCode: 200,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            message: 'Form submitted successfully',
+            email: email
+          })
+        }
+      }
     }
 
-    const responseText = await response.text();
-    console.log('Form submission response:', responseText);
+    // If we get here, something went wrong
+    throw new Error(`Form submission failed: ${response.status}`);
 
-    return {
-      statusCode: 200,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        message: 'Form submitted successfully',
-        email: email
-      })
-    }
   } catch (error) {
     console.error('Form submission error:', error);
     return {
