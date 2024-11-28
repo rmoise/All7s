@@ -1,7 +1,6 @@
 [build]
   command = "npm ci && npm run fresh-studio:build && next build"
   publish = ".next"
-  functions = "netlify/functions"
 
 [build.environment]
   NETLIFY = "true"
@@ -17,8 +16,6 @@
   SANITY_STUDIO_DATASET = "production"
   SITE_URL = "https://all7z.com"
   URL = "https://all7z.com"
-  SANITY_AUTH_TOKEN = "${SANITY_AUTH_TOKEN}"
-  SANITY_STUDIO_API_TOKEN = "${SANITY_STUDIO_API_TOKEN}"
 
 [context.production]
   [context.production.environment]
@@ -30,8 +27,6 @@
     NEXT_PUBLIC_SITE_URL = "https://all7z.com"
     SANITY_STUDIO_PROJECT_ID = "1gxdk71x"
     SANITY_STUDIO_DATASET = "production"
-    SANITY_AUTH_TOKEN = "${SANITY_AUTH_TOKEN}"
-    SANITY_STUDIO_API_TOKEN = "${SANITY_STUDIO_API_TOKEN}"
 
 [context.staging]
   [context.staging.environment]
@@ -145,11 +140,4 @@
   for = "/static/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
-
-[[redirects]]
-  from = "/.netlify/forms/newsletter"
-  to = "/.netlify/functions/form-submission"
-  status = 200
-  force = true
-  conditions = {Method = ["POST"]}
 

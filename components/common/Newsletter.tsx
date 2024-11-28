@@ -28,19 +28,19 @@ interface NewsletterProps {
 }
 
 interface NotificationState {
-  show: boolean;
-  error: boolean;
-  title?: string;
-  description?: string;
-  showSocialLinks?: boolean;
+  show: boolean
+  error: boolean
+  title?: string
+  description?: string
+  showSocialLinks?: boolean
   socialLinks?: Array<{
-    platform: string;
-    url: string;
+    platform: string
+    url: string
     color?: {
-      hex?: string;
+      hex?: string
     }
-  }>;
-  socialLinksTitle?: string;
+  }>
+  socialLinksTitle?: string
 }
 
 const XIcon: React.FC = () => (
@@ -73,7 +73,7 @@ const Newsletter: React.FC<NewsletterProps> = ({ newsletter }) => {
   const [email, setEmail] = useState('')
   const [notification, setNotification] = useState<NotificationState>({
     show: false,
-    error: false
+    error: false,
   })
   const modalRef = useRef<HTMLDivElement>(null)
 
@@ -82,8 +82,8 @@ const Newsletter: React.FC<NewsletterProps> = ({ newsletter }) => {
   )
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
+    e.preventDefault()
+    setIsSubmitting(true)
 
     try {
       const response = await fetch('/.netlify/functions/form-submission', {
@@ -93,56 +93,61 @@ const Newsletter: React.FC<NewsletterProps> = ({ newsletter }) => {
         },
         body: new URLSearchParams({
           'form-name': newsletter?.formName || 'newsletter',
-          'email': email,
+          email: email,
           'bot-field': '',
-        }).toString()
-      });
+        }).toString(),
+      })
 
       if (!response.ok) {
-        throw new Error(`Form submission failed: ${response.status}`);
+        throw new Error(`Form submission failed: ${response.status}`)
       }
 
-      const contentType = response.headers.get('content-type');
-      let jsonResponse;
+      const contentType = response.headers.get('content-type')
+      let jsonResponse
 
       if (contentType && contentType.includes('application/json')) {
-        jsonResponse = await response.json();
+        jsonResponse = await response.json()
       } else {
-        const text = await response.text();
-        console.log('Non-JSON response:', text);
-        jsonResponse = { message: 'Subscription successful' };
+        const text = await response.text()
+        console.log('Non-JSON response:', text)
+        jsonResponse = { message: 'Subscription successful' }
       }
 
       setNotification({
         show: true,
         error: false,
         title: newsletter?.notification?.title || 'Successfully subscribed!',
-        description: newsletter?.notification?.description || jsonResponse.message || 'Thanks for joining our newsletter.',
+        description:
+          newsletter?.notification?.description ||
+          jsonResponse.message ||
+          'Thanks for joining our newsletter.',
         showSocialLinks: newsletter?.notification?.showSocialLinks,
-        socialLinks: newsletter?.notification?.socialLinks || defaultSocialLinks,
-        socialLinksTitle: newsletter?.notification?.socialLinksTitle
-      });
-      setEmail('');
+        socialLinks:
+          newsletter?.notification?.socialLinks || defaultSocialLinks,
+        socialLinksTitle: newsletter?.notification?.socialLinksTitle,
+      })
+      setEmail('')
     } catch (error) {
       console.error('Form submission error:', {
         error,
-        message: error instanceof Error ? error.message : 'Unknown error'
-      });
+        message: error instanceof Error ? error.message : 'Unknown error',
+      })
 
       setNotification({
         show: true,
         error: true,
         title: 'Subscription failed',
-        description: error instanceof Error
-          ? error.message.includes('Form submission failed')
-            ? 'Unable to subscribe at this time. Please try again later.'
-            : error.message
-          : 'Please try again later.'
-      });
+        description:
+          error instanceof Error
+            ? error.message.includes('Form submission failed')
+              ? 'Unable to subscribe at this time. Please try again later.'
+              : error.message
+            : 'Please try again later.',
+      })
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   const InstagramIcon: React.FC = () => (
     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
