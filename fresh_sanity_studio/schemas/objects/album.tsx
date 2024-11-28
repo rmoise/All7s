@@ -3,14 +3,12 @@
 import React from 'react'
 import {Box} from '@sanity/ui'
 import {defineField, defineType} from 'sanity'
-import {Rule} from '@sanity/types'
 import ReleaseInfoInput from '../../components/ReleaseInfoInput'
 import {urlFor} from '../../utils/imageUrlBuilder'
 import type {SanityImage} from '../../../types/sanity'
+import {StringRule, TextRule, UrlRule, ValidationContext, ImageRule} from '@sanity/types'
 
-interface ParentType {
-  albumSource?: string
-}
+type ValidationRule = StringRule | TextRule | UrlRule
 
 interface AlbumSelection {
   albumSource: string
@@ -19,13 +17,7 @@ interface AlbumSelection {
   embeddedImageUrl?: string
   customTitle?: string
   customArtist?: string
-  customImage?: {
-    _type: 'image'
-    asset: {
-      _ref: string
-      _type: 'reference'
-    }
-  }
+  customImage?: SanityImage
 }
 
 const albumSchema = defineType({
@@ -44,7 +36,6 @@ const albumSchema = defineType({
         ],
         layout: 'radio',
       },
-      validation: Rule => Rule.required(),
       initialValue: 'embedded',
     }),
     defineField({
@@ -57,42 +48,68 @@ const albumSchema = defineType({
           title: 'Embed Code',
           type: 'text',
           description: 'Enter Spotify or SoundCloud URL or iframe embed code',
-          readOnly: false,
-          validation: Rule =>
-            Rule.custom((value, context) => {
-              if (!value || typeof value !== 'string' || !value.trim()) {
-                return 'Embed code is required'
-              }
-              return true
-            }),
+          hidden: true,
         }),
-        defineField({name: 'title', title: 'Release Title', type: 'string', readOnly: true}),
-        defineField({name: 'artist', title: 'Artist', type: 'string', readOnly: true}),
-        defineField({name: 'platform', title: 'Platform', type: 'string', readOnly: true}),
-        defineField({name: 'releaseType', title: 'Release Type', type: 'string', readOnly: true}),
+        defineField({
+          name: 'title',
+          title: 'Release Title',
+          type: 'string',
+          readOnly: true,
+          validation: (rule) => rule.required(),
+        }),
+        defineField({
+          name: 'artist',
+          title: 'Artist',
+          type: 'string',
+          readOnly: true,
+          validation: (rule) => rule.required(),
+        }),
+        defineField({
+          name: 'platform',
+          title: 'Platform',
+          type: 'string',
+          readOnly: true,
+        }),
+        defineField({
+          name: 'releaseType',
+          title: 'Release Type',
+          type: 'string',
+          readOnly: true,
+        }),
         defineField({
           name: 'imageUrl',
           title: 'Album Image URL',
           type: 'url',
-          validation: Rule => Rule.required(),
+          readOnly: true,
+        }),
+        defineField({
+          name: 'embedUrl',
+          title: 'Embed URL',
+          type: 'url',
+          readOnly: true,
+        }),
+        defineField({
+          name: 'isEmbedSupported',
+          title: 'Embed Supported',
+          type: 'boolean',
+          readOnly: true,
         }),
         defineField({
           name: 'customImage',
           title: 'Custom Album Image',
           type: 'image',
           options: {hotspot: true},
-          description: 'Optional: override auto-fetched image by uploading your own.',
         }),
-        defineField({
-          name: 'processedImageUrl',
-          type: 'string',
-          title: 'Processed Image URL',
-          readOnly: true,
-          description: 'Automatically processed high-resolution image URL'
-        })
       ],
-      components: {input: ReleaseInfoInput},
-      hidden: ({parent}: {parent: ParentType}) => parent?.albumSource !== 'embedded',
+      components: {
+        input: ReleaseInfoInput,
+      },
+      hidden: ({parent}: {parent: Record<string, unknown>}) => parent?.albumSource !== 'embedded',
+      validation: (rule) =>
+        rule.custom((value, context) => {
+          if (context?.document?.albumSource !== 'embedded') return true
+          return value?.embedCode ? true : 'Please enter an embed code'
+        }),
     }),
     defineField({
       name: 'customAlbum',
@@ -103,72 +120,51 @@ const albumSchema = defineType({
           name: 'title',
           title: 'Release Title',
           type: 'string',
-          validation: Rule => Rule.required(),
-          initialValue: 'Untitled',
+          validation: (rule) => rule.required(),
         }),
         defineField({
           name: 'artist',
           title: 'Artist',
           type: 'string',
+          validation: (rule) => rule.required(),
           initialValue: 'Stak',
-          validation: Rule => Rule.required(),
+          readOnly: true,
         }),
         defineField({
-          name: 'releaseType',
-          title: 'Release Type',
-          type: 'string',
-          options: {
-            list: [
-              {title: 'Album', value: 'album'},
-              {title: 'Single', value: 'single'},
-              {title: 'Compilation', value: 'compilation'},
-            ],
-          },
-          validation: Rule => Rule.required(),
-        }),
-        defineField({
-          name: 'customImage',
-          title: 'Custom Album Image',
+          name: 'image',
+          title: 'Album Image',
           type: 'image',
-          options: {hotspot: true},
-          description: 'Optional: Upload a custom image for the album.',
+          validation: (rule) => rule.required(),
         }),
         defineField({
           name: 'songs',
           title: 'Songs',
           type: 'array',
-          of: [
-            {
-              type: 'object',
-              name: 'song',
-              title: 'Song',
-              fields: [
-                defineField({
-                  name: 'trackTitle',
-                  title: 'Track Title',
-                  type: 'string',
-                  description: 'Enter the title of the individual track.',
-                }),
-                defineField({
-                  name: 'file',
-                  title: 'Audio File',
-                  type: 'file',
-                  options: {accept: 'audio/*'},
-                  description: 'Upload the audio file for this track (if available).',
-                }),
-                defineField({
-                  name: 'duration',
-                  title: 'Duration',
-                  type: 'number',
-                  description: 'Track duration in seconds.',
-                }),
-              ],
-            },
-          ],
-          description: 'Add individual tracks for this release. You can reorder them by dragging.',
+          of: [{
+            type: 'object',
+            fields: [
+              defineField({
+                name: 'trackTitle',
+                title: 'Track Title',
+                type: 'string',
+                validation: (rule) => rule.required(),
+              }),
+              defineField({
+                name: 'duration',
+                title: 'Duration (seconds)',
+                type: 'number',
+              }),
+              defineField({
+                name: 'file',
+                title: 'Audio File',
+                type: 'file',
+                validation: (rule) => rule.required(),
+              }),
+            ],
+          }],
         }),
       ],
-      hidden: ({parent}: {parent: ParentType}) => parent?.albumSource !== 'custom',
+      hidden: ({parent}: {parent: Record<string, unknown>}) => parent?.albumSource !== 'custom',
     }),
   ],
   preview: {
@@ -179,7 +175,7 @@ const albumSchema = defineType({
       embeddedImageUrl: 'embeddedAlbum.imageUrl',
       customTitle: 'customAlbum.title',
       customArtist: 'customAlbum.artist',
-      customImage: 'customAlbum.customImage',
+      customImage: 'customAlbum.image',
     },
     prepare(selection: AlbumSelection) {
       const {
@@ -207,13 +203,15 @@ const albumSchema = defineType({
           ? embeddedArtist || 'Unknown Artist'
           : customArtist || 'Unknown Artist',
         media: imageUrl ? (
-          <div style={{
-            backgroundColor: '#f3f3f3',
-            borderRadius: '4px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}>
+          <div
+            style={{
+              backgroundColor: '#f3f3f3',
+              borderRadius: '4px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
             <img
               src={imageUrl}
               alt="Album Cover"
@@ -223,7 +221,7 @@ const albumSchema = defineType({
                 height: 'auto',
                 maxWidth: '100%',
                 borderRadius: '4px',
-                backgroundColor: '#f3f3f3'
+                backgroundColor: '#f3f3f3',
               }}
               onError={(e) => {
                 e.currentTarget.style.display = 'none'
@@ -238,7 +236,7 @@ const albumSchema = defineType({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              padding: '10px'
+              padding: '10px',
             }}
           >
             No Image

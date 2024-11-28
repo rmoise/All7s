@@ -1,13 +1,6 @@
 import React, {useEffect, useRef} from 'react'
 import {Stack, Card, Box, Text, Button} from '@sanity/ui'
-import {
-  type ObjectInputProps,
-  PatchEvent,
-  type FormPatch,
-  set,
-  unset,
-  setIfMissing
-} from 'sanity'
+import {type ObjectInputProps, PatchEvent, type FormPatch, set, unset, setIfMissing} from 'sanity'
 import {useClient} from 'sanity'
 import imageUrlBuilder from '@sanity/image-url'
 import {urlFor, type SanityImage} from '../utils/imageUrlBuilder'
@@ -54,11 +47,11 @@ interface ReleaseInfoValue {
 const getFunctionUrl = () => {
   // Check if we're in Sanity Studio
   if (typeof window !== 'undefined') {
-    const hostname = window.location.hostname;
+    const hostname = window.location.hostname
 
     // For Sanity Studio in production
     if (hostname.includes('sanity.studio')) {
-      return 'https://all7z.com/.netlify/functions/music-metadata';
+      return 'https://all7z.com/.netlify/functions/music-metadata'
     }
 
     // For local development
@@ -66,16 +59,21 @@ const getFunctionUrl = () => {
       // Check if Netlify Functions are running
       return fetch('http://localhost:8888/.netlify/functions/music-metadata')
         .then(() => 'http://localhost:8888/.netlify/functions/music-metadata')
-        .catch(() => 'https://all7z.com/.netlify/functions/music-metadata');
+        .catch(() => 'https://all7z.com/.netlify/functions/music-metadata')
     }
   }
 
   // Default to production URL
-  return 'https://all7z.com/.netlify/functions/music-metadata';
-};
+  return 'https://all7z.com/.netlify/functions/music-metadata'
+}
 
 const ReleaseInfoInput = (props: ObjectInputProps) => {
-  const {value = {}, onChange, readOnly, renderDefault} = props as {
+  const {
+    value = {},
+    onChange,
+    readOnly,
+    renderDefault,
+  } = props as {
     value: ReleaseInfoValue
     onChange: (patch: PatchEvent | FormPatch | FormPatch[]) => void
     readOnly?: boolean
@@ -86,7 +84,7 @@ const ReleaseInfoInput = (props: ObjectInputProps) => {
   const isMetadataFetchedRef = useRef(false)
 
   const client = useClient({
-    apiVersion: '2024-03-19' // Use current date or your preferred API version
+    apiVersion: '2024-03-19', // Use current date or your preferred API version
   })
   const builder = imageUrlBuilder(client)
 
@@ -98,6 +96,12 @@ const ReleaseInfoInput = (props: ObjectInputProps) => {
     const iframeSrcMatch = embedInput.match(/<iframe.*?src=["'](.*?)["']/i)
     if (iframeSrcMatch && iframeSrcMatch[1]) {
       sanitizedUrl = iframeSrcMatch[1]
+      supportsEmbedding = true
+    }
+
+    // Transform Spotify embed URLs to regular track URLs
+    if (sanitizedUrl.includes('open.spotify.com/embed/')) {
+      sanitizedUrl = sanitizedUrl.replace('/embed/', '/').split('?')[0] // Remove query parameters
       supportsEmbedding = true
     }
 
@@ -128,19 +132,20 @@ const ReleaseInfoInput = (props: ObjectInputProps) => {
       embedCode: embedInput,
       embedUrl: sanitizedUrl,
       isEmbedSupported: supportsEmbedding,
-      platform: detectedPlatform
+      platform: detectedPlatform,
     }
 
     // Apply the initial patch
-    onChange(PatchEvent.from([
-      set(initialPatch),
-      value.customImage
-        ? set(value.customImage, ['customImage'])
-        : unset(['customImage'])
-    ]))
+    onChange(
+      PatchEvent.from([
+        set(initialPatch),
+        value.customImage ? set(value.customImage, ['customImage']) : unset(['customImage']),
+      ]),
+    )
 
     // If we have a valid platform, fetch metadata
     if (detectedPlatform) {
+      console.log('Fetching metadata for URL:', sanitizedUrl)
       fetchMetadata(sanitizedUrl, embedInput, detectedPlatform, supportsEmbedding)
     }
   }
@@ -150,32 +155,44 @@ const ReleaseInfoInput = (props: ObjectInputProps) => {
     sanitizedUrl: string,
     embedCode: string,
     platform: string,
-    supportsEmbedding: boolean
+    supportsEmbedding: boolean,
   ) => {
     try {
-      const functionUrl = getFunctionUrl();
+      const functionUrl = await getFunctionUrl()
       console.log('Metadata fetch attempt:', {
         functionUrl,
         sanitizedUrl,
         platform,
-        hostname: typeof window !== 'undefined' ? window.location.hostname : 'unknown'
-      });
+        hostname: typeof window !== 'undefined' ? window.location.hostname : 'unknown',
+      })
 
-      const response = await fetch(`${functionUrl}?url=${encodeURIComponent(sanitizedUrl)}`, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
-        // Add timeout
-        signal: AbortSignal.timeout(10000) // 10 second timeout
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      // Transform Spotify URLs to API-friendly format
+      let apiUrl = sanitizedUrl
+      if (platform === 'spotify') {
+        // Extract the ID and type from the URL
+        const matches = sanitizedUrl.match(
+          /spotify\.com\/(embed\/)?(track|album|playlist)\/([a-zA-Z0-9]+)/,
+        )
+        if (matches) {
+          const [, , type, id] = matches
+          apiUrl = `https://open.spotify.com/${type}/${id}`
+        }
       }
 
-      const data = await response.json();
+      const response = await fetch(`${functionUrl}?url=${encodeURIComponent(apiUrl)}`, {
+        method: 'GET',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        signal: AbortSignal.timeout(10000),
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
 
       // Create patch with the fetched data
       const patch: EmbeddedAlbum = {
@@ -188,26 +205,19 @@ const ReleaseInfoInput = (props: ObjectInputProps) => {
         imageUrl: data.imageUrl || '/images/placeholder.png',
         embedUrl: sanitizedUrl,
         isEmbedSupported: supportsEmbedding,
-        customImage: value.customImage
-      };
+        customImage: value.customImage,
+      }
 
-      onChange(PatchEvent.from([
-        set(patch),
-        value.customImage
-          ? set(value.customImage, ['customImage'])
-          : unset(['customImage'])
-      ]));
+      onChange(
+        PatchEvent.from([
+          set(patch),
+          value.customImage ? set(value.customImage, ['customImage']) : unset(['customImage']),
+        ]),
+      )
 
-      isMetadataFetchedRef.current = true;
-
+      isMetadataFetchedRef.current = true
     } catch (error) {
-      console.error('Metadata fetch error:', {
-        error,
-        functionUrl: getFunctionUrl(),
-        sanitizedUrl,
-        platform,
-        hostname: typeof window !== 'undefined' ? window.location.hostname : 'unknown'
-      });
+      console.error('Metadata fetch error:', error)
 
       // Use fallback values
       const fallbackPatch: EmbeddedAlbum = {
@@ -220,141 +230,25 @@ const ReleaseInfoInput = (props: ObjectInputProps) => {
         imageUrl: '/images/placeholder.png',
         embedUrl: sanitizedUrl,
         isEmbedSupported: supportsEmbedding,
-        customImage: value.customImage
-      };
+        customImage: value.customImage,
+      }
 
-      onChange(PatchEvent.from([
-        set(fallbackPatch),
-        value.customImage
-          ? set(value.customImage, ['customImage'])
-          : unset(['customImage'])
-      ]));
+      onChange(
+        PatchEvent.from([
+          set(fallbackPatch),
+          value.customImage ? set(value.customImage, ['customImage']) : unset(['customImage']),
+        ]),
+      )
 
-      isMetadataFetchedRef.current = true;
+      isMetadataFetchedRef.current = true
     }
-  };
+  }
 
+  // Replace the useEffect with a simpler version that just calls handleEmbedCodeChange
   useEffect(() => {
     if (!embedCode || isMetadataFetchedRef.current) return
-
-    let sanitizedUrl: string = embedCode
-    let supportsEmbedding = false
-
-    // Extract URL if iframe is present
-    const iframeSrcMatch = embedCode.match(/<iframe.*?src=["'](.*?)["']/i)
-    if (iframeSrcMatch && iframeSrcMatch[1]) {
-      sanitizedUrl = iframeSrcMatch[1]
-      supportsEmbedding = true
-    }
-
-    // Further process SoundCloud URLs embedded within SoundCloud's player
-    if (sanitizedUrl.includes('w.soundcloud.com/player')) {
-      try {
-        const urlObj = new URL(sanitizedUrl)
-        const resourceUrlEncoded = urlObj.searchParams.get('url')
-        if (resourceUrlEncoded) {
-          sanitizedUrl = decodeURIComponent(resourceUrlEncoded)
-          supportsEmbedding = true
-        }
-      } catch (error) {
-        console.error('Error extracting URL from SoundCloud embed code:', error)
-        return
-      }
-    }
-
-    const detectedPlatform = sanitizedUrl.includes('spotify.com')
-      ? 'spotify'
-      : sanitizedUrl.includes('soundcloud.com') || sanitizedUrl.includes('api.soundcloud.com')
-        ? 'soundcloud'
-        : ''
-
-    console.log(`Detected platform: ${detectedPlatform}, Sanitized URL: ${sanitizedUrl}`)
-
-    const functionUrl = getFunctionUrl();
-    console.log('Using function URL:', functionUrl);
-
-    async function fetchMetadata() {
-      try {
-        const functionUrl = await getFunctionUrl();
-        console.log('Metadata fetch attempt:', {
-          functionUrl,
-          sanitizedUrl,
-          platform: detectedPlatform,
-          hostname: typeof window !== 'undefined' ? window.location.hostname : 'unknown'
-        });
-
-        let data: Metadata = {
-          title: '',
-          artist: '',
-          imageUrl: '',
-          releaseType: '',
-          embedUrl: sanitizedUrl,
-          isEmbedSupported: supportsEmbedding,
-        };
-
-        if (detectedPlatform === 'spotify' || detectedPlatform === 'soundcloud') {
-          const response = await fetch(`${functionUrl}?url=${encodeURIComponent(sanitizedUrl)}`, {
-            method: 'GET',
-            headers: {
-              'Accept': 'application/json',
-              'Content-Type': 'application/json',
-            },
-            signal: AbortSignal.timeout(10000)
-          });
-
-          if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-          data = await response.json();
-          data.isEmbedSupported = supportsEmbedding;
-        }
-
-        const patch: EmbeddedAlbum = {
-          _type: 'embeddedAlbum',
-          embedCode: embedCode || '',
-          title: data.title || 'Untitled Release',
-          artist: data.artist || 'Unknown Artist',
-          platform: detectedPlatform,
-          releaseType: data.releaseType || 'album',
-          imageUrl: data.imageUrl || '/images/placeholder.png',
-          embedUrl: sanitizedUrl,
-          isEmbedSupported: data.isEmbedSupported,
-        }
-
-        onChange(PatchEvent.from([
-          set(patch),
-          value.customImage
-            ? set(value.customImage, ['customImage'])
-            : unset(['customImage'])
-        ]))
-
-        isMetadataFetchedRef.current = true
-
-      } catch (error) {
-        console.error('Error fetching metadata:', error)
-        const fallbackPatch: Omit<EmbeddedAlbum, 'customImage'> = {
-          _type: 'embeddedAlbum',
-          embedCode: embedCode || '',
-          title: 'Error Loading Metadata',
-          artist: 'Unknown Artist',
-          platform: detectedPlatform,
-          releaseType: 'album',
-          imageUrl: 'https://example.com/placeholder.png',
-          embedUrl: sanitizedUrl,
-          isEmbedSupported: supportsEmbedding,
-        }
-
-        onChange(PatchEvent.from([
-          set(fallbackPatch),
-          value.customImage
-            ? set(value.customImage, ['customImage'])
-            : unset(['customImage'])
-        ]))
-
-        isMetadataFetchedRef.current = true
-      }
-    }
-
-    fetchMetadata()
-  }, [embedCode, onChange, value.customImage])
+    handleEmbedCodeChange(embedCode)
+  }, [embedCode])
 
   return (
     <Stack space={4}>
@@ -369,7 +263,7 @@ const ReleaseInfoInput = (props: ObjectInputProps) => {
               minHeight: '100px',
               padding: '8px',
               borderRadius: '4px',
-              border: '1px solid #ccc'
+              border: '1px solid #ccc',
             }}
           />
         </Stack>
@@ -377,16 +271,16 @@ const ReleaseInfoInput = (props: ObjectInputProps) => {
 
       <Card padding={3}>
         <Stack space={3}>
-          <Text weight="bold">Custom Album Image</Text>
-          {renderDefault && renderDefault({
-            ...props,
-            value: value.customImage,
-            path: ['customImage'],
-            onChange: (patch: PatchEvent | FormPatch | FormPatch[]) => {
-              onChange(patch)
-            },
-            readOnly: readOnly,
-          })}
+          {renderDefault &&
+            renderDefault({
+              ...props,
+              value: value.customImage,
+              path: ['customImage'],
+              onChange: (patch: PatchEvent | FormPatch | FormPatch[]) => {
+                onChange(patch)
+              },
+              readOnly: readOnly,
+            })}
 
           {value.customImage && (
             <Stack space={2}>
@@ -399,7 +293,7 @@ const ReleaseInfoInput = (props: ObjectInputProps) => {
                     maxWidth: '200px',
                     width: '100%',
                     height: 'auto',
-                    borderRadius: '4px'
+                    borderRadius: '4px',
                   }}
                 />
               </Card>
@@ -422,7 +316,7 @@ const ReleaseInfoInput = (props: ObjectInputProps) => {
                       maxWidth: '200px',
                       width: '100%',
                       height: 'auto',
-                      borderRadius: '4px'
+                      borderRadius: '4px',
                     }}
                   />
                 </Card>

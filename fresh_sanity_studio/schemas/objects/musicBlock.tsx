@@ -10,6 +10,13 @@ export default defineType({
   icon: MdMusicNote,
   fields: [
     defineField({
+      name: 'title',
+      title: 'Title',
+      type: 'string',
+      hidden: true,
+      initialValue: 'LISTEN'
+    }),
+    defineField({
       name: 'listenTitle',
       title: 'Listen Title',
       type: 'string',

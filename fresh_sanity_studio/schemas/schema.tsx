@@ -30,6 +30,7 @@ import contentBlock from './objects/contentBlock'
 import splash from './objects/splash'
 import shopPage from './documents/shopPage'
 import productCategory from './documents/category'
+import song from './objects/song'
 
 const schemaTypes: BaseSchemaDefinition[] = [
   // Document types
@@ -63,6 +64,7 @@ const schemaTypes: BaseSchemaDefinition[] = [
   album,
   youtube,
   additionalVideo,
+  song,
 ]
 
 export default schemaTypes

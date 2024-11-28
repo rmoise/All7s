@@ -16,8 +16,10 @@ import type {
   DocumentActionComponent,
   WorkspaceOptions,
   DocumentActionsResolver,
-  ConfigContext
+  ConfigContext,
 } from 'sanity'
+import {createClient} from '@sanity/client'
+import type {SanityDocument} from '@sanity/types'
 
 // Load environment variables at the start
 if (typeof window === 'undefined') {
@@ -52,21 +54,26 @@ export const getBaseConfig = () => {
       media(),
       visionTool(),
       imageHotspotArrayPlugin(),
-      colorInput()
+      colorInput(),
     ],
     document: {
       actions: ((input, context) => {
-        console.log('Available actions:', input.map(action => action.name))  // Debug log
         return getDocumentActions({
           schemaType: context.schemaType,
-          actions: input
+          actions: input,
         })
       }) satisfies DocumentActionsResolver,
     },
     schema: {
       types: schemaTypes as SchemaTypeDefinition[],
       templates: (templates: any[]) =>
-        templates.filter(({schemaType}: {schemaType: string}) => !SINGLETON_TYPES.has(schemaType)),
+        templates
+          .filter(({schemaType}: {schemaType: string}) => !SINGLETON_TYPES.has(schemaType))
+          .map((template) => ({
+            ...template,
+            // Ensure each template has a unique key
+            _key: template.schemaType || template.id || crypto.randomUUID(),
+          })),
     },
   }
 
@@ -102,7 +109,9 @@ export const getCurrentEnvironment = (): Environment => {
   return window.location.pathname.includes('/staging') ? 'staging' : 'production'
 }
 
-export const getSanityConfig = (environment: Environment = getCurrentEnvironment()): WorkspaceOptions => {
+export const getSanityConfig = (
+  environment: Environment = getCurrentEnvironment(),
+): WorkspaceOptions => {
   const envConfig = environments[environment]
   const baseConfig = getBaseConfig()
 
@@ -111,10 +120,9 @@ export const getSanityConfig = (environment: Environment = getCurrentEnvironment
     ...envConfig,
     document: {
       actions: ((input, context) => {
-        console.log('Available actions:', input.map(action => action.name))  // Debug log
         return getDocumentActions({
           schemaType: context.schemaType,
-          actions: input
+          actions: input,
         })
       }) satisfies DocumentActionsResolver,
       productionUrl: async (prev: string | undefined, context: any) => {
@@ -128,9 +136,42 @@ export const getSanityConfig = (environment: Environment = getCurrentEnvironment
 
         return `${baseUrl}/api/preview?secret=${secret}&type=${document._type}&id=${document._id}`
       },
-    }
+    },
   }
 }
 
 // Export the default config
 export default defineConfig([getSanityConfig('production'), getSanityConfig('staging')])
+
+const client = createClient({
+  projectId: process.env.SANITY_STUDIO_PROJECT_ID,
+  dataset: process.env.SANITY_STUDIO_DATASET,
+  token: process.env.SANITY_AUTH_TOKEN,
+  apiVersion: '2024-03-19',
+  useCdn: false,
+})
+
+interface ArrayItem {
+  _key?: string
+  [key: string]: any // For other potential properties
+}
+
+interface DocumentWithArray extends SanityDocument {
+  arrayField?: ArrayItem[]
+}
+
+async function validateArrayKeys() {
+  // Query all documents with array fields
+  const documents = await client.fetch<DocumentWithArray[]>(`*[_type in ["yourSchemaType"]]`)
+
+  documents.forEach((doc: DocumentWithArray) => {
+    if (doc.arrayField && Array.isArray(doc.arrayField)) {
+      doc.arrayField.forEach((item: ArrayItem, index: number) => {
+        if (!item._key) {
+          console.error(`Document ${doc._id} has array item without _key at index ${index}`)
+        }
+      })
+    }
+  })
+}
+validateArrayKeys()
