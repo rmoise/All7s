@@ -69,7 +69,7 @@ const About: React.FC<AboutProps> = (props) => {
           className={`w-full h-full object-cover transition-opacity duration-300 ${
             imageLoaded ? 'opacity-100' : 'opacity-0'
           }`}
-          onLoadingComplete={() => setImageLoaded(true)}
+          onLoad={() => setImageLoaded(true)}
           unoptimized
         />
         <div

@@ -167,6 +167,41 @@ async function fetchSoundCloudData(url) {
 }
 
 /**
+ * Add this new function to handle Spotify tracks
+ * @param {string} trackId - The Spotify track ID.
+ * @param {string} accessToken - The Spotify access token.
+ * @returns {Promise<Object>} The track data.
+ */
+async function fetchSpotifyTrackData(trackId, accessToken) {
+  try {
+    const response = await axios.get(`https://api.spotify.com/v1/tracks/${trackId}`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    const { name: title, artists, album } = response.data;
+    const artist = artists.map((a) => a.name).join(', ');
+    const largestImage = album.images.length > 0 ? album.images[0].url : '/images/placeholder.png';
+
+    return {
+      title,
+      artist,
+      imageUrl: largestImage,
+      embedUrl: `https://open.spotify.com/embed/track/${trackId}`,
+      releaseType: 'single',
+      isEmbedSupported: true,
+    };
+  } catch (error) {
+    console.error(
+      `Failed to fetch track data for Spotify ID ${trackId}:`,
+      error.response?.data?.error || error.message
+    );
+    throw error;
+  }
+}
+
+/**
  * Main handler function to process incoming requests.
  * Supports both Spotify and SoundCloud URLs.
  */
@@ -219,16 +254,24 @@ exports.handler = async (event, context) => {
 
     if (url.includes('spotify.com') || url.includes('soundcloud.com')) {
       if (url.includes('spotify.com')) {
-        const albumIdMatch = url.match(/album\/([a-zA-Z0-9]+)/);
-        if (!albumIdMatch) {
+        const trackMatch = url.match(/track\/([a-zA-Z0-9]+)/);
+        const albumMatch = url.match(/album\/([a-zA-Z0-9]+)/);
+
+        if (!trackMatch && !albumMatch) {
           return {
             statusCode: 400,
             headers: defaultHeaders,
             body: JSON.stringify({ error: 'Invalid Spotify URL' }),
           };
         }
+
         const accessToken = await getSpotifyAccessToken();
-        metadata = await fetchSpotifyAlbumData(albumIdMatch[1], accessToken);
+
+        if (trackMatch) {
+          metadata = await fetchSpotifyTrackData(trackMatch[1], accessToken);
+        } else {
+          metadata = await fetchSpotifyAlbumData(albumMatch[1], accessToken);
+        }
       } else if (url.includes('soundcloud.com')) {
         metadata = await fetchSoundCloudData(url);
       }
