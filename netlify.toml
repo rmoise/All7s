@@ -147,8 +147,9 @@
     Cache-Control = "public, max-age=31536000, immutable"
 
 [[redirects]]
-  from = "/.netlify/forms/*"
+  from = "/.netlify/forms/newsletter"
   to = "/.netlify/functions/form-submission"
   status = 200
   force = true
+  conditions = {Method = ["POST"]}
 
