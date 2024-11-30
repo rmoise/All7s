@@ -107,20 +107,9 @@ export const urlForImage = (
     if (options?.width) {
       imageUrl = imageUrl.width(options.width)
     }
-    if (options?.blur) {
-      imageUrl = imageUrl.blur(options.blur)
-    }
 
-    const url = imageUrl.url()
-    const httpsUrl = url.startsWith('https://') ? url : url.replace('http://', 'https://')
-
-    // In development, return the direct Sanity URL
-    if (process.env.NODE_ENV === 'development') {
-      return httpsUrl
-    }
-
-    // In production, use Netlify's image optimization service
-    return `/.netlify/images?url=${encodeURIComponent(httpsUrl)}&w=${options?.width || 800}&q=${options?.quality || 75}`
+    // Return direct Sanity URL without Netlify image optimization
+    return imageUrl.url()
   } catch (error) {
     console.error('Error generating URL:', error)
     return ''

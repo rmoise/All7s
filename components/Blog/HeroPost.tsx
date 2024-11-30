@@ -17,58 +17,45 @@ export default function HeroPost({
   date,
   excerpt,
   slug,
-  author,
-}: HeroPostProps & { author?: { name: string; picture?: any } }) {
+}: HeroPostProps) {
+  // Pre-generate image URL
+  const imageUrl = coverImage ? urlFor(coverImage).url() : ''
+
   return (
-    <section>
+    <section className="mb-16 md:mb-24">
       <div className="mb-8 md:mb-16">
-        {coverImage && (
-          <div className="relative aspect-[2/1] w-full">
-            <Link href={`/blog/${slug}`} aria-label={title}>
+        {imageUrl && (
+          <Link href={`/blog/${slug}`} aria-label={title}>
+            <div className="relative aspect-[16/9] w-full">
               <Image
-                src={urlFor(coverImage).width(2000).height(1000).url()}
+                src={imageUrl}
                 alt={`Cover Image for ${title}`}
+                className="object-cover rounded-lg hover:opacity-90 transition-opacity"
                 fill
-                className="object-cover rounded-lg"
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 priority
               />
-            </Link>
-          </div>
+            </div>
+          </Link>
         )}
       </div>
       <div className="md:grid md:grid-cols-2 md:gap-x-16 lg:gap-x-8 mb-20 md:mb-28">
         <div>
-          <h3 className="mb-4 text-4xl lg:text-5xl font-bold leading-tight">
-            <Link href={`/blog/${slug}`} className="hover:underline text-white">
+          <h3 className="mb-4 text-4xl lg:text-5xl font-black leading-tight">
+            <Link href={`/blog/${slug}`} className="hover:underline">
               {title}
             </Link>
           </h3>
-          <div className="text-gray-400 text-lg">
+          <div className="mb-4 md:mb-0 text-lg text-gray-400">
             <DateFormatter dateString={date} />
           </div>
         </div>
         <div>
-          <p className="text-base leading-relaxed text-gray-300 mb-6 break-all overflow-wrap-anywhere">
-            {excerpt}
-          </p>
-          <div className="flex items-center">
-            {author?.picture && (
-              <div className="relative w-12 h-12 mr-4">
-                <Image
-                  src={urlFor(author.picture).width(120).height(120).url()}
-                  alt={author.name || 'Author'}
-                  className="rounded-full object-cover"
-                  fill
-                  sizes="48px"
-                />
-              </div>
-            )}
-            {author?.name && (
-              <span className="font-medium text-white">
-                {author.name}
-              </span>
-            )}
-          </div>
+          {excerpt && (
+            <p className="my-4 leading-relaxed text-base text-gray-300 [&:has(+figure)]:mb-0">
+              {excerpt}
+            </p>
+          )}
         </div>
       </div>
     </section>

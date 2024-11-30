@@ -59,7 +59,7 @@ export default function PostPreview({
           </Link>
         </h3>
         {displayExcerpt && (
-          <p className="text-gray-400 text-base leading-relaxed mb-6">
+          <p className="text-gray-300 text-base leading-relaxed mb-4">
             {displayExcerpt}
           </p>
         )}
