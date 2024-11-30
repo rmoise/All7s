@@ -119,8 +119,8 @@ export const urlForImage = (
       return httpsUrl
     }
 
-    // In production, use Netlify's image optimization
-    return `/_next/image?url=${encodeURIComponent(httpsUrl)}&w=${options?.width || 800}&q=${options?.quality || 75}`
+    // In production, use Netlify's image optimization service
+    return `/.netlify/images?url=${encodeURIComponent(httpsUrl)}&w=${options?.width || 800}&q=${options?.quality || 75}`
   } catch (error) {
     console.error('Error generating URL:', error)
     return ''
