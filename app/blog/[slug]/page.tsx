@@ -2,19 +2,27 @@ import { getClient } from '@lib/sanity'
 import { Metadata } from 'next'
 import { BlogPost } from '@components/Blog'
 import { notFound } from 'next/navigation'
-import { BlogPageProps } from '@types'
 import { postDetailQuery } from '../queries'
 import { fetchWithRetry } from '@/lib/fetchWithRetry'
 
 export const dynamic = 'force-dynamic'
 export const dynamicParams = true
 
-export async function generateMetadata(props: BlogPageProps): Promise<Metadata> {
-  const params = await props.params
+type GenerateMetadataProps = {
+  params: Promise<{ slug: string }>
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}
+
+export async function generateMetadata({
+  params,
+  searchParams,
+}: GenerateMetadataProps): Promise<Metadata> {
+  const resolvedParams = await params
+  const resolvedSearchParams = await searchParams
   const post = await fetchWithRetry(() =>
-    getClient().fetch(postDetailQuery, { slug: params.slug }, {
+    getClient().fetch(postDetailQuery, { slug: resolvedParams.slug }, {
       cache: 'force-cache',
-      next: { tags: [`post-${params.slug}`], revalidate: 60 }
+      next: { tags: [`post-${resolvedParams.slug}`], revalidate: 60 }
     })
   )
 
@@ -29,12 +37,21 @@ export async function generateMetadata(props: BlogPageProps): Promise<Metadata> 
   }
 }
 
-export default async function BlogPostPage(props: BlogPageProps): Promise<JSX.Element> {
-  const params = await props.params
+type PageProps = {
+  params: Promise<{ slug: string }>
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}
+
+export default async function BlogPostPage({
+  params,
+  searchParams,
+}: PageProps): Promise<JSX.Element> {
+  const resolvedParams = await params
+  const resolvedSearchParams = await searchParams
   const post = await fetchWithRetry(() =>
-    getClient().fetch(postDetailQuery, { slug: params.slug }, {
+    getClient().fetch(postDetailQuery, { slug: resolvedParams.slug }, {
       cache: 'force-cache',
-      next: { tags: [`post-${params.slug}`], revalidate: 60 }
+      next: { tags: [`post-${resolvedParams.slug}`], revalidate: 60 }
     })
   )
 
@@ -46,4 +63,3 @@ export default async function BlogPostPage(props: BlogPageProps): Promise<JSX.El
     </div>
   )
 }
-
