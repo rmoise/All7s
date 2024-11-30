@@ -63,26 +63,24 @@ export interface SiteSettings extends SanityBaseDocument {
 }
 
 // Footer types
+export interface FooterButton {
+  label: string;
+  url: string;
+  style: 'primary' | 'secondary';
+}
+
+export interface ConnectSection {
+  title: string;
+  buttons?: FooterButton[];
+}
+
 export interface FooterSettings {
-  footerLinks: FooterLink[]
-  socialLinks: SocialLink[]
-  backgroundColor: SanityColor
-  copyrightText?: string
-  fontColor?: SanityColor
-  alignment?: 'left' | 'center' | 'right'
-}
-
-export interface FooterLink {
-  _key: string
-  text: string
-  url: string
-}
-
-export interface SocialLink {
-  _key: string
-  platform: string
-  url: string
-  iconUrl?: string
+  copyrightText?: string;
+  fontColor?: {
+    hex: string;
+  };
+  alignment?: 'left' | 'center' | 'right';
+  connectSection?: ConnectSection;
 }
 
 export interface SanityColor {

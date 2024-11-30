@@ -1,5 +1,5 @@
 // schemas/schema.ts
-import type { BaseSchemaDefinition } from 'sanity'
+import type {BaseSchemaDefinition} from 'sanity'
 
 // Import your schema types
 import blockContent from './objects/blockContent'
@@ -21,7 +21,7 @@ import navbar from './documents/navbar'
 import siteSettings from './documents/settings'
 import contactPage from './documents/contactPage'
 import album from './objects/album'
-import page from './documents/page'
+import blogPage from './documents/blogPage'
 import additionalVideo from './objects/additionalVideo'
 import musicBlock from './objects/musicBlock'
 import videoBlock from './objects/videoBlock'
@@ -31,12 +31,15 @@ import splash from './objects/splash'
 import shopPage from './documents/shopPage'
 import productCategory from './documents/category'
 import song from './objects/song'
+import seo from './objects/seo'
+import category from './documents/category'
 
 const schemaTypes: BaseSchemaDefinition[] = [
   // Document types
   post,
   author,
-  page,
+  seo,
+  blogPage,
   homePage,
   about,
   contactPage,
@@ -46,7 +49,7 @@ const schemaTypes: BaseSchemaDefinition[] = [
   navbar,
   siteSettings,
   shopPage,
-  productCategory,
+  category,
 
   // Object types
   heroBanner,
@@ -66,5 +69,4 @@ const schemaTypes: BaseSchemaDefinition[] = [
   additionalVideo,
   song,
 ]
-
 export default schemaTypes

@@ -20,6 +20,8 @@ import type {
 } from 'sanity'
 import {createClient} from '@sanity/client'
 import type {SanityDocument} from '@sanity/types'
+import {portableTextEditorPlugin} from './plugins/portableTextEditor'
+import {excerptSyncPlugin} from './plugins/excerptSync'
 
 // Load environment variables at the start
 if (typeof window === 'undefined') {
@@ -35,8 +37,18 @@ export const SINGLETON_TYPES = new Set(['home', 'settings', 'shopPage'])
 export const PROJECT_ID = process.env.SANITY_STUDIO_PROJECT_ID || '1gxdk71x'
 export const API_VERSION = '2024-03-19'
 
+// Create clients for each environment
+const createEnvClient = (dataset: string) =>
+  createClient({
+    projectId: PROJECT_ID,
+    dataset,
+    token: process.env.SANITY_AUTH_TOKEN,
+    apiVersion: API_VERSION,
+    useCdn: false,
+  })
+
 // Base configuration shared between environments
-export const getBaseConfig = () => {
+export const getBaseConfig = (dataset: string) => {
   if (!PROJECT_ID) {
     throw new Error('Project ID is required')
   }
@@ -45,17 +57,7 @@ export const getBaseConfig = () => {
     projectId: PROJECT_ID,
     name: 'default',
     basePath: '/',
-    dataset: 'production',
-    plugins: [
-      deskTool({
-        structure,
-        defaultDocumentNode,
-      }),
-      media(),
-      visionTool(),
-      imageHotspotArrayPlugin(),
-      colorInput(),
-    ],
+    dataset,
     document: {
       actions: ((input, context) => {
         return getDocumentActions({
@@ -71,7 +73,6 @@ export const getBaseConfig = () => {
           .filter(({schemaType}: {schemaType: string}) => !SINGLETON_TYPES.has(schemaType))
           .map((template) => ({
             ...template,
-            // Ensure each template has a unique key
             _key: template.schemaType || template.id || crypto.randomUUID(),
           })),
     },
@@ -113,18 +114,26 @@ export const getSanityConfig = (
   environment: Environment = getCurrentEnvironment(),
 ): WorkspaceOptions => {
   const envConfig = environments[environment]
-  const baseConfig = getBaseConfig()
+  const baseConfig = getBaseConfig(envConfig.dataset)
+  const envClient = createEnvClient(envConfig.dataset)
 
   return {
     ...baseConfig,
     ...envConfig,
+    plugins: [
+      deskTool({
+        structure,
+        defaultDocumentNode,
+      }),
+      media(),
+      visionTool(),
+      imageHotspotArrayPlugin(),
+      colorInput(),
+      portableTextEditorPlugin({client: envClient}),
+      excerptSyncPlugin,
+    ],
     document: {
-      actions: ((input, context) => {
-        return getDocumentActions({
-          schemaType: context.schemaType,
-          actions: input,
-        })
-      }) satisfies DocumentActionsResolver,
+      ...baseConfig.document,
       productionUrl: async (prev: string | undefined, context: any) => {
         const {document} = context
         const previewSecret = process.env.SANITY_STUDIO_PREVIEW_SECRET
@@ -143,26 +152,23 @@ export const getSanityConfig = (
 // Export the default config
 export default defineConfig([getSanityConfig('production'), getSanityConfig('staging')])
 
-const client = createClient({
-  projectId: process.env.SANITY_STUDIO_PROJECT_ID,
-  dataset: process.env.SANITY_STUDIO_DATASET,
-  token: process.env.SANITY_AUTH_TOKEN,
-  apiVersion: '2024-03-19',
-  useCdn: false,
-})
-
+// Array validation utilities
 interface ArrayItem {
   _key?: string
-  [key: string]: any // For other potential properties
+  [key: string]: any
 }
 
 interface DocumentWithArray extends SanityDocument {
   arrayField?: ArrayItem[]
 }
 
+// Create a validation client
+const validationClient = createEnvClient('production')
+
 async function validateArrayKeys() {
-  // Query all documents with array fields
-  const documents = await client.fetch<DocumentWithArray[]>(`*[_type in ["yourSchemaType"]]`)
+  const documents = await validationClient.fetch<DocumentWithArray[]>(
+    `*[_type in ["yourSchemaType"]]`,
+  )
 
   documents.forEach((doc: DocumentWithArray) => {
     if (doc.arrayField && Array.isArray(doc.arrayField)) {

@@ -1,9 +1,17 @@
-import {HomeIcon, CogIcon, DocumentsIcon, ColorWheelIcon, ArchiveIcon, TagIcon, ComponentIcon} from '@sanity/icons'
+import {
+  HomeIcon,
+  CogIcon,
+  DocumentsIcon,
+  ColorWheelIcon,
+  ArchiveIcon,
+  TagIcon,
+  ComponentIcon,
+} from '@sanity/icons'
 import {FaMusic} from 'react-icons/fa'
 import {MdPerson, MdArticle} from 'react-icons/md'
 import type {StructureBuilder} from 'sanity/desk'
 import {Iframe} from 'sanity-plugin-iframe-pane'
-import { environments } from './sanity.config'
+import {environments} from './sanity.config'
 
 interface SanityDocument {
   _type: string
@@ -15,9 +23,8 @@ interface SanityDocument {
 const getPreviewUrl = (doc: SanityDocument | null) => {
   if (!doc) return ''
 
-  const envConfig = environments[
-    window.location.pathname.includes('/staging') ? 'staging' : 'production'
-  ]
+  const envConfig =
+    environments[window.location.pathname.includes('/staging') ? 'staging' : 'production']
 
   const secret = process.env.SANITY_STUDIO_PREVIEW_SECRET
   if (!secret) return ''
@@ -38,7 +45,9 @@ const singletonListItem = (
   icon: any,
   preview = false,
 ) => {
-  const documentId = typeName === 'shopPage' ? 'shopPage' : `singleton-${typeName}`
+  const documentId = ['shopPage', 'blogPage'].includes(typeName)
+    ? typeName
+    : `singleton-${typeName}`
 
   const documentNode = S.document().schemaType(typeName).documentId(documentId)
 
@@ -77,6 +86,22 @@ export const structure = (S: StructureBuilder) =>
       S.divider(),
 
       S.listItem()
+        .title('Blog')
+        .icon(MdArticle)
+        .child(
+          S.list()
+            .title('Blog')
+            .items([
+              singletonListItem(S, 'blogPage', 'Blog Page', ComponentIcon),
+              S.listItem().title('Posts').icon(DocumentsIcon).child(S.documentTypeList('post')),
+              S.listItem()
+                .title('Authors')
+                .icon(MdPerson)
+                .child(S.documentTypeList('author')),
+            ]),
+        ),
+
+      S.listItem()
         .title('E-commerce')
         .icon(TagIcon)
         .child(
@@ -84,54 +109,32 @@ export const structure = (S: StructureBuilder) =>
             .title('E-commerce')
             .items([
               singletonListItem(S, 'shopPage', 'Shop Page', ComponentIcon),
-              S.listItem()
-                .title('Products')
-                .icon(TagIcon)
-                .child(S.documentTypeList('product')),
+              S.listItem().title('Products').icon(TagIcon).child(S.documentTypeList('product')),
               S.listItem()
                 .title('Categories')
                 .icon(ArchiveIcon)
                 .child(S.documentTypeList('category')),
-            ])
+            ]),
         ),
-
-      S.listItem()
-        .title('Pages')
-        .icon(DocumentsIcon)
-        .child(S.documentTypeList('page').title('Pages')),
-
-      S.listItem()
-        .title('Blog Posts')
-        .icon(MdArticle)
-        .child(S.documentTypeList('post').title('Blog Posts')),
-
-      S.listItem()
-        .title('Authors')
-        .icon(MdPerson)
-        .child(S.documentTypeList('author').title('Authors')),
 
       S.divider(),
 
-      S.listItem()
-        .title('Albums')
-        .icon(FaMusic)
-        .child(S.documentTypeList('album').title('Albums')),
+      S.listItem().title('Albums').icon(FaMusic).child(S.documentTypeList('album').title('Albums')),
 
       ...S.documentTypeListItems().filter(
         (listItem) =>
           ![
             'home',
             'settings',
-            'page',
             'post',
             'author',
             'collection',
             'album',
             'product',
             'category',
-            'shopPage'
+            'shopPage',
+            'blogPage',
           ].includes(listItem.getId() as string),
       ),
     ])
-
 export default structure

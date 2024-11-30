@@ -46,3 +46,15 @@ export const productDetailQuery = `*[_type == "product" && slug.current == $slug
   },
   seo
 }`;
+
+export const postsQuery = `*[_type == "post"] | order(_createdAt desc) {
+  _id,
+  title,
+  slug,
+  mainImage,
+  excerpt,
+  _createdAt,
+  author->{
+    name
+  }
+}`;

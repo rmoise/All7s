@@ -149,6 +149,7 @@ const settings = defineType({
           title: 'Copyright Text',
           type: 'string',
           validation: (Rule) => Rule.required(),
+          initialValue: '© 2024 All Rights Reserved'
         }),
         defineField({
           name: 'fontColor',
@@ -171,77 +172,66 @@ const settings = defineType({
             ],
             layout: 'radio',
           },
+          initialValue: 'center'
         }),
         defineField({
-          name: 'footerLinks',
-          title: 'Footer Links',
-          type: 'array',
-          description: 'Add links to important pages',
-          of: [
-            {
-              type: 'object',
-              preview: {
-                select: {
-                  title: 'text',
-                  subtitle: 'url',
-                },
-              },
-              fields: [
-                defineField({
-                  name: 'text',
-                  type: 'string',
-                  title: 'Link Text',
-                  description: 'The text to display for this link',
-                }),
-                defineField({
-                  name: 'url',
-                  type: 'url',
-                  title: 'URL',
-                  description: 'Where should this link go?',
-                }),
+          name: 'connectSection',
+          title: 'Connect Section',
+          type: 'object',
+          fields: [
+            defineField({
+              name: 'title',
+              title: 'Section Title',
+              type: 'string',
+              initialValue: 'Connect with All7Z'
+            }),
+            defineField({
+              name: 'buttons',
+              title: 'Buttons',
+              type: 'array',
+              of: [
+                {
+                  type: 'object',
+                  fields: [
+                    defineField({
+                      name: 'label',
+                      type: 'string',
+                      title: 'Button Label'
+                    }),
+                    defineField({
+                      name: 'url',
+                      type: 'string',
+                      title: 'Button URL'
+                    }),
+                    defineField({
+                      name: 'style',
+                      type: 'string',
+                      title: 'Button Style',
+                      options: {
+                        list: [
+                          {title: 'Primary', value: 'primary'},
+                          {title: 'Secondary', value: 'secondary'}
+                        ]
+                      }
+                    })
+                  ]
+                }
               ],
-            },
-          ],
-          initialValue: [],
-        }),
-        defineField({
-          name: 'socialLinks',
-          title: 'Social Media Links',
-          type: 'array',
-          description: 'Add your social media links',
-          of: [
-            {
-              type: 'object',
-              preview: {
-                select: {
-                  title: 'platform',
-                  subtitle: 'url',
+              initialValue: [
+                {
+                  label: 'Instagram',
+                  url: 'https://instagram.com/all7zbrand',
+                  style: 'secondary'
                 },
-              },
-              fields: [
-                defineField({
-                  name: 'platform',
-                  type: 'string',
-                  title: 'Platform',
-                  description: 'e.g., Instagram, Twitter, etc.',
-                }),
-                defineField({
-                  name: 'url',
-                  type: 'url',
-                  title: 'URL',
-                  description: 'Link to your social media profile',
-                }),
-                defineField({
-                  name: 'iconUrl',
-                  type: 'url',
-                  title: 'Icon URL',
-                  description: 'URL to the social media icon',
-                }),
-              ],
-            },
-          ],
-          initialValue: [],
-        }),
+                {
+                  label: 'Shop Now',
+                  url: '/shop',
+                  style: 'primary'
+                }
+              ]
+            })
+          ]
+        })
       ],
     }),
   ],

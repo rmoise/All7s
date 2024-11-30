@@ -121,7 +121,7 @@ export default async function ShopPage() {
               </div>
             )}
             <div className="absolute inset-0 flex items-center justify-center">
-              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-headline text-white tracking-wider text-center px-4">
+              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black text-white tracking-normal text-center px-4">
                 {shopPage?.heroTitle || 'SHOP ALL7Z'}
               </h1>
             </div>

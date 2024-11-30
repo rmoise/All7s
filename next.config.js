@@ -184,19 +184,10 @@ const nextConfig = {
         permanent: true,
       },
       {
-        source: '/blog',
-        destination: '/blog/posts',
+        source: '/learn',
+        destination: '/blog',
         permanent: true,
-      },
-    ]
-  },
-
-  rewrites: async () => {
-    return [
-      {
-        source: '/studio/:path*',
-        destination: '/studio/[[...index]]/page',
-      },
+      }
     ]
   },
 

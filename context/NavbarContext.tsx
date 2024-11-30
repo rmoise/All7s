@@ -7,6 +7,7 @@ import React, {
   useContext,
   useEffect,
   useRef,
+  useMemo,
 } from 'react'
 import { createClient } from '@sanity/client'
 import { getClient } from '@lib/sanity'
@@ -107,152 +108,140 @@ interface InitialData {
 }
 
 export const NavbarProvider: React.FC<NavbarProviderProps> = ({ children }) => {
-  const [navbarData, setNavbarData] = useState<NavbarData | null>(null)
-  const [error, setError] = useState<Error | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [navbarData, setNavbarData] = useState<NavbarData | null>(null);
+  const [error, setError] = useState<Error | null>(null);
+  const [loading, setLoading] = useState(true);
   const [blockTitles, setBlockTitles] = useState<BlockTitles>({
     listen: 'LISTEN',
     look: 'LOOK'
-  })
+  });
 
-  const lookRef = useRef<HTMLDivElement>(null)
-  const listenRef = useRef<HTMLDivElement>(null)
+  const lookRef = useRef<HTMLDivElement>(null);
+  const listenRef = useRef<HTMLDivElement>(null);
+  const mounted = useRef(true);
 
   const fetchInitialData = useCallback(async () => {
     if (!mounted.current) return;
 
     try {
-      setLoading(true)
-      const home = await getClient().fetch(`
-        *[_type == "home"][0] {
-          contentBlocks[] {
-            _type,
-            listenTitle,
-            lookTitle
+      setLoading(true);
+
+      // Fetch both home and navigation data
+      const [home, navigation] = await Promise.all([
+        getClient().fetch(`
+          *[_type == "home"][0] {
+            contentBlocks[] {
+              _type,
+              listenTitle,
+              lookTitle
+            }
           }
-        }
-      `)
+        `),
+        getClient().fetch(`
+          *[_type == "settings"][0]{
+            navbar {
+              navigationLinks[] {
+                name,
+                href
+              }
+            }
+          }
+        `)
+      ]);
 
-      if (home?.contentBlocks) {
-        const musicBlock = home.contentBlocks.find((block: any) => block._type === 'musicBlock')
-        const videoBlock = home.contentBlocks.find((block: any) => block._type === 'videoBlock')
+      if (mounted.current) {
+        // Set block titles from home data
+        if (home?.contentBlocks) {
+          const musicBlock = home.contentBlocks.find((block: any) => block._type === 'musicBlock');
+          const videoBlock = home.contentBlocks.find((block: any) => block._type === 'videoBlock');
 
-        if (musicBlock?.listenTitle || videoBlock?.lookTitle) {
           setBlockTitles(prev => ({
             listen: musicBlock?.listenTitle || prev.listen,
             look: videoBlock?.lookTitle || prev.look
-          }))
+          }));
+        }
+
+        // Set navbar data from navigation
+        if (navigation?.navbar) {
+          setNavbarData({
+            navigationLinks: navigation.navbar.navigationLinks || [],
+          });
         }
       }
     } catch (error) {
-      console.error('Error fetching initial data:', error)
-      setError(error instanceof Error ? error : new Error('Failed to fetch data'))
+      console.error('Error fetching initial data:', error);
+      if (mounted.current) {
+        setError(error instanceof Error ? error : new Error('Failed to fetch data'));
+      }
     } finally {
       if (mounted.current) {
-        setLoading(false)
+        setLoading(false);
       }
     }
-  }, [])
+  }, []);
 
-  const mounted = useRef(true)
-
+  // Initial data fetch
   useEffect(() => {
     mounted.current = true;
     fetchInitialData();
-
     return () => {
       mounted.current = false;
     };
-  }, []);
+  }, [fetchInitialData]);
 
-  const updateBlockTitle = useCallback(async (type: 'listen' | 'look', newTitle: string) => {
-    try {
-      const response = await fetch('/api/navbar/update-title', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ type, newTitle }),
-      });
+  // Update navigation links when block titles change
+  useEffect(() => {
+    if (!navbarData?.navigationLinks || !mounted.current) return;
 
-      if (!response.ok) {
-        throw new Error('Failed to update title');
+    const updatedNavLinks = navbarData.navigationLinks.map(link => {
+      if (link.href?.toLowerCase().includes('look')) {
+        return { ...link, name: blockTitles.look };
       }
-
-      setBlockTitles(prev => ({
-        ...prev,
-        [type]: newTitle
-      }));
-    } catch (err) {
-      console.error('Error updating title:', err);
-      setError(err instanceof Error ? err : new Error('Unknown error'));
-    }
-  }, []);
-
-  // Add debug logging
-  useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log({
-        navbarData,
-        blockTitles,
-        timestamp: new Date().toISOString()
-      });
-    }
-  }, [navbarData, blockTitles]);
-
-  useEffect(() => {
-    if (blockTitles && navbarData?.navigationLinks) {
-      const updatedNavLinks = navbarData.navigationLinks.map(link => {
-        const isLookLink = link.href?.toLowerCase().includes('look') || link.href?.toLowerCase().includes('/#look')
-        const isListenLink = link.href?.toLowerCase().includes('listen') || link.href?.toLowerCase().includes('/#listen')
-
-        if (isLookLink) {
-          return { ...link, name: blockTitles.look }
-        }
-        if (isListenLink) {
-          return { ...link, name: blockTitles.listen }
-        }
-        return link
-      })
-
-      setNavbarData(prev => ({
-        ...prev!,
-        navigationLinks: updatedNavLinks
-      }))
-    }
-  }, [blockTitles, navbarData?.navigationLinks])
-
-  useEffect(() => {
-    const handlePopState = () => {
-      const hash = window.location.hash.substring(1);
-      if (hash) {
-        if (hash.toLowerCase().includes('look')) {
-          setBlockTitles(prev => ({ ...prev, look: hash }));
-        } else if (hash.toLowerCase().includes('listen')) {
-          setBlockTitles(prev => ({ ...prev, listen: hash }));
-        }
+      if (link.href?.toLowerCase().includes('listen')) {
+        return { ...link, name: blockTitles.listen };
       }
-    };
+      return link;
+    });
 
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
+    setNavbarData(prev => ({
+      ...prev!,
+      navigationLinks: updatedNavLinks
+    }));
+  }, [blockTitles]);
+
+  const contextValue = useMemo(() => ({
+    navbarData,
+    error,
+    blockTitles,
+    updateBlockTitle: async (type: 'listen' | 'look', newTitle: string) => {
+      try {
+        const response = await fetch('/api/navbar/update-title', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type, newTitle }),
+        });
+
+        if (!response.ok) throw new Error('Failed to update title');
+
+        setBlockTitles(prev => ({
+          ...prev,
+          [type]: newTitle
+        }));
+      } catch (err) {
+        console.error('Error updating title:', err);
+        setError(err instanceof Error ? err : new Error('Unknown error'));
+      }
+    },
+    loading,
+    refs: {
+      lookRef,
+      listenRef
+    }
+  }), [navbarData, error, blockTitles, loading]);
 
   return (
-    <NavbarContext.Provider
-      value={{
-        navbarData,
-        error,
-        blockTitles,
-        updateBlockTitle,
-        loading,
-        refs: {
-          lookRef,
-          listenRef
-        }
-      }}
-    >
+    <NavbarContext.Provider value={contextValue}>
       {children}
     </NavbarContext.Provider>
-  )
-}
+  );
+};

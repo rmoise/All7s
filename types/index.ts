@@ -202,10 +202,59 @@ export interface Post {
   _id: string
   _createdAt: string
   title: string
+  author?: {
+    name: string
+    picture?: any
+    bio?: string
+  }
   slug: {
     current: string
   }
-  mainImage?: SanityImage
-  body?: PortableTextBlock[]
+  mainImage?: {
+    asset: {
+      _ref: string
+      _type: string
+    }
+  }
   excerpt?: string
+  categories?: Array<{
+    title: string
+    slug: string
+    color?: {
+      hex: string
+    }
+  }>
+  body?: any[]
+  seo?: {
+    metaTitle?: string
+    metaDescription?: string
+    openGraphImage?: {
+      asset: {
+        url: string
+      }
+    }
+  }
+}
+
+export interface BlogPageData {
+  heroTitle: string
+  heroImage?: {
+    asset: {
+      url: string
+    }
+    alt?: string
+  } | null
+  featuredPosts: Post[]
+  seo?: {
+    metaTitle?: string
+    metaDescription?: string
+    openGraphImage?: any
+  }
+}
+
+export interface BlogPageProps {
+  params: {
+    slug: string
+  }
+  searchParams?: { [key: string]: string | string[] | undefined }
 }

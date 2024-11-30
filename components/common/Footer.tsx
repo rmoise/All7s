@@ -1,11 +1,18 @@
-import React from 'react';
-import { FooterSettings, FooterLink, SocialLink, SanityColor } from '../../types/sanity';
+'use client'
+
+import React from 'react'
+import Container from '@/components/Blog/Container'
+import { FooterSettings, FooterButton } from '@/types/sanity'
+import { usePathname } from 'next/navigation'
 
 interface FooterProps {
-  footer: FooterSettings;
+  footer: FooterSettings
 }
 
 const Footer: React.FC<FooterProps> = ({ footer }) => {
+  const pathname = usePathname()
+  const isShopPage = pathname === '/shop' || pathname.startsWith('/shop/')
+
   if (!footer) {
     return (
       <footer className="w-full bg-black py-4 relative z-20">
@@ -15,83 +22,57 @@ const Footer: React.FC<FooterProps> = ({ footer }) => {
           </h1>
         </div>
       </footer>
-    );
+    )
   }
 
-  const alignment = footer.alignment || 'center';
-
-  const {
-    copyrightText = '© 2024 All Rights Reserved',
-    footerLinks = [],
-    socialLinks = [],
-    fontColor,
-  } = footer;
-
-  console.log('Processed footer data:', {
-    copyrightText,
-    footerLinks,
-    socialLinks,
-    fontColor,
-    alignment
-  });
-
-  const footerStyle = {
-    color: fontColor?.hex || '#FFFFFF',
-    textAlign: alignment,
-  } as React.CSSProperties;
-
-  const justifyClass = alignment === 'left'
-    ? 'justify-start'
-    : alignment === 'right'
-      ? 'justify-end'
-      : 'justify-center';
+  const { copyrightText = '© 2024 All Rights Reserved', connectSection } =
+    footer
 
   return (
-    <footer className={`w-full bg-black py-4 relative z-20`} style={footerStyle}>
-      <div className={`flex flex-col items-center sm:flex-row sm:space-x-4 px-4 space-y-4 sm:space-y-0 ${justifyClass}`}>
-        {/* Copyright Section */}
-        <h1 className={`text-xs sm:text-sm font-sans font-normal`}>
-          {copyrightText}
-        </h1>
+    <>
+      {/* Connect Section */}
+      {connectSection && (
+        <footer className="bg-black border-t border-gray-800">
+          <Container>
+            <div className="py-28 flex flex-col lg:flex-row items-center">
+              <h3 className="text-4xl lg:text-5xl font-bold tracking-tighter leading-tight text-center lg:text-left mb-10 lg:mb-0 lg:pr-4 lg:w-1/2 text-white">
+                {connectSection.title}
+              </h3>
+              <div className="flex flex-col lg:flex-row justify-center items-center lg:pl-4 lg:w-1/2">
+                {connectSection.buttons
+                  ?.filter((button) => !(isShopPage && button.url === '/shop'))
+                  .map((button: FooterButton, index: number) => (
+                    <a
+                      key={index}
+                      href={button.url}
+                      className={`mx-3 font-bold py-3 px-12 lg:px-8 duration-200 transition-colors mb-6 lg:mb-0 rounded-md ${
+                        button.style === 'primary'
+                          ? 'bg-white hover:bg-black hover:text-white text-black border border-white'
+                          : 'bg-black hover:bg-white hover:text-black border border-white text-white'
+                      }`}
+                    >
+                      {button.label}
+                    </a>
+                  ))}
+              </div>
+            </div>
+          </Container>
+        </footer>
+      )}
 
-        {/* Footer Links */}
-        {footerLinks && footerLinks.length > 0 && (
-          <div className={`flex space-x-4 ${justifyClass}`}>
-            {footerLinks.map((link) => (
-              <a
-                key={link._key}
-                href={link.url}
-                className={`text-xs sm:text-sm font-sans font-normal hover:opacity-75 transition-opacity`}
-              >
-                {link.text}
-              </a>
-            ))}
-          </div>
-        )}
+      {/* Copyright Section */}
+      <footer
+        className="w-full bg-black py-4 relative z-20"
+        style={{ color: footer.fontColor?.hex || '#FFFFFF' }}
+      >
+        <div className={`flex justify-${footer.alignment || 'center'} px-4`}>
+          <h1 className="text-xs sm:text-sm font-sans font-normal">
+            {copyrightText}
+          </h1>
+        </div>
+      </footer>
+    </>
+  )
+}
 
-        {/* Social Links */}
-        {socialLinks && socialLinks.length > 0 && (
-          <div className={`flex space-x-4 ${justifyClass}`}>
-            {socialLinks.map((link) => (
-              <a
-                key={link._key}
-                href={link.url}
-                className="h-4 w-4 sm:h-6 sm:w-6 hover:opacity-75 transition-opacity"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <img
-                  src={link.iconUrl}
-                  alt={link.platform}
-                  className="h-full w-full"
-                />
-              </a>
-            ))}
-          </div>
-        )}
-      </div>
-    </footer>
-  );
-};
-
-export default Footer;
+export default Footer
