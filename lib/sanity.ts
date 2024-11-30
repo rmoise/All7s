@@ -17,14 +17,15 @@ const debugEnv = {
   NODE_ENV: process.env.NODE_ENV,
   NEXT_PUBLIC_ENVIRONMENT: process.env.NEXT_PUBLIC_ENVIRONMENT,
   SANITY_STUDIO_DATASET: process.env.SANITY_STUDIO_DATASET,
-  NEXT_PUBLIC_SANITY_DATASET: process.env.NEXT_PUBLIC_SANITY_DATASET
+  NEXT_PUBLIC_SANITY_DATASET: process.env.NEXT_PUBLIC_SANITY_DATASET,
 }
 console.log('Sanity Client Environment:', debugEnv)
 
 // Always use production dataset for development
-const environment = process.env.NODE_ENV === 'development'
-  ? 'production'
-  : (process.env.NEXT_PUBLIC_ENVIRONMENT || 'production')
+const environment =
+  process.env.NODE_ENV === 'development'
+    ? 'production'
+    : process.env.NEXT_PUBLIC_ENVIRONMENT || 'production'
 
 if (!isValidEnvironment(environment)) {
   console.error('Invalid environment configuration:', { environment, debugEnv })
@@ -56,37 +57,51 @@ export const imageBuilder = imageUrlBuilder(client)
 
 interface ProductImage {
   asset: {
-    _id: string;
-    url: string;
+    _id: string
+    url: string
     metadata?: {
       dimensions: {
-        width: number;
-        height: number;
-        aspectRatio: number;
-      };
-    };
-  };
-  alt?: string;
+        width: number
+        height: number
+        aspectRatio: number
+      }
+    }
+  }
+  alt?: string
 }
 
-export function urlFor(source: SanityImageSource): {
-  url: () => string;
-  width: (w: number) => { height: (h: number) => { url: () => string } };
-  // Add other builder methods as needed
-} {
-  return imageBuilder.image(source)
+export function urlFor(source: SanityImageSource): ImageUrlBuilder {
+  if (!source) {
+    console.warn('No source provided to urlFor')
+    return imageBuilder.image({})
+  }
+
+  try {
+    const builder = imageBuilder.image(source)
+    return builder.auto('format').fit('max')
+  } catch (error) {
+    console.error('Error in urlFor:', error)
+    return imageBuilder.image({})
+  }
 }
 
-export const urlForImage = (source: string | SanityImage | null | undefined, options?: {
-  width?: number;
-  quality?: number;
-  blur?: number;
-}): string => {
+export const urlForImage = (
+  source: string | SanityImage | null | undefined,
+  options?: {
+    width?: number
+    quality?: number
+    blur?: number
+  }
+): string => {
+  if (!source) return ''
   if (typeof source === 'string') return source
   if (!source?.asset?._ref) return ''
 
   try {
-    let imageUrl = imageBuilder.image(source)
+    let imageUrl = imageBuilder
+      .image(source)
+      .auto('format')
+      .fit('max')
 
     if (options?.width) {
       imageUrl = imageUrl.width(options.width)
@@ -99,8 +114,7 @@ export const urlForImage = (source: string | SanityImage | null | undefined, opt
     }
 
     const url = imageUrl.url()
-    // Ensure the URL is absolute and includes the CDN domain
-    return url.startsWith('http') ? url : `https://cdn.sanity.io${url}`
+    return url.startsWith('https://') ? url : url.replace('http://', 'https://')
   } catch (error) {
     console.error('Error generating URL:', error)
     return ''
