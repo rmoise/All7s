@@ -78,7 +78,7 @@ export function urlFor(source: SanityImageSource): ImageUrlBuilder {
 
   try {
     const builder = imageBuilder.image(source)
-    return builder.auto('format').fit('max')
+    return builder.auto('format').fit('max').quality(80)
   } catch (error) {
     console.error('Error in urlFor:', error)
     return imageBuilder.image({})
@@ -102,19 +102,25 @@ export const urlForImage = (
       .image(source)
       .auto('format')
       .fit('max')
+      .quality(options?.quality || 80)
 
     if (options?.width) {
       imageUrl = imageUrl.width(options.width)
-    }
-    if (options?.quality) {
-      imageUrl = imageUrl.quality(options.quality)
     }
     if (options?.blur) {
       imageUrl = imageUrl.blur(options.blur)
     }
 
     const url = imageUrl.url()
-    return url.startsWith('https://') ? url : url.replace('http://', 'https://')
+    const httpsUrl = url.startsWith('https://')
+      ? url
+      : url.replace('http://', 'https://')
+
+    if (process.env.NODE_ENV === 'development') {
+      return httpsUrl
+    }
+
+    return httpsUrl
   } catch (error) {
     console.error('Error generating URL:', error)
     return ''
