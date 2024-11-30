@@ -112,15 +112,15 @@ export const urlForImage = (
     }
 
     const url = imageUrl.url()
-    const httpsUrl = url.startsWith('https://')
-      ? url
-      : url.replace('http://', 'https://')
+    const httpsUrl = url.startsWith('https://') ? url : url.replace('http://', 'https://')
 
+    // In development, return the direct Sanity URL
     if (process.env.NODE_ENV === 'development') {
       return httpsUrl
     }
 
-    return httpsUrl
+    // In production, use Netlify's image optimization
+    return `/_next/image?url=${encodeURIComponent(httpsUrl)}&w=${options?.width || 800}&q=${options?.quality || 75}`
   } catch (error) {
     console.error('Error generating URL:', error)
     return ''
