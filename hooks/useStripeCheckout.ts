@@ -21,61 +21,95 @@ export const useStripeCheckout = () => {
     try {
       setIsLoading(true)
 
-      // Verify Stripe key before proceeding
       if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY?.startsWith('pk_')) {
         throw new Error('Invalid Stripe configuration')
       }
 
-      const normalizedLineItems = lineItems.map((item) => ({
-        price_data: {
-          currency: item.price_data.currency,
-          product_data: {
-            name: item.price_data.product_data.name,
-            images: Array.isArray(item.price_data.product_data.images)
-              ? item.price_data.product_data.images
-              : [item.price_data.product_data.images],
-          },
-          unit_amount: Number(item.price_data.unit_amount),
-        },
-        quantity: Number(item.quantity),
-      }))
+      const apiUrl = process.env.NEXT_PUBLIC_CHECKOUT_API_URL || '/api/checkout'
 
-      const response = await fetch('/api/checkout', {
+      console.log('Initiating checkout request:', {
+        url: apiUrl,
+        env: process.env.NODE_ENV,
+        port: window.location.port,
+        itemCount: lineItems.length,
+        totalAmount: lineItems.reduce((sum, item) =>
+          sum + (item.price_data.unit_amount * item.quantity), 0) / 100
+      })
+
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json'
         },
-        body: JSON.stringify({ line_items: normalizedLineItems }),
+        body: JSON.stringify({ line_items: lineItems }),
+        cache: 'no-store',
       })
 
-      const data = await response.json()
+      console.log('Checkout API response received:', {
+        status: response.status,
+        ok: response.ok,
+        statusText: response.statusText,
+        contentType: response.headers.get('content-type')
+      })
 
-      if (!response.ok) {
-        throw new Error(data.error || `Checkout failed: ${response.status}`)
+      let responseText
+      try {
+        responseText = await response.text()
+        console.log('Raw response body:', responseText)
+      } catch (textError) {
+        console.error('Failed to read response text:', textError)
+        throw new Error('Failed to read API response')
+      }
+
+      let data
+      try {
+        data = responseText ? JSON.parse(responseText) : null
+        console.log('Parsed response data:', data)
+      } catch (parseError: any) {
+        console.error('Failed to parse response:', {
+          text: responseText,
+          error: parseError.message
+        })
+        throw new Error(`Invalid API response format: ${parseError.message}`)
+      }
+
+      if (!response.ok || !data) {
+        const errorDetails = {
+          status: response.status,
+          statusText: response.statusText,
+          error: data?.error,
+          data
+        }
+        console.error('Checkout API error:', errorDetails)
+        throw new Error(data?.error || `Checkout failed: ${response.status} ${response.statusText}`)
       }
 
       if (!data.sessionId) {
+        console.error('Missing session ID in response:', data)
         throw new Error('No session ID returned from checkout API')
       }
 
       const stripe = await getStripe()
       if (!stripe) {
-        throw new Error('Failed to load Stripe')
+        throw new Error('Failed to initialize Stripe')
       }
 
-      const { error } = await stripe.redirectToCheckout({
+      const result = await stripe.redirectToCheckout({
         sessionId: data.sessionId,
       })
 
-      if (error) {
-        throw error
+      if (result.error) {
+        console.error('Stripe redirect error:', result.error)
+        throw result.error
       }
+
     } catch (error: any) {
       console.error('Checkout process failed:', {
+        name: error.name,
         message: error.message,
-        code: error.code,
-        type: error.type,
-        timestamp: new Date().toISOString(),
+        cause: error.cause,
+        stack: error.stack
       })
       throw error
     } finally {

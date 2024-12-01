@@ -113,13 +113,12 @@ const nextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://apis.google.com https://*.youtube.com http://*.youtube.com https://*.stripe.com https://*.typekit.net",
+              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://*.stripe.com",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://*.typekit.net",
-              "style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com https://*.typekit.net",
-              "img-src 'self' data: blob: https: http:",
-              "media-src 'self' https://*.scdn.co https://*.spotify.com https://*.ytimg.com https://*.imagekit.io https://*.sanity.io blob:",
+              "img-src 'self' data: blob: https: https://cdn.sanity.io https://*.sndcdn.com https://i.scdn.co",
+              "media-src 'self' https:",
+              "connect-src 'self' https: wss: http://localhost:8888 https://*.sanity.io https://*.apicdn.sanity.io",
               "font-src 'self' data: https://fonts.gstatic.com https://*.typekit.net",
-              "connect-src 'self' https: wss: https://*.sanity.io https://*.apicdn.sanity.io",
               [
                 "frame-src 'self'",
                 "https://www.youtube.com",

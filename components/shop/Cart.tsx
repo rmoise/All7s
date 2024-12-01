@@ -16,7 +16,7 @@ import { useRouter } from 'next/navigation'
 import getStripe from '../../lib/getStripe'
 import type { CartItem } from '../../types/cart'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useStripeCheckout } from '@/hooks/useStripeCheckout';
+import { useStripeCheckout } from '@/hooks/useStripeCheckout'
 
 const Cart: React.FC = () => {
   const cartRef = useRef<HTMLDivElement>(null)
@@ -39,104 +39,125 @@ const Cart: React.FC = () => {
   const [inputValues, setInputValues] = useState<{ [key: string]: string }>({})
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false)
   const checkoutHandledRef = useRef(false)
-  const { redirectToCheckout } = useStripeCheckout();
+  const { redirectToCheckout } = useStripeCheckout()
 
   // Memoized handlers
-  const handleQuantityInput = useCallback((item: CartItem, value: string) => {
-    const numValue = value === '' ? 0 : Math.max(0, parseInt(value))
-    const prevQuantity = parseInt(inputValues[item._id] ?? item.quantity.toString())
+  const handleQuantityInput = useCallback(
+    (item: CartItem, value: string) => {
+      const numValue = value === '' ? 0 : Math.max(0, parseInt(value))
+      const prevQuantity = parseInt(
+        inputValues[item._id] ?? item.quantity.toString()
+      )
 
-    setInputValues(prev => ({
-      ...prev,
-      [item._id]: numValue.toString()
-    }))
+      setInputValues((prev) => ({
+        ...prev,
+        [item._id]: numValue.toString(),
+      }))
 
-    if (numValue === 0) {
-      setItemsToRemove(prev => new Set(prev).add(item._id))
-      updateCartItemQuantity(item._id, 0)
-    } else {
-      setItemsToRemove(prev => {
+      if (numValue === 0) {
+        setItemsToRemove((prev) => new Set(prev).add(item._id))
+        updateCartItemQuantity(item._id, 0)
+      } else {
+        setItemsToRemove((prev) => {
+          const newSet = new Set(prev)
+          newSet.delete(item._id)
+          return newSet
+        })
+        updateCartItemQuantity(item._id, numValue)
+      }
+
+      // Recalculate totals based on all cart items
+      const updatedTotalPrice = cartItems.reduce((total, cartItem) => {
+        if (cartItem._id === item._id) {
+          return total + cartItem.price * numValue
+        }
+        return total + cartItem.price * cartItem.quantity
+      }, 0)
+
+      const updatedTotalQuantities = cartItems.reduce((total, cartItem) => {
+        if (cartItem._id === item._id) {
+          return total + numValue
+        }
+        return total + cartItem.quantity
+      }, 0)
+
+      setTotalPrice(updatedTotalPrice)
+      setTotalQuantities(updatedTotalQuantities)
+    },
+    [
+      cartItems,
+      updateCartItemQuantity,
+      inputValues,
+      setTotalPrice,
+      setTotalQuantities,
+    ]
+  )
+
+  const handleQuantityChange = useCallback(
+    (id: string, action: 'inc' | 'dec') => {
+      const item = cartItems.find((item) => item._id === id)
+      if (!item) return
+
+      const currentValue = parseInt(inputValues[id] ?? item.quantity.toString())
+
+      if (action === 'dec') {
+        if (currentValue <= 1) {
+          handleQuantityInput(item, '0')
+          setItemsToRemove((prev) => new Set(prev).add(id))
+          return
+        }
+        handleQuantityInput(item, Math.max(0, currentValue - 1).toString())
+      } else {
+        if (itemsToRemove.has(id)) {
+          setItemsToRemove((prev) => {
+            const newSet = new Set(prev)
+            newSet.delete(id)
+            return newSet
+          })
+          handleQuantityInput(item, '1')
+          return
+        }
+        handleQuantityInput(item, (currentValue + 1).toString())
+      }
+    },
+    [cartItems, itemsToRemove, handleQuantityInput, inputValues]
+  )
+
+  // Add this function to handle product removal
+  const handleRemoveProduct = useCallback(
+    (item: CartItem) => {
+      onRemove(item)
+
+      // Recalculate totals after removing item
+      const remainingItems = cartItems.filter(
+        (cartItem) => cartItem._id !== item._id
+      )
+      const updatedTotalPrice = remainingItems.reduce(
+        (total, cartItem) => total + cartItem.price * cartItem.quantity,
+        0
+      )
+      const updatedTotalQuantities = remainingItems.reduce(
+        (total, cartItem) => total + cartItem.quantity,
+        0
+      )
+
+      setTotalPrice(updatedTotalPrice)
+      setTotalQuantities(updatedTotalQuantities)
+
+      // Clean up input values and remove from itemsToRemove
+      setInputValues((prev) => {
+        const newValues = { ...prev }
+        delete newValues[item._id]
+        return newValues
+      })
+      setItemsToRemove((prev) => {
         const newSet = new Set(prev)
         newSet.delete(item._id)
         return newSet
       })
-      updateCartItemQuantity(item._id, numValue)
-    }
-
-    // Recalculate totals based on all cart items
-    const updatedTotalPrice = cartItems.reduce((total, cartItem) => {
-      if (cartItem._id === item._id) {
-        return total + (cartItem.price * numValue)
-      }
-      return total + (cartItem.price * cartItem.quantity)
-    }, 0)
-
-    const updatedTotalQuantities = cartItems.reduce((total, cartItem) => {
-      if (cartItem._id === item._id) {
-        return total + numValue
-      }
-      return total + cartItem.quantity
-    }, 0)
-
-    setTotalPrice(updatedTotalPrice)
-    setTotalQuantities(updatedTotalQuantities)
-  }, [cartItems, updateCartItemQuantity, inputValues, setTotalPrice, setTotalQuantities])
-
-  const handleQuantityChange = useCallback((id: string, action: 'inc' | 'dec') => {
-    const item = cartItems.find(item => item._id === id)
-    if (!item) return
-
-    const currentValue = parseInt(inputValues[id] ?? item.quantity.toString())
-
-    if (action === 'dec') {
-      if (currentValue <= 1) {
-        handleQuantityInput(item, '0')
-        setItemsToRemove(prev => new Set(prev).add(id))
-        return
-      }
-      handleQuantityInput(item, Math.max(0, currentValue - 1).toString())
-    } else {
-      if (itemsToRemove.has(id)) {
-        setItemsToRemove(prev => {
-          const newSet = new Set(prev)
-          newSet.delete(id)
-          return newSet
-        })
-        handleQuantityInput(item, '1')
-        return
-      }
-      handleQuantityInput(item, (currentValue + 1).toString())
-    }
-  }, [cartItems, itemsToRemove, handleQuantityInput, inputValues])
-
-  // Add this function to handle product removal
-  const handleRemoveProduct = useCallback((item: CartItem) => {
-    onRemove(item)
-
-    // Recalculate totals after removing item
-    const remainingItems = cartItems.filter(cartItem => cartItem._id !== item._id)
-    const updatedTotalPrice = remainingItems.reduce((total, cartItem) =>
-      total + (cartItem.price * cartItem.quantity), 0
-    )
-    const updatedTotalQuantities = remainingItems.reduce((total, cartItem) =>
-      total + cartItem.quantity, 0
-    )
-
-    setTotalPrice(updatedTotalPrice)
-    setTotalQuantities(updatedTotalQuantities)
-
-    // Clean up input values and remove from itemsToRemove
-    setInputValues(prev => {
-      const newValues = { ...prev }
-      delete newValues[item._id]
-      return newValues
-    })
-    setItemsToRemove(prev => {
-      const newSet = new Set(prev)
-      newSet.delete(item._id)
-      return newSet
-    })
-  }, [cartItems, onRemove, setTotalPrice, setTotalQuantities])
+    },
+    [cartItems, onRemove, setTotalPrice, setTotalQuantities]
+  )
 
   // Optimized effects
   useEffect(() => {
@@ -144,7 +165,10 @@ const Cart: React.FC = () => {
       document.body.style.overflow = 'hidden'
 
       const handleClickOutside = (event: MouseEvent) => {
-        if (cartRef.current && !cartRef.current.contains(event.target as Node)) {
+        if (
+          cartRef.current &&
+          !cartRef.current.contains(event.target as Node)
+        ) {
           setShowCart(false)
         }
       }
@@ -160,8 +184,9 @@ const Cart: React.FC = () => {
   // Prefetch product pages
   useEffect(() => {
     const prefetchTimeout = setTimeout(() => {
-      cartItems.forEach(item => {
-        const slugValue = typeof item.slug === 'string' ? item.slug : item.slug?.current
+      cartItems.forEach((item) => {
+        const slugValue =
+          typeof item.slug === 'string' ? item.slug : item.slug?.current
         if (slugValue) {
           router.prefetch(`/shop/${slugValue}`)
         }
@@ -174,33 +199,69 @@ const Cart: React.FC = () => {
   const handleCheckout = async () => {
     try {
       if (!cartItems?.length) {
-        console.log('Checkout attempted with empty cart');
         toast.error('Your cart is empty')
         return
       }
 
-      setIsCheckoutLoading(true);
+      setIsCheckoutLoading(true)
+      sessionStorage.setItem('previousPath', window.location.pathname)
 
-      const line_items = cartItems.map((item) => ({
-        price_data: {
-          currency: 'usd',
-          product_data: {
-            name: item.name,
-            images: item.image?.map((img) => urlFor(img).url()).filter(Boolean) || [],
+      const line_items = cartItems.map((item) => {
+        if (!item.name || typeof item.price !== 'number') {
+          console.error('Invalid cart item:', item)
+          throw new Error(`Invalid item data: ${JSON.stringify(item)}`)
+        }
+
+        const imageUrls = item.image
+          ?.map((img) => urlFor(img).url())
+          .filter(Boolean) || []
+
+        return {
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: item.name,
+              images: imageUrls,
+            },
+            unit_amount: Math.round(item.price * 100),
           },
-          unit_amount: Math.round(item.price * 100),
-        },
-        quantity: item.quantity,
-      }));
+          quantity: item.quantity,
+        }
+      })
 
-      await redirectToCheckout(line_items);
-    } catch (error) {
-      console.error('Cart checkout error:', error);
-      toast.error('Failed to start checkout process');
+      console.log('Starting checkout with items:', {
+        itemCount: line_items.length,
+        items: line_items,
+        totalAmount: line_items.reduce((sum, item) =>
+          sum + (item.price_data.unit_amount * item.quantity), 0) / 100
+      })
+
+      try {
+        await redirectToCheckout(line_items)
+      } catch (checkoutError: any) {
+        console.error('Checkout process failed:', {
+          error: checkoutError,
+          message: checkoutError?.message,
+          stack: checkoutError?.stack
+        })
+        throw checkoutError // Re-throw to be caught by outer try-catch
+      }
+    } catch (error: any) {
+      const errorMessage = typeof error === 'string'
+        ? error
+        : error?.message || 'Failed to start checkout process'
+
+      console.error('Cart checkout error:', {
+        error: JSON.stringify(error, Object.getOwnPropertyNames(error)),
+        message: errorMessage,
+        stack: error?.stack
+      })
+
+      toast.error(errorMessage)
     } finally {
-      setIsCheckoutLoading(false);
+      setIsCheckoutLoading(false)
     }
-  };
+  }
 
   useEffect(() => {
     const query = new URLSearchParams(window.location.search)
@@ -275,9 +336,7 @@ const Cart: React.FC = () => {
                   <AiOutlineLeft className="text-black text-2xl" />
                   <span className="text-black font-semibold">YOUR CART</span>
                 </button>
-                <span className="text-black">
-                  ({totalQuantities} items)
-                </span>
+                <span className="text-black">({totalQuantities} items)</span>
               </div>
             </header>
 
@@ -362,9 +421,13 @@ const Cart: React.FC = () => {
                                     const value = e.target.value
                                     const numValue = parseInt(value)
 
-                                    if (!value || isNaN(numValue) || numValue <= 0) {
+                                    if (
+                                      !value ||
+                                      isNaN(numValue) ||
+                                      numValue <= 0
+                                    ) {
                                       handleQuantityInput(item, '1')
-                                      setItemsToRemove(prev => {
+                                      setItemsToRemove((prev) => {
                                         const newSet = new Set(prev)
                                         newSet.delete(item._id)
                                         return newSet
@@ -372,7 +435,9 @@ const Cart: React.FC = () => {
                                     }
                                   }}
                                   className={`w-14 h-6 text-center bg-transparent ${
-                                    itemsToRemove.has(item._id) ? 'text-red-500' : 'text-black'
+                                    itemsToRemove.has(item._id)
+                                      ? 'text-red-500'
+                                      : 'text-black'
                                   } border border-gray-200 rounded px-1
                                     [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
                                 />
@@ -424,9 +489,13 @@ const Cart: React.FC = () => {
                                     const value = e.target.value
                                     const numValue = parseInt(value)
 
-                                    if (!value || isNaN(numValue) || numValue <= 0) {
+                                    if (
+                                      !value ||
+                                      isNaN(numValue) ||
+                                      numValue <= 0
+                                    ) {
                                       handleQuantityInput(item, '1')
-                                      setItemsToRemove(prev => {
+                                      setItemsToRemove((prev) => {
                                         const newSet = new Set(prev)
                                         newSet.delete(item._id)
                                         return newSet
@@ -434,7 +503,9 @@ const Cart: React.FC = () => {
                                     }
                                   }}
                                   className={`w-14 h-6 text-center bg-transparent ${
-                                    itemsToRemove.has(item._id) ? 'text-red-500' : 'text-black'
+                                    itemsToRemove.has(item._id)
+                                      ? 'text-red-500'
+                                      : 'text-black'
                                   } border border-gray-200 rounded px-1
                                     [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
                                 />
