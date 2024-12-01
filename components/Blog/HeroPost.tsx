@@ -3,23 +3,28 @@ import Image from 'next/image'
 import { urlFor } from '@/lib/sanity'
 import DateFormatter from '@/components/Blog/DateFormatter'
 
-interface HeroPostProps {
+export interface HeroPostProps {
   title: string
   coverImage: any
   date: string
   excerpt?: string
   slug: string
+  author?: {
+    name: string
+    picture?: any
+  }
 }
 
-export default function HeroPost({
+const HeroPost: React.FC<HeroPostProps> = ({
   title,
   coverImage,
   date,
   excerpt,
   slug,
-}: HeroPostProps) {
-  // Pre-generate image URL
+  author,
+}: HeroPostProps) => {
   const imageUrl = coverImage ? urlFor(coverImage).url() : ''
+  const authorImageUrl = author?.picture ? urlFor(author.picture).url() : ''
 
   return (
     <section className="mb-16 md:mb-24">
@@ -52,12 +57,28 @@ export default function HeroPost({
         </div>
         <div>
           {excerpt && (
-            <p className="my-4 leading-relaxed text-base text-gray-300 [&:has(+figure)]:mb-0">
+            <p className="my-4 leading-relaxed text-base text-gray-300">
               {excerpt}
             </p>
+          )}
+          {author && (
+            <div className="flex items-center mt-4">
+              {authorImageUrl && (
+                <Image
+                  src={authorImageUrl}
+                  alt={author.name}
+                  width={48}
+                  height={48}
+                  className="rounded-full mr-3"
+                />
+              )}
+              <span className="text-lg text-gray-400">{author.name}</span>
+            </div>
           )}
         </div>
       </div>
     </section>
   )
 }
+
+export default HeroPost

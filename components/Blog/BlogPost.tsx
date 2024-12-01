@@ -148,21 +148,21 @@ const BlogPost: React.FC<BlogPostProps> = ({
           </h1>
           <div className="flex items-center mb-8">
             {authorImageUrl && (
-              <div className="relative w-6 h-6 mr-2 rounded-full overflow-hidden flex-shrink-0">
+              <div className="relative w-12 h-12 mr-3 rounded-full overflow-hidden flex-shrink-0">
                 <Image
                   src={authorImageUrl}
                   alt={author?.name || 'Author'}
                   className="rounded-full object-cover"
                   fill
-                  sizes="24px"
+                  sizes="48px"
                 />
               </div>
             )}
             {author?.name && (
-              <span className="text-sm text-gray-400">{author.name}</span>
+              <span className="text-lg text-gray-400">{author.name}</span>
             )}
-            <span className="text-sm text-gray-400 mx-4">•</span>
-            <span className="text-sm text-gray-400">
+            <span className="text-lg text-gray-400 mx-4">•</span>
+            <span className="text-lg text-gray-400">
               <DateFormatter dateString={_createdAt} />
             </span>
           </div>

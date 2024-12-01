@@ -1,12 +1,11 @@
 'use client'
 
-import React, { useState, useMemo } from 'react'
+import React from 'react'
 import { AllPosts } from '@/components/Blog'
 import Container from '@/components/Blog/Container'
 import HeroPost from '@/components/Blog/HeroPost'
 import Intro from '@/components/Blog/Intro'
 import type { BlogPageData, Post } from '@/types'
-import { motion } from 'framer-motion'
 
 interface BlogClientProps {
   blogPage: BlogPageData
