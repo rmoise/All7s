@@ -13,6 +13,8 @@ interface AuthorProps {
   bio?: any[]
 }
 
+const shouldOptimize = process.env.NODE_ENV !== 'production'
+
 export default function Author({ name, picture, bio }: AuthorProps) {
   const bioText = Array.isArray(bio)
     ? bio
@@ -40,6 +42,7 @@ export default function Author({ name, picture, bio }: AuthorProps) {
             className="rounded-full"
             fill
             sizes="48px"
+            unoptimized={!shouldOptimize}
           />
         </div>
       )}

@@ -36,6 +36,8 @@ interface PostPreviewProps {
   }>
 }
 
+const shouldOptimize = process.env.NODE_ENV !== 'production'
+
 export default function PostPreview({
   title,
   mainImage,
@@ -62,6 +64,7 @@ export default function PostPreview({
                 className="object-cover hover:opacity-90 transition-opacity"
                 fill
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                unoptimized={!shouldOptimize}
               />
             </Link>
           </div>
@@ -88,6 +91,7 @@ export default function PostPreview({
                 className="rounded-full object-cover"
                 fill
                 sizes="48px"
+                unoptimized={!shouldOptimize}
               />
             </div>
           )}

@@ -2,6 +2,8 @@ import Link from 'next/link'
 import Image from 'next/image'
 import DateFormatter from '@/components/Blog/DateFormatter'
 
+const shouldOptimize = process.env.NODE_ENV !== 'production'
+
 export interface HeroPostProps {
   title: string
   mainImage?: {
@@ -51,6 +53,7 @@ const HeroPost: React.FC<HeroPostProps> = ({
                 fill
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 priority
+                unoptimized={!shouldOptimize}
               />
             </div>
           </Link>
@@ -82,6 +85,7 @@ const HeroPost: React.FC<HeroPostProps> = ({
                   width={48}
                   height={48}
                   className="rounded-full mr-3"
+                  unoptimized={!shouldOptimize}
                 />
               )}
               <span className="text-lg text-gray-400">{author.name}</span>

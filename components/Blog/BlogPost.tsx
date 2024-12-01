@@ -38,6 +38,8 @@ interface BlogPostProps {
   relatedPosts?: Post[]
 }
 
+const shouldOptimize = process.env.NODE_ENV !== 'production'
+
 const RenderContent = ({ block }: { block: any }) => {
   if (!block) return null
 
@@ -89,7 +91,7 @@ const RenderContent = ({ block }: { block: any }) => {
             fill
             className="object-cover rounded-lg"
             sizes="(max-width: 768px) 100vw, 1200px"
-            unoptimized={process.env.NODE_ENV === 'production'}
+            unoptimized={!shouldOptimize}
           />
         </div>
         {block.caption && (
@@ -159,6 +161,7 @@ const BlogPost: React.FC<BlogPostProps> = ({
                   className="rounded-full object-cover"
                   fill
                   sizes="48px"
+                  unoptimized={!shouldOptimize}
                 />
               </div>
             )}
@@ -181,6 +184,7 @@ const BlogPost: React.FC<BlogPostProps> = ({
               fill
               className="object-cover rounded-lg"
               priority
+              unoptimized={!shouldOptimize}
             />
           </div>
         )}

@@ -33,8 +33,6 @@ export interface SanityImage {
     _ref: string
     _type: 'reference'
   }
-  hotspot?: SanityImageHotspot
-  crop?: SanityImageCrop
 }
 
 // Navigation types
