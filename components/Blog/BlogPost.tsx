@@ -75,6 +75,7 @@ const RenderContent = ({ block }: { block: any }) => {
             fill
             className="object-cover rounded-lg"
             sizes="(max-width: 768px) 100vw, 1200px"
+            unoptimized={process.env.NODE_ENV === 'production'}
           />
         </div>
         {block.caption && (
@@ -104,7 +105,10 @@ const BlogPost: React.FC<BlogPostProps> = ({
   }
 
   const mainImageUrl = mainImage
-    ? urlForImage(mainImage)
+    ? urlForImage(mainImage, {
+        width: 1200,
+        quality: 75,
+      })
     : ''
   const authorImageUrl = author?.picture
     ? urlForImage(author.picture, {
