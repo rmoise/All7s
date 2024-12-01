@@ -13,6 +13,9 @@ interface BlogClientProps {
 }
 
 const BlogClient: React.FC<BlogClientProps> = ({ blogPage, posts }) => {
+  console.log('Posts data:', posts)
+  console.log('First post mainImage:', posts[0]?.mainImage)
+
   return (
     <Container>
       <div>
@@ -20,7 +23,7 @@ const BlogClient: React.FC<BlogClientProps> = ({ blogPage, posts }) => {
         {posts.length > 0 && (
           <HeroPost
             title={posts[0].title}
-            coverImage={posts[0].mainImage}
+            mainImage={posts[0].mainImage}
             date={posts[0]._createdAt}
             author={posts[0].author}
             slug={posts[0].slug.current}

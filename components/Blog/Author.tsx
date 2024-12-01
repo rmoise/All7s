@@ -1,9 +1,15 @@
 import Image from 'next/image'
-import { urlFor } from '@/lib/sanity'
+import { urlForImage } from '@/lib/sanity'
 
 interface AuthorProps {
   name: string
-  picture?: any
+  picture?: {
+    _type: 'image'
+    asset: {
+      _ref: string
+      _type: 'reference'
+    }
+  }
   bio?: any[]
 }
 
@@ -19,12 +25,17 @@ export default function Author({ name, picture, bio }: AuthorProps) {
         .join(' ')
     : undefined
 
+  const imageUrl = picture ? urlForImage(picture, {
+    width: 96,
+    quality: 75,
+  }) : ''
+
   return (
     <div className="flex items-center space-x-4">
       {picture && (
         <div className="relative w-12 h-12">
           <Image
-            src={urlFor(picture).width(96).height(96).url()}
+            src={imageUrl}
             alt={name}
             className="rounded-full"
             fill
@@ -38,4 +49,4 @@ export default function Author({ name, picture, bio }: AuthorProps) {
       </div>
     </div>
   )
-} 
+}

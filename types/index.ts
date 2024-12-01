@@ -200,23 +200,30 @@ export interface SomeType {
 
 export interface Post {
   _id: string
-  _createdAt: string
   title: string
-  author?: {
-    name: string
-    picture?: any
-    bio?: string
+  mainImage?: {
+    _type: 'image'
+    asset: {
+      _ref: string | null
+      _type: 'sanity.imageAsset'
+      url: string
+    }
   }
   slug: {
     current: string
   }
-  mainImage?: {
-    asset: {
-      _ref: string
-      _type: string
+  excerpt?: string
+  _createdAt: string
+  author?: {
+    name: string
+    picture?: {
+      asset: {
+        _ref: string | null
+        _type: 'sanity.imageAsset'
+        url: string
+      }
     }
   }
-  excerpt?: string
   categories?: Array<{
     title: string
     slug: string
@@ -224,16 +231,6 @@ export interface Post {
       hex: string
     }
   }>
-  body?: any[]
-  seo?: {
-    metaTitle?: string
-    metaDescription?: string
-    openGraphImage?: {
-      asset: {
-        url: string
-      }
-    }
-  }
 }
 
 export interface BlogPageData {

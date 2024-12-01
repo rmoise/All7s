@@ -1,17 +1,30 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { urlFor } from '@/lib/sanity'
+import { urlForImage } from '@/lib/sanity'
 import DateFormatter from './DateFormatter'
 
 interface PostPreviewProps {
   title: string
-  coverImage: any
+  mainImage?: {
+    _type: 'image'
+    asset: {
+      _ref: string | null
+      _type: 'sanity.imageAsset'
+      url: string
+    }
+  }
   date: string
   excerpt?: string
   bodyExcerpt?: string
   author?: {
     name: string
-    picture?: any
+    picture?: {
+      asset: {
+        _ref: string | null
+        _type: 'sanity.imageAsset'
+        url: string
+      }
+    }
   }
   slug: string
   categories?: Array<{
@@ -25,7 +38,7 @@ interface PostPreviewProps {
 
 export default function PostPreview({
   title,
-  coverImage,
+  mainImage,
   date,
   excerpt,
   bodyExcerpt,
@@ -34,15 +47,17 @@ export default function PostPreview({
   categories,
 }: PostPreviewProps) {
   const displayExcerpt = excerpt || bodyExcerpt
+  const mainImageUrl = mainImage?.asset?.url || ''
+  const authorImageUrl = author?.picture?.asset?.url || ''
 
   return (
     <div className="flex flex-col h-full">
       <div className="mb-5">
-        {coverImage && (
+        {mainImageUrl && (
           <div className="relative aspect-[16/9] w-full">
             <Link href={`/blog/${slug}`} aria-label={title}>
               <Image
-                src={urlFor(coverImage).width(800).height(450).url()}
+                src={mainImageUrl}
                 alt={`Cover Image for ${title}`}
                 className="object-cover hover:opacity-90 transition-opacity"
                 fill
@@ -65,11 +80,11 @@ export default function PostPreview({
         )}
 
         <div className="flex items-center mt-auto">
-          {author?.picture && (
+          {authorImageUrl && author?.name && (
             <div className="relative w-12 h-12 mr-4">
               <Image
-                src={urlFor(author.picture).width(120).height(120).url()}
-                alt={author.name || 'Author'}
+                src={authorImageUrl}
+                alt={author.name}
                 className="rounded-full object-cover"
                 fill
                 sizes="48px"

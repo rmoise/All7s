@@ -9,19 +9,33 @@ import Categories from './Categories'
 import RelatedPosts from './RelatedPosts'
 import Link from 'next/link'
 import Grid from '@/components/common/Grid/Grid'
+import { Post } from '@/types'
 
 interface BlogPostProps {
   title: string
-  mainImage: any
+  mainImage: {
+    _type: 'image'
+    asset: {
+      _ref: string | null
+      _type: 'sanity.imageAsset'
+      url: string
+    }
+  }
   body: any[]
   author?: {
     name: string
-    picture?: any
+    picture?: {
+      asset: {
+        _ref: string | null
+        _type: 'sanity.imageAsset'
+        url: string
+      }
+    }
     bio?: any[]
   }
   _createdAt: string
   categories?: any[]
-  relatedPosts?: any[]
+  relatedPosts?: Post[]
 }
 
 const RenderContent = ({ block }: { block: any }) => {
@@ -104,18 +118,8 @@ const BlogPost: React.FC<BlogPostProps> = ({
     return null
   }
 
-  const mainImageUrl = mainImage
-    ? urlForImage(mainImage, {
-        width: 1200,
-        quality: 75,
-      })
-    : ''
-  const authorImageUrl = author?.picture
-    ? urlForImage(author.picture, {
-        width: 1200,
-        quality: 75,
-      })
-    : ''
+  const mainImageUrl = mainImage?.asset?.url || ''
+  const authorImageUrl = author?.picture?.asset?.url || ''
 
   return (
     <article className="bg-black">

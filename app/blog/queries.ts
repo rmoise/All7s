@@ -21,6 +21,7 @@ export const postsQuery = `*[_type == "post"] | order(_createdAt desc) {
   title,
   slug,
   mainImage {
+    _type,
     asset-> {
       _ref,
       _type,
@@ -37,8 +38,7 @@ export const postsQuery = `*[_type == "post"] | order(_createdAt desc) {
         _type,
         url
       }
-    },
-    bio
+    }
   },
   categories[]-> {
     title,
@@ -50,12 +50,25 @@ export const postsQuery = `*[_type == "post"] | order(_createdAt desc) {
 export const postDetailQuery = `*[_type == "post" && slug.current == $slug][0]{
   title,
   body,
-  mainImage,
+  mainImage {
+    _type,
+    asset-> {
+      _ref,
+      _type,
+      url
+    }
+  },
   slug,
   _createdAt,
   author->{
     name,
-    picture,
+    picture {
+      asset-> {
+        _ref,
+        _type,
+        url
+      }
+    },
     bio
   },
   categories[]-> {
@@ -63,18 +76,28 @@ export const postDetailQuery = `*[_type == "post" && slug.current == $slug][0]{
     slug,
     color
   },
-  "relatedPosts": *[_type == "post" &&
-    slug.current != $slug &&
-    _id != ^._id
-  ] | order(_createdAt desc) [0...3] {
+  "relatedPosts": *[_type == "post" && slug.current != $slug && _id != ^._id] | order(_createdAt desc) [0...3] {
     _id,
     title,
     slug,
-    mainImage,
+    mainImage {
+      _type,
+      asset-> {
+        _ref,
+        _type,
+        url
+      }
+    },
     excerpt,
     author->{
       name,
-      picture
+      picture {
+        asset-> {
+          _ref,
+          _type,
+          url
+        }
+      }
     },
     _createdAt,
     categories[]->

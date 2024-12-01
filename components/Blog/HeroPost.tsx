@@ -1,30 +1,42 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { urlFor } from '@/lib/sanity'
 import DateFormatter from '@/components/Blog/DateFormatter'
 
 export interface HeroPostProps {
   title: string
-  coverImage: any
+  mainImage?: {
+    _type: 'image'
+    asset: {
+      _ref: string | null
+      _type: 'sanity.imageAsset'
+      url: string
+    }
+  }
   date: string
   excerpt?: string
   slug: string
   author?: {
     name: string
-    picture?: any
+    picture?: {
+      asset: {
+        _ref: string | null
+        _type: 'sanity.imageAsset'
+        url: string
+      }
+    }
   }
 }
 
 const HeroPost: React.FC<HeroPostProps> = ({
   title,
-  coverImage,
+  mainImage,
   date,
   excerpt,
   slug,
   author,
 }: HeroPostProps) => {
-  const imageUrl = coverImage ? urlFor(coverImage).url() : ''
-  const authorImageUrl = author?.picture ? urlFor(author.picture).url() : ''
+  const imageUrl = mainImage?.asset?.url || ''
+  const authorImageUrl = author?.picture?.asset?.url || ''
 
   return (
     <section className="mb-16 md:mb-24">

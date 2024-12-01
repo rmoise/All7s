@@ -17,7 +17,7 @@ export default function RelatedPosts({
           <PostPreview
             key={post._id}
             title={post.title}
-            coverImage={post.mainImage}
+            mainImage={post.mainImage}
             date={post._createdAt}
             author={post.author}
             slug={post.slug.current}
