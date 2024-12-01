@@ -15,7 +15,10 @@ export async function POST(request: Request) {
     });
 
     if (!process.env.STRIPE_SECRET_KEY) {
-      throw new Error('Missing Stripe secret key');
+      return NextResponse.json(
+        { error: 'Missing Stripe secret key' },
+        { status: 500 }
+      );
     }
 
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
@@ -23,6 +26,13 @@ export async function POST(request: Request) {
     });
 
     const { line_items } = await request.json();
+
+    if (!Array.isArray(line_items) || line_items.length === 0) {
+      return NextResponse.json(
+        { error: 'Invalid line items' },
+        { status: 400 }
+      );
+    }
 
     const origin = request.headers.get('origin') ||
                   request.headers.get('referer') ||
