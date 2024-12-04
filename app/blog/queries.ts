@@ -1,17 +1,49 @@
 export const blogPageQuery = `*[_type == "blogPage"][0] {
   heroTitle,
-  heroImage{
-    asset->{
-      url
-    },
-    alt
-  },
-  featuredPosts[]->{
+  heroSubtitle,
+  "featuredPost": featuredPost->{
     _id,
     title,
     slug,
-    mainImage,
-    excerpt
+    mainImage {
+      asset-> {
+        _ref,
+        _type,
+        url
+      }
+    },
+    excerpt,
+    _createdAt,
+    author->{
+      name,
+      picture {
+        asset-> {
+          url
+        }
+      }
+    }
+  },
+  blogFeed[]->{
+    _id,
+    title,
+    slug,
+    mainImage {
+      asset-> {
+        _ref,
+        _type,
+        url
+      }
+    },
+    excerpt,
+    _createdAt,
+    author->{
+      name,
+      picture {
+        asset-> {
+          url
+        }
+      }
+    }
   },
   seo
 }`

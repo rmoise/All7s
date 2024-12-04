@@ -7,20 +7,27 @@ import { fetchWithRetry } from '@/lib/fetchWithRetry'
 export const dynamic = 'force-dynamic'
 export const dynamicParams = true
 
-export const metadata: Metadata = {
-  title: 'Blog - All7Z Brand',
-  description: 'Explore our collection of blog posts covering West Coast Music, Lifestyle, and Merch.',
+export async function generateMetadata(): Promise<Metadata> {
+  const blogPage = await fetchWithRetry(() =>
+    fetchSanity<BlogPageData>(blogPageQuery)
+  )
+
+  return {
+    title: blogPage?.seo?.metaTitle || 'Blog - All7Z Brand',
+    description:
+      blogPage?.seo?.metaDescription ||
+      'Explore our collection of blog posts covering West Coast Music, Lifestyle, and Merch.',
+    openGraph: blogPage?.seo?.openGraphImage?.asset?.url
+      ? { images: [{ url: blogPage.seo.openGraphImage.asset.url }] }
+      : undefined,
+  }
 }
 
 interface BlogPageData {
   heroTitle: string
-  heroImage?: {
-    asset: {
-      url: string
-    }
-    alt?: string
-  } | null
-  featuredPosts: Post[]
+  heroSubtitle?: string
+  featuredPost?: Post
+  blogFeed: Post[]
   seo?: {
     metaTitle?: string
     metaDescription?: string
@@ -30,37 +37,35 @@ interface BlogPageData {
 
 const defaultBlogPage: BlogPageData = {
   heroTitle: 'Welcome to Our Blog',
-  heroImage: null,
-  featuredPosts: [],
+  heroSubtitle: 'Exploring West Coast Music, Lifestyle, and Culture',
+  featuredPost: undefined,
+  blogFeed: [],
   seo: {
     metaTitle: 'Blog - All7Z Brand',
-    metaDescription: 'Explore our collection of blog posts covering West Coast Music, Lifestyle, and Merch.',
-  }
+    metaDescription:
+      'Explore our collection of blog posts covering West Coast Music, Lifestyle, and Merch.',
+  },
 }
 
 export default async function BlogPage() {
   try {
-    const [blogPage, posts] = await Promise.all([
-      fetchWithRetry(() =>
-        fetchSanity<BlogPageData>(blogPageQuery)
-      ),
-      fetchWithRetry(() =>
-        fetchSanity<Post[]>(postsQuery)
-      )
-    ])
+    const blogPage = await fetchWithRetry(() =>
+      fetchSanity<BlogPageData>(blogPageQuery)
+    )
 
     const BlogClient = (await import('./BlogClient')).default
     return (
       <div className="pb-28">
-        <BlogClient blogPage={blogPage || defaultBlogPage} posts={posts || []} />
+        <BlogClient
+          blogPage={blogPage || defaultBlogPage}
+        />
       </div>
     )
-
   } catch (error) {
     console.error('BlogPage Error:', {
       name: error instanceof Error ? error.name : 'Unknown',
       message: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined
+      stack: error instanceof Error ? error.stack : undefined,
     })
 
     return (

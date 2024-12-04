@@ -9,28 +9,27 @@ import type { BlogPageData, Post } from '@/types'
 
 interface BlogClientProps {
   blogPage: BlogPageData
-  posts: Post[]
 }
 
-const BlogClient: React.FC<BlogClientProps> = ({ blogPage, posts }) => {
-  console.log('Posts data:', posts)
-  console.log('First post mainImage:', posts[0]?.mainImage)
+const BlogClient: React.FC<BlogClientProps> = ({ blogPage }) => {
+  const heroPost = blogPage.featuredPost || null
+  const feedPosts = blogPage.blogFeed || []
 
   return (
     <Container>
       <div>
-        <Intro title={blogPage.heroTitle} />
-        {posts.length > 0 && (
+        <Intro title={blogPage.heroTitle} subtitle={blogPage.heroSubtitle} />
+        {heroPost && (
           <HeroPost
-            title={posts[0].title}
-            mainImage={posts[0].mainImage}
-            date={posts[0]._createdAt}
-            author={posts[0].author}
-            slug={posts[0].slug.current}
-            excerpt={posts[0].excerpt}
+            title={heroPost.title}
+            mainImage={heroPost.mainImage}
+            date={heroPost._createdAt}
+            author={heroPost.author}
+            slug={heroPost.slug.current}
+            excerpt={heroPost.excerpt}
           />
         )}
-        <AllPosts postInfo={posts.slice(1)} />
+        {feedPosts.length > 0 && <AllPosts postInfo={feedPosts} />}
       </div>
     </Container>
   )

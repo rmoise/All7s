@@ -1,6 +1,12 @@
 import {defineType, defineField} from 'sanity'
 import {ComponentIcon} from '@sanity/icons'
 
+interface SanityDocument {
+  featuredPost?: {
+    _ref: string
+  }
+}
+
 export default defineType({
   name: 'blogPage',
   title: 'Blog Page',
@@ -29,28 +35,40 @@ export default defineType({
       group: 'hero',
     }),
     defineField({
-      name: 'heroImage',
-      title: 'Hero Banner Image',
-      type: 'image',
-      options: {
-        hotspot: true,
-      },
-      fields: [
-        {
-          name: 'alt',
-          type: 'string',
-          title: 'Alternative Text',
-          description: 'Important for SEO and accessibility.',
-          validation: (Rule) => Rule.required(),
-        },
-      ],
+      name: 'heroSubtitle',
+      title: 'Hero Subtitle',
+      type: 'string',
+      description: 'A brief description below the title',
       group: 'hero',
     }),
     defineField({
-      name: 'featuredPosts',
-      title: 'Featured Posts',
+      name: 'featuredPost',
+      title: 'Featured Post',
+      description: 'Select one post to feature at the top of the blog',
+      type: 'reference',
+      to: [{type: 'post'}],
+      group: 'content',
+    }),
+    defineField({
+      name: 'blogFeed',
+      title: 'Blog Feed',
+      description: 'Posts that appear in the main blog feed under "More Stories"',
       type: 'array',
-      of: [{type: 'reference', to: [{type: 'post'}]}],
+      of: [{
+        type: 'reference',
+        to: [{type: 'post'}],
+        options: {
+          filter: ({document}: {document: SanityDocument}) => {
+            const featuredPostId = document?.featuredPost?._ref
+            return {
+              filter: '!(_id in $ids)',
+              params: {
+                ids: featuredPostId ? [featuredPostId] : []
+              }
+            }
+          }
+        }
+      }],
       group: 'content',
     }),
     defineField({

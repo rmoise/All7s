@@ -6,7 +6,7 @@ import type {
   SiteSettings as SanitySiteSettings,
   ContentBlock as SanityContentBlock,
   NavigationLink,
-  ProductImage
+  ProductImage,
 } from './sanity'
 
 import type {
@@ -15,7 +15,7 @@ import type {
   Album,
   CustomAlbum,
   EmbeddedAlbum,
-  MusicAlbum
+  MusicAlbum,
 } from './music'
 
 import type { PortableTextBlock } from '@portabletext/types'
@@ -35,7 +35,7 @@ export type {
   Album,
   CustomAlbum,
   EmbeddedAlbum,
-  MusicAlbum
+  MusicAlbum,
 }
 
 // Content Block Types
@@ -65,11 +65,14 @@ export interface AboutContent extends BaseContentBlock {
 export interface MusicBlockProps {
   listenTitle: string
   description?: string
-  albums?: Array<MusicAlbum | {
-    _ref: string
-    _type: 'reference'
-    _key: string
-  }>
+  albums?: Array<
+    | MusicAlbum
+    | {
+        _ref: string
+        _type: 'reference'
+        _key: string
+      }
+  >
 }
 
 export interface MusicBlockContent extends BaseContentBlock {
@@ -235,13 +238,9 @@ export interface Post {
 
 export interface BlogPageData {
   heroTitle: string
-  heroImage?: {
-    asset: {
-      url: string
-    }
-    alt?: string
-  } | null
-  featuredPosts: Post[]
+  heroSubtitle?: string
+  featuredPost?: Post
+  blogFeed: Post[]
   seo?: {
     metaTitle?: string
     metaDescription?: string
