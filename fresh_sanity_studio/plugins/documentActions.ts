@@ -7,22 +7,24 @@ export function getSingletonActions(originalActions: DocumentActionComponent[]) 
     console.group('Singleton Actions')
     console.log(
       'Original actions:',
-      originalActions.map((a) => a.name),
+      originalActions.map((a) => ({
+        name: a.name,
+        originalName: (a as any).originalName,
+      }))
     )
     console.groupEnd()
   }
 
   return originalActions.filter((action) => {
     const actionName = action.name?.toLowerCase()
-    // Be more permissive with action names and match both formats
-    return ![
-      'duplicate',
-      'create',
-      'delete',
-      'duplicateaction',
-      'createaction',
-      'deleteaction',
-    ].includes(actionName || '')
+    const originalName = (action as any).originalName?.toLowerCase()
+
+    // Check both name and originalName against our blacklist
+    const blacklist = ['duplicate', 'create', 'delete']
+    return !blacklist.some(
+      (blocked) =>
+        actionName?.includes(blocked) || originalName?.includes(blocked)
+    )
   })
 }
 
