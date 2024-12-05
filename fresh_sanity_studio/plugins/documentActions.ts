@@ -1,44 +1,14 @@
 import type {DocumentActionComponent} from 'sanity'
-import {SINGLETON_TYPES, SINGLETON_ACTIONS} from '../sanity.config'
-
-// Updated action mapping to match actual Sanity action names
-const ACTION_MAP = {
-  PublishAction: 'PublishAction',
-  ScheduleAction: 'ScheduleAction',
-  UnpublishAction: 'UnpublishAction',
-  DiscardChangesAction: 'DiscardChangesAction',
-  DuplicateAction: 'DuplicateAction',
-  DeleteAction: 'DeleteAction',
-  HistoryRestoreAction: 'RestoreAction',
-  TaskCreateAction: 'TaskAction',
-  StartInCreateActionWrapper: 'StartAction'
-} as const
+import {SINGLETON_TYPES} from '../sanity.config'
 
 export function getSingletonActions(originalActions: DocumentActionComponent[]) {
-  try {
-    if (!Array.isArray(originalActions)) {
-      return []
+  return originalActions.filter(action => {
+    if (typeof action === 'function') {
+      const actionName = action.displayName || action.name
+      return ['PublishAction', 'DiscardChangesAction'].includes(actionName)
     }
-
-    console.log('Singleton Actions')
-    console.log('Original actions:', originalActions)
-
-    // Keep all publish and discard actions
-    const filteredActions = originalActions.filter((action) => {
-      const actionName = action.name
-      console.log(`Processing action: ${actionName}`)
-
-      // Directly check the action name since it matches the actual names
-      return actionName === 'PublishAction' || actionName === 'DiscardChangesAction'
-    })
-
-    console.log('Filtered actions:', filteredActions)
-    return filteredActions
-
-  } catch (error) {
-    console.error('Error in getSingletonActions:', error)
-    return originalActions
-  }
+    return false
+  })
 }
 
 export function getDocumentActions(props: {
@@ -47,7 +17,6 @@ export function getDocumentActions(props: {
 }) {
   const {schemaType, actions} = props
 
-  // Only apply filtering for singleton types
   if (SINGLETON_TYPES.has(schemaType)) {
     return getSingletonActions(actions)
   }
