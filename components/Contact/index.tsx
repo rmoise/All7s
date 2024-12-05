@@ -1,5 +1,5 @@
-import { Contact } from './Contact';
+import Contact from './Contact';
 
-export { Contact };
+export { default as Contact } from './Contact';
 export { default as Form } from './Form';
 export { default as Comments } from './Comments';
