@@ -9,17 +9,17 @@ const getPreviewUrl = (doc: any) => {
 
   const baseUrl = window.location.hostname === 'localhost'
     ? 'http://localhost:3000'
-    : 'https://your-production-url.com'
+    : process.env.NEXT_PUBLIC_SITE_URL || 'https://your-production-url.com'
 
   switch (doc._type) {
     case 'home':
-      return `${baseUrl}/api/preview?type=home`
+      return `${baseUrl}/api/preview?preview=1`
     case 'post':
-      return `${baseUrl}/api/preview?type=post&slug=${doc?.slug?.current}`
+      return `${baseUrl}/api/preview?preview=1&slug=${doc?.slug?.current}`
     case 'page':
-      return `${baseUrl}/api/preview?type=page&slug=${doc?.slug?.current}`
+      return `${baseUrl}/api/preview?preview=1&slug=${doc?.slug?.current}`
     default:
-      return `${baseUrl}/api/preview`
+      return `${baseUrl}/api/preview?preview=1`
   }
 }
 

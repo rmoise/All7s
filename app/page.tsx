@@ -5,22 +5,30 @@ import { fetchSanity } from '@lib/sanity'
 import type { HomePageProps, HomeData } from '@/types'
 
 export async function generateMetadata(): Promise<Metadata> {
-  const homeData = await fetchSanity<HomeData>(`*[_type == "home"][0]`, undefined, false)
+  const homeData = await fetchSanity<HomeData>(
+    `*[_type == "home"][0]`,
+    undefined,
+    false
+  )
   return {
     title: homeData?.metaTitle ?? 'All7Z',
     description: homeData?.metaDescription ?? 'Welcome to All7Z',
   }
 }
 
-export default async function HomePage(props: HomePageProps): Promise<JSX.Element> {
-  const searchParams = await props.searchParams;
+export default async function HomePage(
+  props: HomePageProps
+): Promise<JSX.Element> {
+  const searchParams = await props.searchParams
   const preview = searchParams?.preview === '1'
   const token = await getPreviewToken()
-  const isPreview = Boolean(preview && token && process.env.NEXT_PUBLIC_ENVIRONMENT === 'production')
+  const isPreview = Boolean(
+    preview && token && process.env.NEXT_PUBLIC_ENVIRONMENT !== 'production'
+  )
 
   try {
     const homeData = await fetchSanity<HomeData>(
-      `*[_type == "home" && (_id == "singleton-home")] {
+      `*[_type == "home" && (_id == "singleton-home" || _id == "drafts.singleton-home")] | order(_id desc) [0] {
         _id,
         _type,
         title,
@@ -80,7 +88,7 @@ export default async function HomePage(props: HomePageProps): Promise<JSX.Elemen
             }
           )
         }
-      }[0]`,
+      }`,
       undefined,
       isPreview
     )
@@ -90,9 +98,7 @@ export default async function HomePage(props: HomePageProps): Promise<JSX.Elemen
       return <div>No content available</div>
     }
 
-    return (
-      <HomeClient contentBlocks={homeData.contentBlocks} />
-    )
+    return <HomeClient contentBlocks={homeData.contentBlocks} />
   } catch (error) {
     console.error('Error fetching home data:', error)
     return <div>Error loading page</div>

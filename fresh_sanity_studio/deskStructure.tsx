@@ -23,16 +23,12 @@ interface SanityDocument {
 const getPreviewUrl = (doc: SanityDocument | null) => {
   if (!doc) return ''
 
-  const envConfig =
-    environments[window.location.pathname.includes('/staging') ? 'staging' : 'production']
-
-  const secret = process.env.SANITY_STUDIO_PREVIEW_SECRET
-  if (!secret) return ''
+  const baseUrl = window.location.hostname === 'localhost'
+    ? 'http://localhost:3000'
+    : process.env.NEXT_PUBLIC_SITE_URL || 'https://your-production-url.com'
 
   if (doc._type === 'home') {
-    const timestamp = new Date().getTime()
-    const isDraft = doc._id.startsWith('drafts.')
-    return `${envConfig.baseUrl}/api/preview?secret=${secret}&type=${doc._type}&id=${doc._id}&preview=1&timestamp=${timestamp}&draft=${isDraft}`
+    return `${baseUrl}/api/preview?preview=1`
   }
 
   return null
