@@ -1,6 +1,6 @@
 'use client'
 
-import Contact from '../../components/contact/Contact'
+import Contact from '@/components/Contact/Contact'
 import { ContactPageData } from '@/types'
 
 interface ContactClientProps {
@@ -22,4 +22,4 @@ export default function ContactClient({ contactData }: ContactClientProps) {
       />
     </div>
   )
-} 
+}
