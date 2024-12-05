@@ -35,7 +35,6 @@ export default defineType({
   name: 'home',
   title: 'Home',
   type: 'document',
-  __experimental_actions: ['update', 'publish'],
   groups: [
     {
       name: 'content',

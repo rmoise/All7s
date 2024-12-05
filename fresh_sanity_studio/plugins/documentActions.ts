@@ -1,33 +1,44 @@
 import type {DocumentActionComponent} from 'sanity'
-import {SINGLETON_TYPES} from '../sanity.config'
+import {SINGLETON_TYPES, SINGLETON_ACTIONS} from '../sanity.config'
+
+// Updated action mapping to match actual Sanity action names
+const ACTION_MAP = {
+  PublishAction: 'PublishAction',
+  ScheduleAction: 'ScheduleAction',
+  UnpublishAction: 'UnpublishAction',
+  DiscardChangesAction: 'DiscardChangesAction',
+  DuplicateAction: 'DuplicateAction',
+  DeleteAction: 'DeleteAction',
+  HistoryRestoreAction: 'RestoreAction',
+  TaskCreateAction: 'TaskAction',
+  StartInCreateActionWrapper: 'StartAction'
+} as const
 
 export function getSingletonActions(originalActions: DocumentActionComponent[]) {
-  // Log actions in production for debugging
-  if (process.env.NODE_ENV === 'production') {
-    console.group('Singleton Actions')
-    console.log(
-      'Original actions:',
-      originalActions.map((a) => ({
-        name: a.name,
-        originalName: (a as any).originalName,
-      }))
-    )
-    console.groupEnd()
+  try {
+    if (!Array.isArray(originalActions)) {
+      return []
+    }
+
+    console.log('Singleton Actions')
+    console.log('Original actions:', originalActions)
+
+    // Keep all publish and discard actions
+    const filteredActions = originalActions.filter((action) => {
+      const actionName = action.name
+      console.log(`Processing action: ${actionName}`)
+
+      // Directly check the action name since it matches the actual names
+      return actionName === 'PublishAction' || actionName === 'DiscardChangesAction'
+    })
+
+    console.log('Filtered actions:', filteredActions)
+    return filteredActions
+
+  } catch (error) {
+    console.error('Error in getSingletonActions:', error)
+    return originalActions
   }
-
-  // Whitelist approach instead of blacklist
-  const allowedActions = ['publish', 'discardchanges', 'restore']
-
-  return originalActions.filter((action) => {
-    const actionName = action.name?.toLowerCase() || ''
-    const originalName = (action as any).originalName?.toLowerCase() || ''
-
-    return allowedActions.some(
-      (allowed) =>
-        actionName.includes(allowed) ||
-        originalName.includes(allowed)
-    )
-  })
 }
 
 export function getDocumentActions(props: {
@@ -36,6 +47,7 @@ export function getDocumentActions(props: {
 }) {
   const {schemaType, actions} = props
 
+  // Only apply filtering for singleton types
   if (SINGLETON_TYPES.has(schemaType)) {
     return getSingletonActions(actions)
   }

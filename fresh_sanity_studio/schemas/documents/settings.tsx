@@ -9,7 +9,6 @@ interface SettingsSchema {
   name: string
   title: string
   type: 'document'
-  __experimental_actions: Array<'update' | 'publish'>
   fields: any[]
   preview: {
     select: {
@@ -29,7 +28,6 @@ const settings = defineType({
   name: 'settings',
   title: 'Site Settings',
   type: 'document',
-  __experimental_actions: ['update', 'publish'],
   groups: [
     {
       name: 'general',
