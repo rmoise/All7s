@@ -133,6 +133,7 @@ export const structure = (S: StructureBuilder) =>
             'category',
             'shopPage',
             'blogPage',
+            'contactPage',
           ].includes(listItem.getId() as string),
       ),
     ])
