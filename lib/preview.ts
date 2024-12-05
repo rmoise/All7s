@@ -1,5 +1,6 @@
 import { draftMode } from 'next/headers'
 import { cookies } from 'next/headers'
+import { headers } from 'next/headers'
 
 export async function setPreviewToken(token: string) {
   const cookieStore = await cookies()
@@ -14,10 +15,11 @@ export async function setPreviewToken(token: string) {
 export async function getPreviewToken(): Promise<string | null> {
   const cookieStore = await cookies()
   const token = cookieStore.get('sanity-preview-token')?.value ?? null
+  const referrer = headers().get('referer') || ''
 
-  // Allow preview in development without token
-  if (process.env.NODE_ENV === 'development') {
-    return token || 'development-preview-token'
+  // Only allow preview token if coming from Sanity Studio
+  if (!referrer.includes('sanity.studio')) {
+    return null
   }
 
   return token

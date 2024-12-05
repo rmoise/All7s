@@ -14,12 +14,11 @@ export default async function handler(request: Request, context?: EnvContext) {
     const url = new URL(request.url)
     const preview = url.searchParams.get('preview')
 
-    // Debug log to check environment variables
+    // Debug log
     console.log('Debug request:', {
       url: request.url,
       preview,
-      context: context ? 'exists' : 'undefined',
-      env: context?.env ? Object.keys(context.env) : 'undefined'
+      context: context ? 'exists' : 'undefined'
     })
 
     if (preview !== '1') {
@@ -29,13 +28,17 @@ export default async function handler(request: Request, context?: EnvContext) {
       })
     }
 
-    // Return success with cookie
+    // Return success with cookies for both preview token and draft mode
     return new Response(null, {
       status: 307,
       headers: {
         ...headers,
         'Location': '/?preview=1',
-        'Set-Cookie': `sanity-preview-token=${context?.env?.SANITY_API_TOKEN || 'development-token'}; Path=/; HttpOnly; SameSite=Strict`
+        'Set-Cookie': [
+          'sanity-preview-token=development-token; Path=/; HttpOnly; SameSite=Strict',
+          '__prerender_bypass=true; Path=/; HttpOnly; SameSite=Strict',
+          '__next_preview_data=true; Path=/; HttpOnly; SameSite=Strict'
+        ].join(', ')
       },
     })
 
