@@ -46,12 +46,20 @@ export const client = createClient(clientConfig)
 export const previewClient = createClient({
   ...clientConfig,
   useCdn: false,
-  token: process.env.SANITY_API_READ_TOKEN,
+  token: process.env.SANITY_API_TOKEN,
   perspective: 'previewDrafts',
+  stega: {
+    enabled: true,
+    studioUrl: process.env.NEXT_PUBLIC_SANITY_STUDIO_URL,
+  },
 })
 
-export const getClient = (usePreview = false) =>
-  usePreview ? previewClient : client
+export const getClient = (usePreview = false) => {
+  if (usePreview && !process.env.SANITY_API_TOKEN) {
+    console.warn('No preview token found')
+  }
+  return usePreview ? previewClient : client
+}
 
 export const imageBuilder = imageUrlBuilder(client)
 
@@ -123,4 +131,20 @@ export const fetchSanity = async <T>(
   options?: FilteredResponseQueryOptions
 ): Promise<T> => {
   return getClient(preview).fetch<T>(query, params, options)
+}
+
+const getPreviewUrl = (doc: any) => {
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://all7z.com'
+  const previewSecret = process.env.SANITY_PREVIEW_SECRET
+
+  switch (doc._type) {
+    case 'home':
+      return `${baseUrl}/api/preview?secret=${previewSecret}&preview=1`
+    case 'post':
+      return `${baseUrl}/api/preview?secret=${previewSecret}&preview=1&type=post&slug=${doc?.slug?.current}`
+    case 'page':
+      return `${baseUrl}/api/preview?secret=${previewSecret}&preview=1&type=page&slug=${doc?.slug?.current}`
+    default:
+      return `${baseUrl}/api/preview?secret=${previewSecret}&preview=1`
+  }
 }

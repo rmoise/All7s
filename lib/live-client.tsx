@@ -42,7 +42,9 @@ export function SanityLive({ children, enabled }: SanityLiveProps) {
 
       // Force a full page reload with cache busting
       const url = new URL(window.location.href)
-      url.searchParams.set('preview', '1')
+      if (!url.searchParams.has('preview')) {
+        url.searchParams.set('preview', '1')
+      }
       url.searchParams.set('purge', now.toString())
 
       // Clear any existing caches
@@ -71,28 +73,46 @@ export function SanityLive({ children, enabled }: SanityLiveProps) {
   useEffect(() => {
     if (!enabled || !mounted) return
 
-    const eventSource = new EventSource('/api/preview/listen')
+    let retryCount = 0
+    const maxRetries = 3
+    const retryDelay = 2000
 
-    eventSource.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data)
-        if (data.type === 'update' || data.type === 'reorder') {
-          handleUpdate()
+    function connect() {
+      const eventSource = new EventSource('/api/preview/listen')
+
+      eventSource.onmessage = (event) => {
+        if (event.data === 'ping') return
+
+        try {
+          const data = JSON.parse(event.data)
+          if (data.type === 'update' || data.type === 'reorder') {
+            handleUpdate()
+          }
+        } catch (error) {
+          console.error('Preview update error:', error)
         }
-      } catch (error) {
-        console.error('Preview update error:', error)
       }
+
+      eventSource.onerror = (error) => {
+        console.error('Preview connection error:', error)
+        eventSource.close()
+        setIsSubscribed(false)
+
+        if (retryCount < maxRetries) {
+          retryCount++
+          setTimeout(connect, retryDelay * retryCount)
+        }
+      }
+
+      eventSource.onopen = () => {
+        retryCount = 0
+        setIsSubscribed(true)
+      }
+
+      return eventSource
     }
 
-    eventSource.onerror = (error) => {
-      console.error('Preview connection error:', error)
-      setIsSubscribed(false)
-      eventSource.close()
-    }
-
-    eventSource.onopen = () => {
-      setIsSubscribed(true)
-    }
+    const eventSource = connect()
 
     return () => {
       eventSource.close()

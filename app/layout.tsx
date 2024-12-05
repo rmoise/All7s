@@ -11,6 +11,7 @@ import ClientLoading from '@components/common/ClientLoading'
 import ClientLayout from '@components/layout/ClientLayout'
 import { PreviewProvider } from '@lib/live'
 import { getPreviewToken } from '@lib/preview'
+import { PreviewErrorBoundary } from '@/app/components/PreviewErrorBoundary'
 
 FontAwesome.config.autoAddCss = false
 FontAwesome.library.add(faUser, faShoppingCart)
@@ -25,11 +26,14 @@ async function getFavicon() {
 
 export default async function RootLayout({
   children,
+  searchParams,
 }: {
   children: React.ReactNode
+  searchParams?: { [key: string]: string | string[] | undefined }
 }) {
-  const preview = await getPreviewToken()
-  const isPreview = Boolean(preview)
+  const preview = searchParams?.preview === '1'
+  const token = await getPreviewToken()
+  const isPreview = Boolean(preview && token)
 
   const siteSettings = await getClient(isPreview).fetch(`
     *[_type == "settings" && _id == "singleton-settings"][0] {
@@ -48,27 +52,24 @@ export default async function RootLayout({
           name="format-detection"
           content="telephone=no, date=no, email=no, address=no"
         />
-        <link
-          rel="icon"
-          type="image/x-icon"
-          href={favicon}
-          sizes="any"
-        />
+        <link rel="icon" type="image/x-icon" href={favicon} sizes="any" />
       </head>
       <body className="font-headline" suppressHydrationWarning>
         <PreviewProvider preview={isPreview}>
-          <ClientLayout>
-            <ClientLoading>
-              <div className="flex flex-col min-h-screen">
-                <Navbar navbarData={siteSettings?.navbar} />
-                <main className="flex-grow w-full relative z-20">
-                  {children}
-                </main>
-                <Footer footer={siteSettings?.footer} />
-                <Toaster />
-              </div>
-            </ClientLoading>
-          </ClientLayout>
+          <PreviewErrorBoundary>
+            <ClientLayout>
+              <ClientLoading>
+                <div className="flex flex-col min-h-screen">
+                  <Navbar navbarData={siteSettings?.navbar} />
+                  <main className="flex-grow w-full relative z-20">
+                    {children}
+                  </main>
+                  <Footer footer={siteSettings?.footer} />
+                  <Toaster />
+                </div>
+              </ClientLoading>
+            </ClientLayout>
+          </PreviewErrorBoundary>
         </PreviewProvider>
       </body>
     </html>

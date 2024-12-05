@@ -1,28 +1,27 @@
 import { NextResponse } from 'next/server'
-import { previewClient } from '@lib/sanity'
-import { WebSocket, WebSocketServer } from 'ws'
-
-// Extend global to include our WebSocket server
-declare global {
-  var wss: WebSocketServer | undefined
-}
-
-if (!global.wss) {
-  global.wss = new WebSocketServer({ noServer: true })
-}
 
 export async function GET() {
-  return new Response(
-    new ReadableStream({
-      start(controller) {
-        controller.enqueue('data: connected\n\n')
+  const stream = new ReadableStream({
+    start(controller) {
+      controller.enqueue('data: connected\n\n')
+
+      // Keep connection alive with periodic pings
+      const interval = setInterval(() => {
+        controller.enqueue('data: ping\n\n')
+      }, 15000)
+
+      // Cleanup on close
+      return () => {
+        clearInterval(interval)
       }
-    }), {
-      headers: {
-        'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache, no-transform',
-        'Connection': 'keep-alive',
-      },
     }
-  )
+  })
+
+  return new Response(stream, {
+    headers: {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache, no-transform',
+      'Connection': 'keep-alive',
+    },
+  })
 }

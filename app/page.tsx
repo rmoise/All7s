@@ -22,7 +22,9 @@ export default async function HomePage(
   const searchParams = await props.searchParams
   const preview = searchParams?.preview === '1'
   const token = await getPreviewToken()
-  const isPreview = Boolean(preview && token)
+  const isPreview = Boolean(
+    preview && token && process.env.NEXT_PUBLIC_ENVIRONMENT !== 'production'
+  )
 
   try {
     const homeData = await fetchSanity<HomeData>(

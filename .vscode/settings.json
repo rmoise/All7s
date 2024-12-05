@@ -3,6 +3,12 @@
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.formatOnSave": true,
   "prettier.useEditorConfig": false,
-  "prettier.requireConfig": true
+  "prettier.requireConfig": true,
+  "deno.enable": true,
+  "deno.enablePaths": [
+    "netlify/edge-functions"
+  ],
+  "deno.unstable": true,
+  "deno.importMap": ".netlify/edge-functions-import-map.json",
+  "deno.path": "/Users/roderickmoise/Library/Preferences/netlify/deno-cli/deno"
 }
-

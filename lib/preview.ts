@@ -5,16 +5,22 @@ export async function setPreviewToken(token: string) {
   const cookieStore = await cookies()
   cookieStore.set('sanity-preview-token', token, {
     httpOnly: true,
-    secure: true,
-    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
     path: '/',
-    maxAge: 60 * 60 // 1 hour
   })
 }
 
 export async function getPreviewToken(): Promise<string | null> {
   const cookieStore = await cookies()
-  return cookieStore.get('sanity-preview-token')?.value ?? null
+  const token = cookieStore.get('sanity-preview-token')?.value ?? null
+
+  // Allow preview in development without token
+  if (process.env.NODE_ENV === 'development') {
+    return token || 'development-preview-token'
+  }
+
+  return token
 }
 
 export async function enablePreview() {

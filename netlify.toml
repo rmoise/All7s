@@ -16,6 +16,7 @@
   SANITY_STUDIO_DATASET = "production"
   SITE_URL = "https://all7z.com"
   URL = "https://all7z.com"
+  NETLIFY_NEXT_PLUGIN_SKIP = "true"
 
 [context.production]
   [context.production.environment]
@@ -127,12 +128,14 @@
 [functions.fetchBatchSpotifyMetadata]
   included_files = ["lib/spotify.js"]
 
+[[edge_functions]]
+  path = "/api/preview"
+  function = "preview"
+
 [dev]
-  command = "cross-env NODE_ENV=development SANITY_STUDIO_API_TOKEN=$SANITY_AUTH_TOKEN next dev"
+  framework = "next"
   targetPort = 3000
   port = 8888
-  publish = "out"
-  framework = "next"
 
 [dev.environment]
   NODE_ENV = "development"
@@ -145,6 +148,8 @@
   SANITY_STUDIO_API_TOKEN = "env(SANITY_STUDIO_API_TOKEN)"
   STRIPE_SECRET_KEY = "$STRIPE_SECRET_KEY"
   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY = "$NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY"
+  SANITY_PREVIEW_SECRET = "env(SANITY_PREVIEW_SECRET)"
+  SANITY_API_TOKEN = "env(SANITY_API_TOKEN)"
 
 [[headers]]
   for = "/*"
@@ -155,4 +160,12 @@
   for = "/static/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/api/preview/listen"
+  [headers.values]
+    Content-Type = "text/event-stream"
+    Cache-Control = "no-cache"
+    Connection = "keep-alive"
+    X-Accel-Buffering = "no"
 
