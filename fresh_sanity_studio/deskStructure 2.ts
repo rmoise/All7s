@@ -5,21 +5,17 @@ import type { StructureBuilder } from 'sanity/desk'
 import { Iframe } from 'sanity-plugin-iframe-pane'
 
 const getPreviewUrl = (doc: any) => {
-  if (!doc) return ''
-
-  const baseUrl = window.location.hostname === 'localhost'
-    ? 'http://localhost:3000'
-    : process.env.NEXT_PUBLIC_SITE_URL || 'https://your-production-url.com'
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://all7z.com'
 
   switch (doc._type) {
     case 'home':
-      return `${baseUrl}/api/preview?preview=1`
+      return `${baseUrl}/?preview=1`
     case 'post':
-      return `${baseUrl}/api/preview?preview=1&slug=${doc?.slug?.current}`
+      return `${baseUrl}/blog/${doc?.slug?.current}?preview=1`
     case 'page':
-      return `${baseUrl}/api/preview?preview=1&slug=${doc?.slug?.current}`
+      return `${baseUrl}/${doc?.slug?.current}?preview=1`
     default:
-      return `${baseUrl}/api/preview?preview=1`
+      return `${baseUrl}/?preview=1`
   }
 }
 

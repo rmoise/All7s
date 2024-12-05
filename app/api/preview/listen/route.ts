@@ -12,31 +12,17 @@ if (!global.wss) {
 }
 
 export async function GET() {
-  if (process.env.NODE_ENV === 'development') {
-    const subscription = previewClient.listen(
-      `*[_type == "home" && (_id == "drafts.singleton-home" || _id == "singleton-home")]`
-    ).subscribe({
-      next: () => {
-        global.wss?.clients.forEach((client: WebSocket) => {
-          if (client.readyState === WebSocket.OPEN) {
-            client.send(JSON.stringify({ type: 'update', timestamp: Date.now() }))
-          }
-        })
-      },
-      error: (error) => {
-        console.error('Preview subscription error:', error)
-        global.wss?.clients.forEach((client: WebSocket) => client.close())
+  return new Response(
+    new ReadableStream({
+      start(controller) {
+        controller.enqueue('data: connected\n\n')
       }
-    })
-
-    return new NextResponse(null, {
-      status: 101,
+    }), {
       headers: {
-        'Upgrade': 'websocket',
-        'Connection': 'Upgrade'
-      }
-    })
-  }
-
-  return new NextResponse('WebSocket not available in production', { status: 400 })
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache, no-transform',
+        'Connection': 'keep-alive',
+      },
+    }
+  )
 }
