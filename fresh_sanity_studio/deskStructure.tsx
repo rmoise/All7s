@@ -28,8 +28,10 @@ const getPreviewUrl = (doc: SanityDocument | null) => {
       ? 'http://localhost:3000'
       : process.env.NEXT_PUBLIC_SITE_URL || 'https://all7z.com'
 
+  const timestamp = Date.now()
+
   if (doc._type === 'home') {
-    return `${baseUrl}/api/preview?preview=1`
+    return `${baseUrl}/api/preview?preview=1&timestamp=${timestamp}`
   }
 
   return null
@@ -64,7 +66,11 @@ const singletonListItem = (
               reload: {
                 button: true,
                 revision: true,
+                hotkey: 'mod+shift+r',
               },
+              attributes: {
+                reload: 'true'
+              }
             }),
         ]),
       )
