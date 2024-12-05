@@ -3,7 +3,7 @@ import HomeClient from './HomeClient'
 import { getPreviewToken } from '@lib/preview'
 import { fetchSanity } from '@lib/sanity'
 import type { HomePageProps, HomeData } from '@/types'
-import { headers } from 'next/navigation'
+import { headers } from 'next/headers'
 
 export async function generateMetadata(): Promise<Metadata> {
   const homeData = await fetchSanity<HomeData>(
@@ -23,14 +23,15 @@ export default async function HomePage(
   const searchParams = await props.searchParams
   const preview = searchParams?.preview === '1'
   const token = await getPreviewToken()
-  const referrer = headers().get('referer') || ''
+  const headersList = await headers()
+  const referrer = headersList.get('referer') || ''
 
   // Only enable preview if coming from Sanity Studio
   const isPreview = Boolean(
     preview &&
-    token &&
-    referrer.includes('sanity.studio') &&
-    process.env.NEXT_PUBLIC_ENVIRONMENT !== 'production'
+      token &&
+      referrer.includes('sanity.studio') &&
+      process.env.NEXT_PUBLIC_ENVIRONMENT !== 'production'
   )
 
   try {
