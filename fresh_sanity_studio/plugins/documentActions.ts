@@ -2,7 +2,10 @@ import type {DocumentActionComponent} from 'sanity'
 import {SINGLETON_TYPES} from '../sanity.config'
 
 export function getSingletonActions(originalActions: DocumentActionComponent[]) {
-  return originalActions
+  return originalActions.filter(action => {
+    const actionName = action.name || ''
+    return !['duplicate', 'create', 'delete'].includes(actionName)
+  })
 }
 
 export function getDocumentActions(props: {
