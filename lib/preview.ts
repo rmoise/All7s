@@ -5,9 +5,10 @@ export async function setPreviewToken(token: string) {
   const cookieStore = await cookies()
   cookieStore.set('sanity-preview-token', token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
-    path: '/'
+    secure: true,
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 60 * 60 // 1 hour
   })
 }
 
