@@ -42,7 +42,6 @@ export async function generateMetadata(): Promise<Metadata> {
       },
     }
   } catch (error) {
-    console.error('Error generating metadata:', error)
     return {
       title: 'Shop - All7Z Brand',
       description: 'Browse our collection of products from All7Z.',
@@ -134,7 +133,6 @@ export default async function ShopPage() {
       </div>
     )
   } catch (error) {
-    console.error('Error loading shop page:', error)
     return (
       <div className="min-h-screen bg-black text-white flex items-center justify-center">
         <p>Unable to load shop. Please try again later.</p>

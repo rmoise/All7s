@@ -175,26 +175,18 @@ export default function HomeClient({ contentBlocks }: HomeClientProps) {
   const { refs } = useNavbar()
   const [resolvedBlocks, setResolvedBlocks] = useState<ContentBlock[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<Error | null>(null)
 
   const newsletterBlock = contentBlocks.find(
     (block) => block._type === 'newsletter'
   ) as NewsletterContent
 
-  console.log('Newsletter in HomeClient:', {
-    block: newsletterBlock,
-    hasNotification: !!newsletterBlock?.notification,
-  })
-
-  useEffect(() => {
+  const handleError = (error: Error, context: string) => {
+    setError(error)
     if (process.env.NODE_ENV === 'development') {
-      console.log({
-        contentBlocks,
-        availableSections: Array.from(
-          document.querySelectorAll('section[id]')
-        ).map((s) => s.id),
-      })
+      throw error
     }
-  }, [contentBlocks])
+  }
 
   const generateSafeKey = (prefix: string, value: string | undefined) => {
     if (!value) {
@@ -207,23 +199,14 @@ export default function HomeClient({ contentBlocks }: HomeClientProps) {
     block: MusicBlockContent
   ): Promise<MusicBlockContent> => {
     try {
-      console.log('Environment:', {
-        NODE_ENV: process.env.NODE_ENV,
-        NEXT_PUBLIC_ENVIRONMENT: process.env.NEXT_PUBLIC_ENVIRONMENT,
-        dataset: process.env.NEXT_PUBLIC_SANITY_DATASET
-      });
-
       if (!block || block._type !== 'musicBlock') {
-        console.log('Invalid block type:', block)
         return block
       }
 
       if (!block.albums?.length) {
-        console.log('No albums to resolve:', block)
         return block
       }
 
-      // Create a map of refs to their original order
       const refOrderMap = new Map(
         block.albums.map((album, index) => [album._ref, index])
       )
@@ -232,10 +215,7 @@ export default function HomeClient({ contentBlocks }: HomeClientProps) {
         .filter((album) => Boolean(album && album._ref))
         .map((album) => album._ref)
 
-      console.log('Album refs to resolve:', refs)
-
       if (!refs.length) {
-        console.log('No valid refs to resolve')
         return block
       }
 
@@ -277,14 +257,11 @@ export default function HomeClient({ contentBlocks }: HomeClientProps) {
       const resolvedAlbums = await getClient().fetch<SanityAlbum[]>(query, {
         refs,
       })
-      console.log('Raw resolved albums:', resolvedAlbums)
 
       if (!resolvedAlbums?.length) {
-        console.warn('No albums found for refs:', refs)
         return block
       }
 
-      // Sort the resolved albums based on their original order
       const musicAlbums = resolvedAlbums
         .filter((album): album is SanityAlbum => Boolean(album && album._id))
         .sort((a, b) => {
@@ -292,45 +269,36 @@ export default function HomeClient({ contentBlocks }: HomeClientProps) {
           const orderB = refOrderMap.get(b._id) ?? Number.MAX_VALUE
           return orderA - orderB
         })
-        .map((album) => {
-          const transformed = {
-            _type: 'album' as const,
-            _id: album._id,
-            albumSource: album.albumSource,
-            title:
-              album.albumSource === 'custom'
-                ? album.customAlbum?.title || 'Untitled Album'
-                : album.embeddedAlbum?.title || 'Untitled Album',
-            albumId: album._id,
-            customAlbum: album.customAlbum && {
-              ...album.customAlbum,
-              customImage: album.customAlbum.image ? {
-                asset: album.customAlbum.image.asset
-              } : undefined
-            },
-            embeddedAlbum: album.embeddedAlbum && {
-              ...album.embeddedAlbum,
-              platform: album.embeddedAlbum.platform,
-              songs: album.embeddedAlbum.songs || [],
-            },
-          }
-          console.log('Transformed album:', transformed)
-          return transformed
-        })
+        .map((album) => ({
+          _type: 'album' as const,
+          _id: album._id,
+          albumSource: album.albumSource,
+          title:
+            album.albumSource === 'custom'
+              ? album.customAlbum?.title || 'Untitled Album'
+              : album.embeddedAlbum?.title || 'Untitled Album',
+          albumId: album._id,
+          customAlbum: album.customAlbum && {
+            ...album.customAlbum,
+            customImage: album.customAlbum.image
+              ? {
+                  asset: album.customAlbum.image.asset,
+                }
+              : undefined,
+          },
+          embeddedAlbum: album.embeddedAlbum && {
+            ...album.embeddedAlbum,
+            platform: album.embeddedAlbum.platform,
+            songs: album.embeddedAlbum.songs || [],
+          },
+        }))
 
       return {
         ...block,
         resolvedAlbums: musicAlbums,
       }
     } catch (error) {
-      console.error('Error in resolveAlbumReferences:', error)
-      if (process.env.NODE_ENV === 'production') {
-        console.error('Full error details:', {
-          error,
-          block,
-          env: process.env.NEXT_PUBLIC_ENVIRONMENT
-        })
-      }
+      handleError(error as Error, 'resolveAlbumReferences')
       return block
     }
   }
@@ -339,7 +307,6 @@ export default function HomeClient({ contentBlocks }: HomeClientProps) {
     const resolveBlocks = async () => {
       try {
         if (!contentBlocks?.length) {
-          console.log('No content blocks to process')
           return
         }
 
@@ -350,27 +317,12 @@ export default function HomeClient({ contentBlocks }: HomeClientProps) {
               const safeKey = generateSafeKey('block', blockKey)
 
               if (block._type === 'musicBlock') {
-                console.log('Raw music block:', {
-                  block,
-                  albumsData: block.albums,
-                  albumsLength: block.albums?.length,
-                })
-
-                // Validate and transform albums array
                 const validAlbums = (block.albums || []).reduce(
                   (acc: AlbumReference[], album: any) => {
-                    if (!album) {
-                      console.warn('Skipping null/undefined album')
-                      return acc
-                    }
-
-                    console.log('Processing raw album:', album)
+                    if (!album) return acc
 
                     const hasValidRef = Boolean(album._id || album._ref)
-                    if (!hasValidRef) {
-                      console.warn('Album missing _id and _ref:', album)
-                      return acc
-                    }
+                    if (!hasValidRef) return acc
 
                     const ref = album._ref || album._id
                     const key = album._key || ref
@@ -387,10 +339,7 @@ export default function HomeClient({ contentBlocks }: HomeClientProps) {
                   []
                 )
 
-                console.log('Processed valid albums:', validAlbums)
-
                 if (!validAlbums.length) {
-                  console.warn('No valid albums found after processing')
                   return { ...block, _key: safeKey }
                 }
 
@@ -400,18 +349,13 @@ export default function HomeClient({ contentBlocks }: HomeClientProps) {
                   albums: validAlbums,
                 }
 
-                console.log(
-                  'Sending block to resolveAlbumReferences:',
-                  updatedBlock
-                )
                 const resolvedBlock = await resolveAlbumReferences(updatedBlock)
-                console.log('Received resolved block:', resolvedBlock)
                 return resolvedBlock
               }
 
               return { ...block, _key: safeKey }
             } catch (blockError) {
-              console.error('Error processing block:', blockError)
+              handleError(blockError as Error, 'processBlock')
               return {
                 ...block,
                 _key: generateSafeKey('block', `${index}_error`),
@@ -420,12 +364,10 @@ export default function HomeClient({ contentBlocks }: HomeClientProps) {
           })
         )
 
-        // Filter out any null or undefined blocks
         const validBlocks = resolvedBlocks.filter(Boolean)
-        console.log('Final resolved blocks:', validBlocks)
         setResolvedBlocks(validBlocks)
       } catch (error) {
-        console.error('Error in resolveBlocks:', error)
+        handleError(error as Error, 'resolveBlocks')
         setResolvedBlocks([])
       }
     }
@@ -433,22 +375,10 @@ export default function HomeClient({ contentBlocks }: HomeClientProps) {
     resolveBlocks()
   }, [contentBlocks])
 
-  // Add console logging to debug
-  useEffect(() => {
-    console.log('Resolved Blocks:', resolvedBlocks)
-  }, [resolvedBlocks])
-
   const renderContentBlock = useCallback(
     (block: ContentBlock) => {
       switch (block._type) {
         case 'musicBlock':
-          console.log('Rendering music block:', {
-            block,
-            hasAlbums: block.albums?.length > 0,
-            albumRefs: block.albums?.map((a) => a._ref),
-            resolvedAlbums: block.resolvedAlbums,
-          })
-
           return (
             <ClientOnly>
               <section
@@ -507,7 +437,6 @@ export default function HomeClient({ contentBlocks }: HomeClientProps) {
             />
           )
         default:
-          console.warn(`Unknown block type: ${(block as any)._type}`)
           return null
       }
     },
@@ -518,11 +447,11 @@ export default function HomeClient({ contentBlocks }: HomeClientProps) {
     <ErrorBoundary
       fallback={
         <div className="min-h-screen bg-black text-white flex items-center justify-center">
-          <p>Error loading content. Please try again later.</p>
+          <p>{error?.message || 'Error loading content. Please try again later.'}</p>
         </div>
       }
       onError={(error, errorInfo) => {
-        console.error('HomeClient Error:', error, errorInfo)
+        handleError(error, 'HomeClient')
       }}
     >
       <main className="relative min-h-screen bg-black">

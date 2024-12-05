@@ -126,13 +126,10 @@ interface SanityFileAsset {
 
 // Helper function to get URL from any song format
 function getSongUrl(song: SanityRawSong | Song): string | undefined {
-  console.log('Getting URL for song:', JSON.stringify(song, null, 2));
-
   // For Sanity file-based songs
   if (song.file?.asset) {
     // Check for direct URL first
     if ('url' in song.file.asset && song.file.asset.url) {
-      console.log('Found direct URL:', song.file.asset.url);
       return song.file.asset.url;
     }
 
@@ -141,18 +138,15 @@ function getSongUrl(song: SanityRawSong | Song): string | undefined {
       const ref = song.file.asset._ref;
       const [_file, id, extension] = ref.split('-');
       const fileUrl = `https://cdn.sanity.io/files/${process.env.NEXT_PUBLIC_SANITY_PROJECT_ID}/production/${id}.${extension}`;
-      console.log('Constructed file URL:', fileUrl);
       return fileUrl;
     }
   }
 
   // For direct URL songs
   if ('url' in song && song.url) {
-    console.log('Found direct URL:', song.url);
     return song.url;
   }
 
-  console.log('No URL found for song:', song);
   return undefined;
 }
 
@@ -217,17 +211,8 @@ const FlipCard = forwardRef<HTMLDivElement, FlipCardProps>(
       const url = embedUrl.toLowerCase();
       if (url.includes('spotify.com')) return 'spotify';
       if (url.includes('soundcloud.com') || url.includes('api.soundcloud.com')) return 'soundcloud';
-      console.log('No platform detected for URL:', url); // Add debugging
       return null;
     }, [embedUrl]);
-
-    // Logging for debugging
-    useEffect(() => {
-      console.log('Album Data:', album)
-      console.log('Embed URL:', embedUrl)
-      console.log('Platform:', platform)
-      console.log('Image URL:', imageUrl)
-    }, [album, embedUrl, platform, imageUrl])
 
     // Determine if the current track is playing or paused
     const isThisTrackPlaying = useMemo(
@@ -262,19 +247,14 @@ const FlipCard = forwardRef<HTMLDivElement, FlipCardProps>(
     const handleTrackClick = useCallback(
       (e: React.MouseEvent, idx: number) => {
         e.stopPropagation();
-        console.log('Track clicked:', { idx, song: songs[idx] });
 
         if (songs && idx >= 0 && idx < songs.length) {
           const selectedTrack = songs[idx];
           const trackUrl = getSongUrl(selectedTrack);
 
-          console.log('Track URL:', trackUrl);
-
           if (trackUrl) {
             setCurrentTrackIndexLocal(idx);
             playTrack(trackUrl, album.albumId, idx);
-          } else {
-            console.warn('No valid URL found for track:', selectedTrack);
           }
         }
       },
@@ -285,27 +265,15 @@ const FlipCard = forwardRef<HTMLDivElement, FlipCardProps>(
     const handlePlayPause = useCallback(
       (e: React.MouseEvent) => {
         e.stopPropagation();
-        console.log('Play/Pause clicked:', {
-          currentTrackIndexLocal,
-          songs,
-          isThisTrackPlaying,
-          isThisTrackPaused
-        });
 
         if (currentTrackIndexLocal === null) {
           if (songs && songs.length > 0) {
             const firstTrack = songs[0];
-            console.log('Playing first track:', firstTrack);
-
-            // Use getSongUrl helper instead of direct property access
             const trackUrl = getSongUrl(firstTrack);
-            console.log('Track URL:', trackUrl);
 
             if (trackUrl) {
               setCurrentTrackIndexLocal(0);
               playTrack(trackUrl, album.albumId, 0);
-            } else {
-              console.warn('Track URL is missing:', firstTrack);
             }
           }
           return;
@@ -317,13 +285,10 @@ const FlipCard = forwardRef<HTMLDivElement, FlipCardProps>(
           currentHowl?.play();
         } else {
           const currentSong = songs[currentTrackIndexLocal];
-          // Use getSongUrl helper here as well
           const trackUrl = getSongUrl(currentSong);
 
           if (trackUrl) {
             playTrack(trackUrl, album.albumId, currentTrackIndexLocal);
-          } else {
-            console.warn('No valid URL found for track:', currentSong);
           }
         }
       },
@@ -386,13 +351,6 @@ const FlipCard = forwardRef<HTMLDivElement, FlipCardProps>(
         const seekPercent = Number(e.target.value);
         const duration = songDurations[currentTrackIndexLocal];
         const seekTime = (seekPercent / 100) * duration;
-
-        console.log('Seeking to:', {
-          seekTime,
-          duration,
-          percent: seekPercent,
-          currentTrack: currentTrackIndexLocal
-        });
 
         debouncedHandleSeek(seekTime);
       },

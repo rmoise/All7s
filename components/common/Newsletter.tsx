@@ -63,12 +63,6 @@ const defaultSocialLinks = [
 ]
 
 const Newsletter: React.FC<NewsletterProps> = ({ newsletter }) => {
-  console.log('Newsletter props:', {
-    newsletter,
-    hasNotification: !!newsletter?.notification,
-    notificationContent: newsletter?.notification,
-  })
-
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [email, setEmail] = useState('')
   const [notification, setNotification] = useState<NotificationState>({
@@ -109,7 +103,6 @@ const Newsletter: React.FC<NewsletterProps> = ({ newsletter }) => {
         jsonResponse = await response.json()
       } else {
         const text = await response.text()
-        console.log('Non-JSON response:', text)
         jsonResponse = { message: 'Subscription successful' }
       }
 
@@ -128,11 +121,6 @@ const Newsletter: React.FC<NewsletterProps> = ({ newsletter }) => {
       })
       setEmail('')
     } catch (error) {
-      console.error('Form submission error:', {
-        error,
-        message: error instanceof Error ? error.message : 'Unknown error',
-      })
-
       setNotification({
         show: true,
         error: true,

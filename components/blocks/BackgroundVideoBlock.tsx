@@ -60,10 +60,6 @@ const BackgroundVideoBlock: React.FC<BackgroundVideoBlockProps> = ({
     return '/images/default-poster.png';
   }, [posterImage]);
 
-  // Add debug logging
-  console.log('Video Source:', videoSrc);
-  console.log('Poster Source:', posterSrc);
-
   if (!videoSrc) return null;
 
   return (

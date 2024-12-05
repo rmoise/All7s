@@ -46,7 +46,7 @@ const settings = defineType({
     {
       name: 'footer',
       title: 'Footer',
-    }
+    },
   ],
   fields: [
     defineField({
@@ -54,7 +54,7 @@ const settings = defineType({
       title: 'Site Title',
       type: 'string',
       description: 'The title of your website.',
-      group: 'general'
+      group: 'general',
     }),
     defineField({
       name: 'favicon',
@@ -64,7 +64,7 @@ const settings = defineType({
       options: {
         hotspot: true,
       },
-      group: 'general'
+      group: 'general',
     }),
     defineField({
       name: 'seo',
@@ -149,7 +149,7 @@ const settings = defineType({
           title: 'Copyright Text',
           type: 'string',
           validation: (Rule) => Rule.required(),
-          initialValue: '© 2024 All Rights Reserved'
+          initialValue: '© 2024 All Rights Reserved',
         }),
         defineField({
           name: 'fontColor',
@@ -172,7 +172,7 @@ const settings = defineType({
             ],
             layout: 'radio',
           },
-          initialValue: 'center'
+          initialValue: 'center',
         }),
         defineField({
           name: 'connectSection',
@@ -183,7 +183,7 @@ const settings = defineType({
               name: 'title',
               title: 'Section Title',
               type: 'string',
-              initialValue: 'Connect with All7Z'
+              initialValue: 'Connect with All7Z',
             }),
             defineField({
               name: 'buttons',
@@ -196,12 +196,12 @@ const settings = defineType({
                     defineField({
                       name: 'label',
                       type: 'string',
-                      title: 'Button Label'
+                      title: 'Button Label',
                     }),
                     defineField({
                       name: 'url',
                       type: 'string',
-                      title: 'Button URL'
+                      title: 'Button URL',
                     }),
                     defineField({
                       name: 'style',
@@ -210,28 +210,28 @@ const settings = defineType({
                       options: {
                         list: [
                           {title: 'Primary', value: 'primary'},
-                          {title: 'Secondary', value: 'secondary'}
-                        ]
-                      }
-                    })
-                  ]
-                }
+                          {title: 'Secondary', value: 'secondary'},
+                        ],
+                      },
+                    }),
+                  ],
+                },
               ],
               initialValue: [
                 {
                   label: 'Instagram',
                   url: 'https://instagram.com/all7zbrand',
-                  style: 'secondary'
+                  style: 'secondary',
                 },
                 {
                   label: 'Shop Now',
                   url: '/shop',
-                  style: 'primary'
-                }
-              ]
-            })
-          ]
-        })
+                  style: 'primary',
+                },
+              ],
+            }),
+          ],
+        }),
       ],
     }),
   ],
@@ -249,28 +249,6 @@ const settings = defineType({
   },
   hooks: {
     async onPublish(props) {
-      console.group('📝 Settings Document Publishing')
-
-      // Log the mutation details
-      console.log('Mutation Details:', {
-        type: props.type,
-        transition: props.transition,
-        previousRev: props.document._rev,
-      })
-
-      // Log footer state
-      console.log('Footer State:', {
-        current: props.document.footer,
-        hasRequiredFields: !!(
-          props.document.footer?.alignment && props.document.footer?.copyrightText
-        ),
-        missingFields: [
-          !props.document.footer?.footerLinks && 'footerLinks',
-          !props.document.footer?.socialLinks && 'socialLinks',
-        ].filter(Boolean),
-      })
-
-      // Validate footer structure
       const validationIssues = []
 
       if (!props.document.footer) {
@@ -290,13 +268,8 @@ const settings = defineType({
         }
       }
 
-      if (validationIssues.length > 0) {
-        console.warn('⚠️ Validation Issues:', validationIssues)
-      } else {
-        console.log('✅ Document is valid')
-      }
-
-      console.groupEnd()
+      // If there are validation issues, you might want to handle them differently
+      // For now, we'll just continue with the publish
       return props
     },
 

@@ -32,7 +32,12 @@ if (typeof window === 'undefined') {
 }
 
 // Constants
-export const SINGLETON_ACTIONS = new Set(['PublishAction', 'DiscardChangesAction', 'RestoreAction'])
+export const SINGLETON_ACTIONS = new Set([
+  'PublishAction',
+  'DiscardChangesAction',
+  'RestoreAction',
+  'DeleteAction',
+])
 export const SINGLETON_TYPES = new Set(['home', 'settings', 'shopPage'])
 export const PROJECT_ID = process.env.SANITY_STUDIO_PROJECT_ID || '1gxdk71x'
 export const API_VERSION = '2024-03-19'
@@ -59,12 +64,13 @@ export const getBaseConfig = (dataset: string) => {
     basePath: '/',
     dataset,
     document: {
-      actions: ((input, context) => {
-        return getDocumentActions({
+      actions: (input, context) => {
+        const actions = getDocumentActions({
           schemaType: context.schemaType,
           actions: input,
         })
-      }) satisfies DocumentActionsResolver,
+        return actions
+      },
     },
     schema: {
       types: schemaTypes as SchemaTypeDefinition[],

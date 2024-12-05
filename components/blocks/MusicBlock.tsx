@@ -28,8 +28,6 @@ const MusicBlock: React.FC<MusicBlockProps> = ({
   listenTitle,
   albums = [],
 }) => {
-  console.log('MusicBlock props:', { listenTitle, albums })
-
   const [flippedAlbums, setFlippedAlbums] = useState<Set<string>>(new Set())
   const flipCardRefs = useRef<{ [key: string]: HTMLDivElement | null }>({})
   const [loadedAlbums, setLoadedAlbums] = useState<MusicAlbum[]>([])

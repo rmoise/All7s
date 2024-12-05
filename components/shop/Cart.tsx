@@ -208,7 +208,6 @@ const Cart: React.FC = () => {
 
       const line_items = cartItems.map((item) => {
         if (!item.name || typeof item.price !== 'number') {
-          console.error('Invalid cart item:', item)
           throw new Error(`Invalid item data: ${JSON.stringify(item)}`)
         }
 
@@ -229,33 +228,15 @@ const Cart: React.FC = () => {
         }
       })
 
-      console.log('Starting checkout with items:', {
-        itemCount: line_items.length,
-        items: line_items,
-        totalAmount: line_items.reduce((sum, item) =>
-          sum + (item.price_data.unit_amount * item.quantity), 0) / 100
-      })
-
       try {
         await redirectToCheckout(line_items)
       } catch (checkoutError: any) {
-        console.error('Checkout process failed:', {
-          error: checkoutError,
-          message: checkoutError?.message,
-          stack: checkoutError?.stack
-        })
         throw checkoutError // Re-throw to be caught by outer try-catch
       }
     } catch (error: any) {
       const errorMessage = typeof error === 'string'
         ? error
         : error?.message || 'Failed to start checkout process'
-
-      console.error('Cart checkout error:', {
-        error: JSON.stringify(error, Object.getOwnPropertyNames(error)),
-        message: errorMessage,
-        stack: error?.stack
-      })
 
       toast.error(errorMessage)
     } finally {

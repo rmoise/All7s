@@ -48,34 +48,11 @@ function ExcerptSyncAction(props: DocumentActionProps): DocumentActionDescriptio
   // Stable reference to current document with debug logging
   const doc = useMemo(() => {
     const currentDoc = props.draft || props.published
-    const bodyContent = currentDoc?.body?.[0]
-    console.log('ExcerptSync: Document state:', {
-      hasDraft: !!props.draft,
-      hasPublished: !!props.published,
-      currentDoc: currentDoc ? {
-        id: currentDoc._id,
-        type: currentDoc._type,
-        bodyLength: currentDoc.body?.length,
-        bodyContent: bodyContent ? {
-          _type: bodyContent._type,
-          childrenCount: bodyContent.children?.length,
-          firstChild: bodyContent.children?.[0]
-        } : null
-      } : null
-    })
     return currentDoc
   }, [props.draft, props.published])
 
   const handleSync = useCallback(() => {
-    console.log('ExcerptSync: Starting sync', {
-      hasBody: !!doc?.body,
-      isArray: Array.isArray(doc?.body),
-      bodyLength: doc?.body?.length,
-      documentId
-    })
-
     if (!doc?.body || !Array.isArray(doc.body)) {
-      console.warn('ExcerptSync: Cannot sync - invalid document state')
       patch.execute([{
         unset: ['excerpt']
       }])
@@ -86,7 +63,6 @@ function ExcerptSyncAction(props: DocumentActionProps): DocumentActionDescriptio
       const textBlocks = doc.body.filter(block => block._type === 'block')
 
       if (textBlocks.length === 0) {
-        console.log('ExcerptSync: No text blocks found, clearing excerpt')
         patch.execute([{
           unset: ['excerpt']
         }])
@@ -97,19 +73,14 @@ function ExcerptSyncAction(props: DocumentActionProps): DocumentActionDescriptio
         .map(block => {
           const content = block.children
             .filter((child: SpanChild) => child._type === 'span')
-            .map((span: SpanChild) => {
-              console.log('ExcerptSync: Processing span', { text: span.text })
-              return span.text || ''
-            })
+            .map((span: SpanChild) => span.text || '')
             .join('')
-          console.log('ExcerptSync: Block content', { content })
           return content
         })
         .join('\n\n')
         .trim()
 
       if (!text) {
-        console.log('ExcerptSync: No text content found, clearing excerpt')
         patch.execute([{
           unset: ['excerpt']
         }])
@@ -120,12 +91,6 @@ function ExcerptSyncAction(props: DocumentActionProps): DocumentActionDescriptio
         ? text.substring(0, 197) + '...'
         : text
 
-      console.log('ExcerptSync: Generated excerpt', {
-        textLength: excerpt.length,
-        excerpt,
-        originalText: text
-      })
-
       lastSyncRef.current = text
 
       patch.execute([{
@@ -133,9 +98,8 @@ function ExcerptSyncAction(props: DocumentActionProps): DocumentActionDescriptio
           excerpt
         }
       }])
-      console.log('ExcerptSync: Patch executed')
     } catch (error) {
-      console.error('ExcerptSync: Error during sync', error)
+      throw error
     }
   }, [doc?.body, patch, documentId])
 
@@ -154,47 +118,22 @@ function ExcerptSyncAction(props: DocumentActionProps): DocumentActionDescriptio
 
     // Only sync if content has actually changed
     if (currentText && currentText !== lastContentRef.current) {
-      console.log('ExcerptSync: Content changed, preparing to sync')
-
-      // Update the ref immediately to prevent multiple triggers
       lastContentRef.current = currentText
-
-      // Debounce the sync operation
       const timeoutId = setTimeout(() => {
-        console.log('ExcerptSync: Executing delayed sync')
         handleSync()
-      }, 1000) // Wait 1 second before syncing
-
-      // Cleanup timeout on unmount or content change
+      }, 1000)
       return () => clearTimeout(timeoutId)
     }
   }, [doc?.body, handleSync])
 
   // Stable disabled state with logging
   const disabled = useMemo(() => {
-    const isDisabled = !doc?.body || !Array.isArray(doc.body)
-    console.log('ExcerptSync: Disabled state', {
-      isDisabled,
-      hasBody: !!doc?.body,
-      isArray: Array.isArray(doc?.body)
-    })
-    return isDisabled
+    return !doc?.body || !Array.isArray(doc.body)
   }, [doc?.body])
 
   useEffect(() => {
     mountCount.current += 1
-    console.log('ExcerptSync: Component mounted', {
-      mountCount: mountCount.current,
-      documentId,
-      hasBody: !!doc?.body
-    })
-
-    return () => {
-      console.log('ExcerptSync: Component unmounted', {
-        mountCount: mountCount.current,
-        documentId
-      })
-    }
+    return () => {}
   }, [documentId, doc?.body])
 
   return {

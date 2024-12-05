@@ -68,22 +68,17 @@ export const NavbarContent: React.FC<{ navbarData?: NavbarData }> = ({
     async (e: React.MouseEvent, href: string) => {
       e.preventDefault();
       const normalizedHref = href.toLowerCase();
-      console.log('Navigation attempted to:', normalizedHref);
-      console.log('Current pathname:', pathname);
 
       // Check if we're already on the blog page
       if (pathname === normalizedHref) {
-        console.log('Already on page:', normalizedHref);
         return;
       }
 
       // Add a check for the blog route
       if (normalizedHref === '/blog') {
-        console.log('Pushing to blog route');
         try {
           // Wait for both hydration and loading to complete
           if (!hydrated || loading) {
-            console.log('Waiting for component to be ready...');
             let attempts = 0;
             while ((!hydrated || loading) && attempts < 5) {
               await new Promise(resolve => setTimeout(resolve, 100));
@@ -93,24 +88,18 @@ export const NavbarContent: React.FC<{ navbarData?: NavbarData }> = ({
 
           // If still not ready after attempts, use fallback
           if (!hydrated || loading) {
-            console.log('Component not ready, using fallback navigation');
             window.location.href = normalizedHref;
             return;
           }
 
-          console.log('Component ready, using router navigation');
           await router.push(normalizedHref);
-          console.log('Navigation successful');
         } catch (error: unknown) {
-          console.error('Navigation failed:', error);
-          console.log('Attempting fallback navigation');
           window.location.href = normalizedHref;
         }
         return;
       }
 
       if (normalizedHref.startsWith('/#')) {
-        console.log('Hash navigation detected')
         const sectionType = normalizedHref.substring(2).toLowerCase()
         if (sectionType === 'look' && refs.lookRef?.current) {
           refs.lookRef.current.scrollIntoView({
@@ -126,28 +115,15 @@ export const NavbarContent: React.FC<{ navbarData?: NavbarData }> = ({
           window.history.pushState({}, '', `/#${blockTitles.listen}`)
         }
       } else {
-        console.log('Standard navigation to:', normalizedHref)
         try {
           router.push(normalizedHref, { scroll: true })
         } catch (error) {
-          console.error('Navigation error:', error)
-          // Fallback to window.location if router fails
           window.location.href = normalizedHref
         }
       }
     },
     [router, pathname, hydrated, loading]
   )
-
-  // Add a debug effect to monitor navigation state
-  useEffect(() => {
-    console.log('Current pathname:', pathname)
-    console.log('Navigation state:', {
-      hydrated,
-      loading,
-      navbarData: finalNavbarData,
-    })
-  }, [pathname, hydrated, loading, finalNavbarData])
 
   const renderNavLinks = useCallback(
     (mobile = false) => {

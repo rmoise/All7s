@@ -1,16 +1,18 @@
 // components/media/YouTubeEmbed.tsx
 
-import React from 'react';
+import React from 'react'
 
 interface YouTubeEmbedProps {
-  embedId: string;
-  title: string;
-  className?: string;
+  embedId: string
+  title: string
+  className?: string
 }
 
-const YouTubeEmbed: React.FC<YouTubeEmbedProps> = ({ embedId, title, className }) => {
-  console.log('YouTubeEmbed Rendering:', { embedId, title });
-
+const YouTubeEmbed: React.FC<YouTubeEmbedProps> = ({
+  embedId,
+  title,
+  className,
+}) => {
   return (
     <div className={`video-responsive ${className || ''}`}>
       <iframe
@@ -23,7 +25,7 @@ const YouTubeEmbed: React.FC<YouTubeEmbedProps> = ({ embedId, title, className }
         allowFullScreen
       />
     </div>
-  );
-};
+  )
+}
 
-export default YouTubeEmbed;
+export default YouTubeEmbed
