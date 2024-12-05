@@ -2,6 +2,7 @@
 
 import {defineType, defineField} from 'sanity'
 import type {SanityClient} from '@sanity/client'
+import type {DocumentDefinition, FieldDefinition} from '@sanity/types'
 import newsletter from '../objects/newsletter'
 
 interface SanityDocument {
@@ -20,12 +21,21 @@ interface PreviewSelection {
   title?: string
 }
 
+// Define a custom type that extends DocumentDefinition
+type CustomDocumentDefinition = Omit<DocumentDefinition, 'type'> & {
+  type: 'document'
+  __experimental_actions?: Array<'create' | 'update' | 'delete' | 'publish'>
+  hooks?: {
+    onPublish?: (context: PublishContext) => Promise<any>
+  }
+}
+
+// Use type assertion instead of satisfies
 export default defineType({
   name: 'home',
   title: 'Home',
   type: 'document',
-  // @ts-ignore -- experimental actions are valid but not typed
-  __experimental_actions: ['update', 'publish'],
+  __experimental_actions: ['create', 'update', 'delete', 'publish'],
   groups: [
     {
       name: 'content',
@@ -35,7 +45,7 @@ export default defineType({
       name: 'seo',
       title: 'SEO',
     },
-  ],
+  ] as const,
   fields: [
     defineField({
       name: 'title',
@@ -51,7 +61,7 @@ export default defineType({
       validation: (Rule: any) =>
         Rule.custom((blocks: any[]) => {
           if (!blocks) return true
-          const hasInvalidKey = blocks.some(block => !block._key)
+          const hasInvalidKey = blocks.some((block) => !block._key)
           if (hasInvalidKey) {
             return 'All content blocks must have a _key property'
           }
@@ -59,83 +69,13 @@ export default defineType({
         }),
       group: 'content',
       of: [
-        {
-          type: 'splash',
-          title: 'Splash',
-          validation: (Rule: any) =>
-            Rule.custom((block: any) => {
-              if (!block?._key) {
-                return 'Content block must have a _key'
-              }
-              return true
-            })
-        },
-        {
-          type: 'about',
-          title: 'About',
-          validation: (Rule: any) =>
-            Rule.custom((block: any) => {
-              if (!block?._key) {
-                return 'Content block must have a _key'
-              }
-              return true
-            })
-        },
-        {
-          type: 'musicBlock',
-          title: 'Music Block',
-          validation: (Rule: any) =>
-            Rule.custom((block: any) => {
-              if (!block?._key) {
-                return 'Content block must have a _key'
-              }
-              return true
-            })
-        },
-        {
-          type: 'videoBlock',
-          title: 'Video Block',
-          validation: (Rule: any) =>
-            Rule.custom((block: any) => {
-              if (!block?._key) {
-                return 'Content block must have a _key'
-              }
-              return true
-            })
-        },
-        {
-          type: 'backgroundVideoBlock',
-          title: 'Background Video Block',
-          validation: (Rule: any) =>
-            Rule.custom((block: any) => {
-              if (!block?._key) {
-                return 'Content block must have a _key'
-              }
-              return true
-            })
-        },
-        {
-          type: newsletter.name,
-          title: newsletter.title,
-          validation: (Rule: any) =>
-            Rule.custom((block: any) => {
-              if (!block?._key) {
-                return 'Content block must have a _key'
-              }
-              return true
-            })
-        },
-        {
-          type: 'heroBanner',
-          title: 'Hero Banner',
-          validation: (Rule: any) =>
-            Rule.custom((block: any) => {
-              if (!block?._key) {
-                return 'Content block must have a _key'
-              }
-              return true
-            })
-        },
+        {type: 'splash'},
+        {type: 'about'},
+        {type: 'musicBlock'},
+        {type: 'videoBlock'},
+        {type: 'backgroundVideoBlock'},
+        {type: newsletter.name},
+        {type: 'heroBanner'},
       ],
     }),
     defineField({
@@ -176,7 +116,6 @@ export default defineType({
   hooks: {
     onPublish: async ({getClient, document}: PublishContext) => {
       const client = getClient({apiVersion: '2024-05-28'})
-
       try {
         // Helper function to generate a unique key
         const generateKey = (type: string, index: number) => {
@@ -184,33 +123,35 @@ export default defineType({
         }
 
         // Process content blocks
-        const processedBlocks = document.contentBlocks?.map((block: any, index: number) => {
-          // If block is null or undefined, skip it
-          if (!block) return null
+        const processedBlocks = document.contentBlocks
+          ?.map((block: any, index: number) => {
+            // If block is null or undefined, skip it
+            if (!block) return null
 
-          // If block already has a valid _key, keep it
-          if (block._key && typeof block._key === 'string' && block._key.length > 0) {
-            return block
-          }
+            // If block already has a valid _key, keep it
+            if (block._key && typeof block._key === 'string' && block._key.length > 0) {
+              return block
+            }
 
-          // Generate a new key for the block
-          return {
-            ...block,
-            _key: generateKey(block._type || 'unknown', index)
-          }
-        }).filter(Boolean) // Remove any null blocks
+            // Generate a new key for the block
+            return {
+              ...block,
+              _key: generateKey(block._type || 'unknown', index),
+            }
+          })
+          .filter(Boolean) // Remove any null blocks
 
         // Create new document with processed blocks
         const newDocData = {
           ...document,
           _id: 'singleton-home',
           _type: 'home',
-          contentBlocks: processedBlocks || []
+          contentBlocks: processedBlocks || [],
         }
 
         // Validate all blocks have keys
         const hasInvalidBlocks = newDocData.contentBlocks.some(
-          (block: any) => !block._key || typeof block._key !== 'string'
+          (block: any) => !block._key || typeof block._key !== 'string',
         )
 
         if (hasInvalidBlocks) {
@@ -223,6 +164,6 @@ export default defineType({
         console.error('Error in onPublish:', error)
         throw error
       }
-    }
-  }
-})
+    },
+  },
+} as CustomDocumentDefinition)
