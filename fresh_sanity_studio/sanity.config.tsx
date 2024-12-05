@@ -136,7 +136,7 @@ export const getSanityConfig = (
       imageHotspotArrayPlugin(),
       colorInput(),
       portableTextEditorPlugin({client: envClient}),
-      excerptSyncPlugin,
+      excerptSyncPlugin(),
     ],
     document: {
       ...baseConfig.document,

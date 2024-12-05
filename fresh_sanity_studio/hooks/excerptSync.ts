@@ -1,50 +1,82 @@
 import {type SanityClient} from 'sanity'
-import {useEffect, useCallback} from 'react'
-import {useFormValue, useDocumentOperation} from 'sanity'
+import {useCallback} from 'react'
+import {useDocumentOperation, useEditState, useClient} from 'sanity'
 
-export function useExcerptSync(client: SanityClient, documentId: string, documentType: string) {
-  const body = useFormValue(['body']) as any[]
-  const {patch} = useDocumentOperation(documentId, documentType)
+interface SpanChild {
+  _type: string
+  text?: string
+}
+
+interface Block {
+  _type: string
+  children?: SpanChild[]
+}
+
+interface SanityDocument {
+  _id: string
+  _type: string
+  body?: Block[]
+}
+
+interface DocumentOperation {
+  patch: {
+    execute: (patches: any[]) => void
+    disabled: boolean
+  }
+}
+
+export function useExcerptSync(documentId: string, documentType: string) {
+  const client = useClient({apiVersion: '2021-06-07'})
+  const {patch} = useDocumentOperation(documentId, documentType) as DocumentOperation
+  const editState = useEditState(documentId, documentType)
+  const doc = (editState?.draft || editState?.published) as SanityDocument | undefined
 
   const generateExcerpt = useCallback(() => {
-    if (!body || !documentId || !documentType) {
-      console.log('Missing required data:', {body, documentId, documentType})
+    if (patch.disabled || !editState) return
+
+    const body = doc?.body || []
+
+    if (!documentId || !documentType || !Array.isArray(body)) {
+      patch.execute([{unset: ['excerpt']}])
       return
     }
 
-    const excerpt = body
-      .filter((block) => block._type === 'block')
-      .map((block) =>
-        block.children
-          ?.filter((child: any) => child._type === 'span' && child.text)
-          .map((span: any) => span.text)
-          .join(''),
-      )
-      .join(' ')
-      .slice(0, 200)
+    const textBlocks = body.filter((block): block is Block => block?._type === 'block')
 
-    if (excerpt) {
-      console.log('Generated excerpt:', excerpt)
-      patch.execute([
-        {
-          set: {
-            excerpt: excerpt + (excerpt.length >= 200 ? '...' : ''),
-          },
-        },
-      ])
+    if (textBlocks.length === 0) {
+      patch.execute([{unset: ['excerpt']}])
+      return
     }
-  }, [body, documentId, documentType, patch])
 
-  useEffect(() => {
-    console.log('ExcerptSync effect running:', {
-      documentId,
-      documentType,
-      hasBody: !!body,
-      bodyLength: body?.length,
-    })
+    const text = textBlocks
+      .map((block) => {
+        const children = block?.children || []
+        return children
+          .filter(
+            (child): child is SpanChild =>
+              child?._type === 'span' && typeof child?.text === 'string',
+          )
+          .map((span) => span.text || '')
+          .join('')
+      })
+      .join(' ')
+      .trim()
 
-    generateExcerpt()
-  }, [generateExcerpt])
+    if (!text) {
+      patch.execute([{unset: ['excerpt']}])
+      return
+    }
+
+    const excerpt = text.length > 197 ? text.substring(0, 197) + '...' : text
+
+    patch.execute([
+      {
+        set: {
+          excerpt,
+        },
+      },
+    ])
+  }, [doc?.body, documentId, documentType, patch, editState])
 
   return {generateExcerpt}
 }
