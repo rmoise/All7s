@@ -19,23 +19,42 @@ export async function getPreviewToken(): Promise<string | null> {
   const referrer = headersList.get('referer') || ''
   const studioUrl = process.env.NEXT_PUBLIC_SANITY_STUDIO_URL || ''
 
+  // Always allow preview in development
+  if (process.env.NODE_ENV === 'development') {
+    return token
+  }
+
   // Validate studio URL is configured
   if (!studioUrl) {
     console.warn('NEXT_PUBLIC_SANITY_STUDIO_URL is not configured')
     return null
   }
 
-  // Only allow preview token if coming from configured Sanity Studio URL
-  if (!referrer.startsWith(studioUrl)) {
-    return null
+  // Allow preview if coming from Sanity Studio or if already in preview mode
+  const draft = await draftMode()
+  const isEnabled = await draft.isEnabled
+
+  if (referrer.startsWith(studioUrl) || isEnabled) {
+    return token
   }
 
-  return token
+  return null
 }
 
 export async function enablePreview() {
   const draft = await draftMode()
   await draft.enable()
+
+  // Clear any existing preview data from the response
+  const headers = new Headers()
+  headers.set('Cache-Control', 'no-cache, no-store, must-revalidate')
+  headers.set('Pragma', 'no-cache')
+  headers.set('Expires', '0')
+
+  return new Response(null, {
+    status: 307,
+    headers
+  })
 }
 
 export async function disablePreview() {

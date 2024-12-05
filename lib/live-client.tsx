@@ -19,13 +19,12 @@ export function SanityLive({ children, enabled }: SanityLiveProps) {
     if (!mounted || !enabled || isUpdating) return
 
     const now = Date.now()
-    if (now - lastUpdate < 1000) return
+    if (now - lastUpdate < 500) return
 
     setIsUpdating(true)
     setLastUpdate(now)
 
     try {
-      // First, revalidate the cache
       await fetch('/api/revalidate', {
         method: 'POST',
         headers: {
@@ -33,32 +32,27 @@ export function SanityLive({ children, enabled }: SanityLiveProps) {
         },
         body: JSON.stringify({
           tag: 'home',
-          purgeCache: true
+          purgeCache: true,
+          draft: true
         })
       })
 
-      // Wait a moment for cache to clear
-      await new Promise(resolve => setTimeout(resolve, 500))
+      await new Promise(resolve => setTimeout(resolve, 200))
 
-      // Force a full page reload with cache busting
       const url = new URL(window.location.href)
-      if (!url.searchParams.has('preview')) {
-        url.searchParams.set('preview', '1')
-      }
+      url.searchParams.set('preview', '1')
+      url.searchParams.set('draft', '1')
       url.searchParams.set('purge', now.toString())
 
-      // Clear any existing caches
       if ('caches' in window) {
         await caches.keys().then(keys =>
           Promise.all(keys.map(key => caches.delete(key)))
         )
       }
 
-      // Use location.replace for a clean reload
       window.location.replace(url.toString())
     } catch (error) {
       console.error('Preview update failed:', error)
-      // Fallback to force reload
       window.location.reload()
     } finally {
       setIsUpdating(false)
