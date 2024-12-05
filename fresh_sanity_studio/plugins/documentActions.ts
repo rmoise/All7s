@@ -1,10 +1,11 @@
 import type {DocumentActionComponent} from 'sanity'
-import {SINGLETON_TYPES} from '../sanity.config'
+import {SINGLETON_TYPES, SINGLETON_ACTIONS} from '../sanity.config'
 
 export function getSingletonActions(originalActions: DocumentActionComponent[]) {
-  return originalActions.filter(action => {
-    const actionName = action.name || ''
-    return ['publish', 'discardChanges'].includes(actionName)
+  return originalActions.filter((action) => {
+    const actionName = action.name
+    // Match the exact action names from SINGLETON_ACTIONS
+    return ['PublishAction', 'DiscardChangesAction', 'RestoreAction'].includes(actionName || '')
   })
 }
 
