@@ -15,15 +15,17 @@ export function getSingletonActions(originalActions: DocumentActionComponent[]) 
     console.groupEnd()
   }
 
-  return originalActions.filter((action) => {
-    const actionName = action.name?.toLowerCase()
-    const originalName = (action as any).originalName?.toLowerCase()
+  // Whitelist approach instead of blacklist
+  const allowedActions = ['publish', 'discardchanges', 'restore']
 
-    // Check both name and originalName against our blacklist
-    const blacklist = ['duplicate', 'create', 'delete']
-    return !blacklist.some(
-      (blocked) =>
-        actionName?.includes(blocked) || originalName?.includes(blocked)
+  return originalActions.filter((action) => {
+    const actionName = action.name?.toLowerCase() || ''
+    const originalName = (action as any).originalName?.toLowerCase() || ''
+
+    return allowedActions.some(
+      (allowed) =>
+        actionName.includes(allowed) ||
+        originalName.includes(allowed)
     )
   })
 }
