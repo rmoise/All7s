@@ -254,3 +254,25 @@ export interface BlogPageProps {
   }
   searchParams?: { [key: string]: string | string[] | undefined }
 }
+
+export interface ContactPageData {
+  title?: string
+  description?: string
+  address?: string
+  phoneNumber?: string
+  email?: string
+  contactFormMessage?: string
+  socialLinks?: Array<{
+    platform: string
+    url: string
+  }>
+  seo?: {
+    metaTitle?: string
+    metaDescription?: string
+    openGraphImage?: {
+      asset?: {
+        url?: string
+      }
+    }
+  }
+}

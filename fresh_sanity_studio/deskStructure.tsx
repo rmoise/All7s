@@ -23,9 +23,10 @@ interface SanityDocument {
 const getPreviewUrl = (doc: SanityDocument | null) => {
   if (!doc) return ''
 
-  const baseUrl = window.location.hostname === 'localhost'
-    ? 'http://localhost:3000'
-    : process.env.NEXT_PUBLIC_SITE_URL || 'https://your-production-url.com'
+  const baseUrl =
+    window.location.hostname === 'localhost'
+      ? 'http://localhost:3000'
+      : process.env.NEXT_PUBLIC_SITE_URL || 'https://all7z.com'
 
   if (doc._type === 'home') {
     return `${baseUrl}/api/preview?preview=1`
@@ -90,10 +91,7 @@ export const structure = (S: StructureBuilder) =>
             .items([
               singletonListItem(S, 'blogPage', 'Blog Page', ComponentIcon),
               S.listItem().title('Posts').icon(DocumentsIcon).child(S.documentTypeList('post')),
-              S.listItem()
-                .title('Authors')
-                .icon(MdPerson)
-                .child(S.documentTypeList('author')),
+              S.listItem().title('Authors').icon(MdPerson).child(S.documentTypeList('author')),
             ]),
         ),
 
@@ -116,6 +114,11 @@ export const structure = (S: StructureBuilder) =>
       S.divider(),
 
       S.listItem().title('Albums').icon(FaMusic).child(S.documentTypeList('album').title('Albums')),
+
+      S.listItem()
+        .title('Contact Page')
+        .icon(ComponentIcon)
+        .child(S.document().schemaType('contactPage').documentId('singleton-contactPage')),
 
       ...S.documentTypeListItems().filter(
         (listItem) =>
