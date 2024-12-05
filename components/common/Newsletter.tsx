@@ -295,7 +295,7 @@ const Newsletter: React.FC<NewsletterProps> = ({ newsletter }) => {
                       {newsletter?.notification?.showSocialLinks !== false && (
                         <div className="pt-4">
                           <p className="text-sm font-semibold mb-3">
-                            Follow us:
+                            {newsletter?.notification?.socialLinksTitle || 'Follow us:'}
                           </p>
                           <div className="flex justify-center space-x-6">
                             {(
