@@ -1,6 +1,6 @@
 'use client'
 
-import Contact from '@/components/contact/Contact'
+import Contact from '../../components/contact/Contact'
 import { ContactPageData } from '@/types'
 
 interface ContactClientProps {
