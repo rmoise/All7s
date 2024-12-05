@@ -29,7 +29,7 @@ const settings = defineType({
   name: 'settings',
   title: 'Site Settings',
   type: 'document',
-  __experimental_actions: ['create', 'update', 'delete', 'publish'],
+  __experimental_actions: ['update', 'publish'],
   groups: [
     {
       name: 'general',
