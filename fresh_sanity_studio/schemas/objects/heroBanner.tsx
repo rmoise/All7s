@@ -6,39 +6,12 @@ export default defineType({
   type: 'object',
   fields: [
     defineField({
-      name: 'title',
-      title: 'Title',
-      type: 'string',
-    }),
-    defineField({
-      name: 'subtitle',
-      title: 'Subtitle',
-      type: 'string',
-    }),
-    defineField({
       name: 'backgroundImage',
       title: 'Background Image',
       type: 'image',
       options: {
         hotspot: true,
       },
-    }),
-    defineField({
-      name: 'cta',
-      title: 'Call to Action',
-      type: 'object',
-      fields: [
-        {
-          name: 'text',
-          title: 'Button Text',
-          type: 'string',
-        },
-        {
-          name: 'link',
-          title: 'Button Link',
-          type: 'url',
-        },
-      ],
     }),
   ],
   preview: {
@@ -48,7 +21,7 @@ export default defineType({
     prepare({ media }) {
       return {
         title: 'Hero Block',
-        subtitle: 'Hero banner with background image and CTA',
+        subtitle: 'Hero banner with background image',
         media: media
       };
     },

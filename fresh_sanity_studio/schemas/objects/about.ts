@@ -1,11 +1,11 @@
-import { defineType } from 'sanity';
+import {defineType, defineField} from 'sanity'
 
 export default defineType({
   name: 'about',
   title: 'About',
-  type: 'document',
+  type: 'object',
   fields: [
-    {
+    defineField({
       name: 'body',
       title: 'Body',
       type: 'array',
@@ -23,8 +23,8 @@ export default defineType({
           },
         },
       ],
-    },
-    {
+    }),
+    defineField({
       name: 'alignment',
       title: 'Text Alignment',
       type: 'string',
@@ -36,15 +36,15 @@ export default defineType({
         ],
         layout: 'radio',
       },
-    },
-    {
+    }),
+    defineField({
       name: 'image',
       title: 'Image',
       type: 'image',
       options: {
         hotspot: true,
       },
-    },
+    }),
   ],
   preview: {
     select: {
@@ -63,4 +63,4 @@ export default defineType({
       }
     }
   },
-});
+}) 

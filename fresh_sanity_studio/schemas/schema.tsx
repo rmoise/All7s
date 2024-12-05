@@ -5,19 +5,11 @@ import type {BaseSchemaDefinition} from 'sanity'
 import blockContent from './objects/blockContent'
 import post from './documents/post'
 import author from './documents/author'
-import about from './documents/about'
-import youtube from './objects/youtube'
-import musicLink from './objects/musicLink'
-import videoLink from './objects/videoLink'
-import heroVideo from './objects/heroVideo'
-import product from './documents/products'
-import banner from './modules/banner'
-import comments from './documents/comments'
-import footer from './documents/footer'
 import heroBanner from './objects/heroBanner'
+import product from './documents/products'
+import comments from './documents/comments'
 import homePage from './documents/home'
 import newsletter from './objects/newsletter'
-import navbar from './documents/navbar'
 import siteSettings from './documents/settings'
 import contactPage from './documents/contactPage'
 import album from './objects/album'
@@ -33,6 +25,8 @@ import productCategory from './documents/category'
 import song from './objects/song'
 import seo from './objects/seo'
 import category from './documents/category'
+import about from './objects/about'
+import youtube from './objects/youtube'
 
 const schemaTypes: BaseSchemaDefinition[] = [
   // Document types
@@ -41,12 +35,9 @@ const schemaTypes: BaseSchemaDefinition[] = [
   seo,
   blogPage,
   homePage,
-  about,
   contactPage,
   product,
   comments,
-  footer,
-  navbar,
   siteSettings,
   shopPage,
   category,
@@ -59,14 +50,11 @@ const schemaTypes: BaseSchemaDefinition[] = [
   backgroundVideoBlock,
   contentBlock,
   blockContent,
-  musicLink,
-  videoLink,
-  heroVideo,
-  banner,
   newsletter,
   album,
-  youtube,
   additionalVideo,
   song,
+  about,
+  youtube,
 ]
 export default schemaTypes
