@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
     console.log(`Revalidating cache for ${_type} (${_id})`)
 
     // Get cache tags for the document type
-    const cacheTags = CACHE_TAGS[_type as keyof typeof CACHE_TAGS] || []
+    const cacheTags = [...(CACHE_TAGS[_type as keyof typeof CACHE_TAGS] || [])]
 
     // Always include the specific document type as a tag
     cacheTags.push(_type)
@@ -111,7 +111,6 @@ export async function POST(req: NextRequest) {
     )
 
     const results = revalidationResults.map((result, index) => ({
-      tag: cacheTags[index],
       status: result.status,
       ...(result.status === 'fulfilled'
         ? result.value
