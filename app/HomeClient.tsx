@@ -172,10 +172,10 @@ interface AlbumReference {
 }
 
 // Constants for query optimization
-const ALBUM_QUERY_INTERVAL = 30000; // 30 seconds
-let lastQueryTime = 0;
-let pendingAlbumRefs = new Set<string>();
-let queryTimeoutId: NodeJS.Timeout | null = null;
+const ALBUM_QUERY_INTERVAL = 30000 // 30 seconds
+let lastQueryTime = 0
+let pendingAlbumRefs = new Set<string>()
+let queryTimeoutId: NodeJS.Timeout | null = null
 
 export default function HomeClient({ contentBlocks }: HomeClientProps) {
   const { refs } = useNavbar()
@@ -206,46 +206,52 @@ export default function HomeClient({ contentBlocks }: HomeClientProps) {
   ): Promise<MusicBlockContent> => {
     try {
       if (!block || block._type !== 'musicBlock' || !block.albums?.length) {
-        return block;
+        return block
       }
 
-      const now = Date.now();
+      const now = Date.now()
       const refs = block.albums
         .filter((album) => Boolean(album && album._ref))
-        .map((album) => album._ref);
+        .map((album) => album._ref)
 
       if (!refs.length) {
-        return block;
+        return block
       }
 
       // Add new refs to pending set
-      refs.forEach(ref => pendingAlbumRefs.add(ref));
+      refs.forEach((ref) => pendingAlbumRefs.add(ref))
 
       // If we recently queried, wait for next batch
       if (now - lastQueryTime < ALBUM_QUERY_INTERVAL) {
         if (!queryTimeoutId) {
-          queryTimeoutId = setTimeout(async () => {
-            await batchResolveAlbums();
-            queryTimeoutId = null;
-          }, ALBUM_QUERY_INTERVAL - (now - lastQueryTime));
+          queryTimeoutId = setTimeout(
+            async () => {
+              await batchResolveAlbums()
+              queryTimeoutId = null
+            },
+            ALBUM_QUERY_INTERVAL - (now - lastQueryTime)
+          )
         }
-        return block;
+        return block
       }
 
       // Otherwise do the query now
-      return await batchResolveAlbums(block);
+      const result = await batchResolveAlbums(block)
+      return result || block
     } catch (error) {
-      console.error('Error resolving album references:', error);
-      return block;
+      console.error('Error resolving album references:', error)
+      return block
     }
-  };
+  }
 
-  const batchResolveAlbums = async (currentBlock?: MusicBlockContent) => {
-    if (!pendingAlbumRefs.size) return currentBlock || null;
+  const batchResolveAlbums = async (
+    currentBlock?: MusicBlockContent
+  ): Promise<MusicBlockContent | null> => {
+    if (!pendingAlbumRefs.size || !currentBlock) return null
 
-    const refs = Array.from(pendingAlbumRefs);
-    pendingAlbumRefs.clear();
-    lastQueryTime = Date.now();
+    const refs = Array.from(pendingAlbumRefs)
+    pendingAlbumRefs.clear()
+    lastQueryTime = Date.now()
 
     const query = `*[_type == "album" && _id in $refs]{
       _id,
@@ -280,29 +286,26 @@ export default function HomeClient({ contentBlocks }: HomeClientProps) {
         },
         songs[]
       }
-    }`;
+    }`
 
-    const resolvedAlbums = await getClient().fetch<SanityAlbum[]>(query, { refs });
+    const resolvedAlbums = await getClient().fetch<SanityAlbum[]>(query, {
+      refs,
+    })
 
     if (!resolvedAlbums?.length) {
-      return currentBlock || null;
+      return currentBlock
     }
-
-    // Cache the resolved albums for future use
-    const albumsMap = new Map(resolvedAlbums.map(album => [album._id, album]));
-
-    if (!currentBlock) return null;
 
     const refOrderMap = new Map(
       currentBlock.albums.map((album, index) => [album._ref, index])
-    );
+    )
 
     const musicAlbums = resolvedAlbums
       .filter((album): album is SanityAlbum => Boolean(album && album._id))
       .sort((a, b) => {
-        const orderA = refOrderMap.get(a._id) ?? Number.MAX_VALUE;
-        const orderB = refOrderMap.get(b._id) ?? Number.MAX_VALUE;
-        return orderA - orderB;
+        const orderA = refOrderMap.get(a._id) ?? Number.MAX_VALUE
+        const orderB = refOrderMap.get(b._id) ?? Number.MAX_VALUE
+        return orderA - orderB
       })
       .map((album) => ({
         _type: 'album' as const,
@@ -326,13 +329,13 @@ export default function HomeClient({ contentBlocks }: HomeClientProps) {
           platform: album.embeddedAlbum.platform,
           songs: album.embeddedAlbum.songs || [],
         },
-      }));
+      }))
 
     return {
       ...currentBlock,
       resolvedAlbums: musicAlbums,
-    };
-  };
+    }
+  }
 
   useEffect(() => {
     const resolveBlocks = async () => {
@@ -478,7 +481,9 @@ export default function HomeClient({ contentBlocks }: HomeClientProps) {
     <ErrorBoundary
       fallback={
         <div className="min-h-screen bg-black text-white flex items-center justify-center">
-          <p>{error?.message || 'Error loading content. Please try again later.'}</p>
+          <p>
+            {error?.message || 'Error loading content. Please try again later.'}
+          </p>
         </div>
       }
       onError={(error, errorInfo) => {
