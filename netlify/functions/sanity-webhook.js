@@ -193,6 +193,37 @@ async function fetchAlbumsToProcess(client) {
   return await client.fetch(query);
 }
 
+// Cache for audio durations
+const durationCache = new Map()
+
+async function getAudioDuration(url) {
+  // Check cache first
+  if (durationCache.has(url)) {
+    return durationCache.get(url)
+  }
+
+  try {
+    // Try HEAD request first
+    const headResponse = await fetch(url, { method: 'HEAD' })
+    const contentDuration = headResponse.headers.get('Content-Duration')
+    if (contentDuration) {
+      const duration = parseFloat(contentDuration)
+      durationCache.set(url, duration)
+      return duration
+    }
+
+    // If no Content-Duration, use get-audio-duration library
+    const response = await fetch(url)
+    const buffer = await response.buffer()
+    const duration = await getAudioDurationInSeconds(buffer)
+    durationCache.set(url, duration)
+    return duration
+  } catch (error) {
+    console.error('Error getting audio duration:', error)
+    return 0
+  }
+}
+
 async function extractAndUpdateDurations(config) {
   const query = `*[_type == "album" && albumSource == "custom" && !(_id in path("drafts.**"))]`;
   console.log('Fetching albums with query:', query);
@@ -287,66 +318,6 @@ async function extractAndUpdateDurations(config) {
     } catch (error) {
       console.error(`Failed to update album ${album.customAlbum.title}:`, error);
     }
-  }
-}
-
-// Helper function to get audio duration
-async function getAudioDuration(url) {
-  try {
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    const buffer = await response.arrayBuffer();
-
-    // Look for ID3v2 header
-    const view = new DataView(buffer);
-    let offset = 0;
-
-    // Check for ID3v2 header
-    if (buffer.byteLength > 10 &&
-        view.getUint8(0) === 0x49 && // 'I'
-        view.getUint8(1) === 0x44 && // 'D'
-        view.getUint8(2) === 0x33) { // '3'
-
-      // Skip ID3v2 tag
-      const size = ((view.getUint8(6) & 0x7f) << 21) |
-                   ((view.getUint8(7) & 0x7f) << 14) |
-                   ((view.getUint8(8) & 0x7f) << 7) |
-                   (view.getUint8(9) & 0x7f);
-      offset = 10 + size;
-    }
-
-    // Find first MPEG frame header
-    while (offset < buffer.byteLength - 4) {
-      if (view.getUint8(offset) === 0xff && (view.getUint8(offset + 1) & 0xe0) === 0xe0) {
-        // Found frame header
-        const version = (view.getUint8(offset + 1) & 0x18) >> 3;
-        const layer = (view.getUint8(offset + 1) & 0x06) >> 1;
-        const bitRateIndex = (view.getUint8(offset + 2) & 0xf0) >> 4;
-        const sampleRateIndex = (view.getUint8(offset + 2) & 0x0c) >> 2;
-
-        // Lookup tables for MPEG1 Layer III
-        const bitRates = [0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320];
-        const sampleRates = [44100, 48000, 32000];
-
-        const bitRate = bitRates[bitRateIndex] * 1000;
-        const sampleRate = sampleRates[sampleRateIndex];
-
-        if (bitRate && sampleRate) {
-          const duration = Math.floor((buffer.byteLength * 8) / bitRate);
-          console.log(`Calculated duration: ${duration} seconds`);
-          return duration;
-        }
-        break;
-      }
-      offset++;
-    }
-
-    throw new Error('Could not find valid MPEG frame header');
-  } catch (error) {
-    console.error('Error getting audio duration:', error);
-    return null;
   }
 }
 

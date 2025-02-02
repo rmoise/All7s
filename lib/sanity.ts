@@ -279,42 +279,89 @@ const getPreviewUrl = (doc: any) => {
 async function fetchAudioDuration(fileRef: string): Promise<number> {
   try {
     const fileUrl = urlFor(fileRef).url()
-    const response = await fetch(fileUrl, {
+
+    // First try a HEAD request to get Content-Duration
+    const headResponse = await fetch(fileUrl, {
+      method: 'HEAD',
       next: { revalidate: CACHE_TTL / 1000 },
     })
-    const arrayBuffer = await response.arrayBuffer()
 
-    // Create an audio context
-    const AudioContext =
-      (typeof window !== 'undefined' && window.AudioContext) ||
-      (typeof window !== 'undefined' && (window as any).webkitAudioContext)
-
-    if (!AudioContext) {
-      console.warn('AudioContext not available')
-      return 0
+    const contentDuration = headResponse.headers.get('Content-Duration')
+    if (contentDuration) {
+      return parseFloat(contentDuration)
     }
 
-    const audioContext = new AudioContext()
-    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer)
-    return audioBuffer.duration
+    // If no Content-Duration, fetch just the first few bytes
+    const response = await fetch(fileUrl, {
+      headers: { Range: 'bytes=0-8192' }, // First 8KB should contain metadata
+      next: { revalidate: CACHE_TTL / 1000 },
+    })
+
+    const buffer = await response.arrayBuffer()
+
+    // Try to get duration from metadata without loading full file
+    if (typeof window !== 'undefined') {
+      const AudioContext =
+        window.AudioContext || (window as any).webkitAudioContext
+      if (AudioContext) {
+        const audioContext = new AudioContext()
+        try {
+          const audioBuffer = await audioContext.decodeAudioData(buffer)
+          return audioBuffer.duration
+        } catch {
+          // If we can't decode the partial file, fall back to stored duration
+          return 0
+        } finally {
+          await audioContext.close()
+        }
+      }
+    }
+
+    return 0
   } catch (error) {
-    console.error('Error decoding audio:', error)
+    console.error('Error getting audio duration:', error)
     return 0
   }
 }
 
-export async function getAudioDuration(fileRef: string): Promise<number> {
-  const now = Date.now()
-  const cached = audioMetadataCache.get(fileRef)
+// Cache audio durations in memory and localStorage
+const DURATION_CACHE_KEY = 'audio_durations_cache'
+let memoryDurationCache: Record<string, number> = {}
 
-  if (cached && now - cached.lastFetched < CACHE_TTL) {
-    return cached.duration
+// Load cached durations from localStorage on init
+if (typeof window !== 'undefined') {
+  try {
+    const cached = localStorage.getItem(DURATION_CACHE_KEY)
+    if (cached) {
+      memoryDurationCache = JSON.parse(cached)
+    }
+  } catch (e) {
+    console.warn('Failed to load audio duration cache:', e)
+  }
+}
+
+export async function getAudioDuration(fileRef: string): Promise<number> {
+  // Check memory cache first
+  if (memoryDurationCache[fileRef]) {
+    return memoryDurationCache[fileRef]
   }
 
   try {
-    // Your existing audio duration fetching logic here
     const duration = await fetchAudioDuration(fileRef)
-    audioMetadataCache.set(fileRef, { duration, lastFetched: now })
+    if (duration > 0) {
+      // Cache the duration
+      memoryDurationCache[fileRef] = duration
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem(
+            DURATION_CACHE_KEY,
+            JSON.stringify(memoryDurationCache)
+          )
+        } catch (e) {
+          console.warn('Failed to cache audio duration:', e)
+        }
+      }
+    }
     return duration
   } catch (error) {
     console.error('Error fetching audio duration:', error)
