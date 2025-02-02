@@ -33,3 +33,4 @@ fresh_sanity_studio/.sanity
 
 # Cache
 .cache
+tsconfig.tsbuildinfo
