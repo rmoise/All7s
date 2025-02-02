@@ -171,6 +171,12 @@ interface AlbumReference {
   _id?: string
 }
 
+// Constants for query optimization
+const ALBUM_QUERY_INTERVAL = 30000; // 30 seconds
+let lastQueryTime = 0;
+let pendingAlbumRefs = new Set<string>();
+let queryTimeoutId: NodeJS.Timeout | null = null;
+
 export default function HomeClient({ contentBlocks }: HomeClientProps) {
   const { refs } = useNavbar()
   const [resolvedBlocks, setResolvedBlocks] = useState<ContentBlock[]>([])
@@ -199,109 +205,134 @@ export default function HomeClient({ contentBlocks }: HomeClientProps) {
     block: MusicBlockContent
   ): Promise<MusicBlockContent> => {
     try {
-      if (!block || block._type !== 'musicBlock') {
-        return block
+      if (!block || block._type !== 'musicBlock' || !block.albums?.length) {
+        return block;
       }
 
-      if (!block.albums?.length) {
-        return block
-      }
-
-      const refOrderMap = new Map(
-        block.albums.map((album, index) => [album._ref, index])
-      )
-
+      const now = Date.now();
       const refs = block.albums
         .filter((album) => Boolean(album && album._ref))
-        .map((album) => album._ref)
+        .map((album) => album._ref);
 
       if (!refs.length) {
-        return block
+        return block;
       }
 
-      const query = `*[_type == "album" && _id in $refs]{
-        _id,
-        _type,
-        albumSource,
-        customAlbum {
-          title,
-          artist,
-          releaseType,
-          image {
-            asset {
-              _ref,
-              url
-            }
-          },
-          songs[]
-        },
-        embeddedAlbum {
-          platform,
-          embedCode,
-          title,
-          artist,
-          embedUrl,
-          imageUrl,
-          processedImageUrl,
-          releaseType,
-          customImage {
-            asset {
-              _ref,
-              url
-            }
-          },
-          songs[]
+      // Add new refs to pending set
+      refs.forEach(ref => pendingAlbumRefs.add(ref));
+
+      // If we recently queried, wait for next batch
+      if (now - lastQueryTime < ALBUM_QUERY_INTERVAL) {
+        if (!queryTimeoutId) {
+          queryTimeoutId = setTimeout(async () => {
+            await batchResolveAlbums();
+            queryTimeoutId = null;
+          }, ALBUM_QUERY_INTERVAL - (now - lastQueryTime));
         }
-      }`
-
-      const resolvedAlbums = await getClient().fetch<SanityAlbum[]>(query, {
-        refs,
-      })
-
-      if (!resolvedAlbums?.length) {
-        return block
+        return block;
       }
 
-      const musicAlbums = resolvedAlbums
-        .filter((album): album is SanityAlbum => Boolean(album && album._id))
-        .sort((a, b) => {
-          const orderA = refOrderMap.get(a._id) ?? Number.MAX_VALUE
-          const orderB = refOrderMap.get(b._id) ?? Number.MAX_VALUE
-          return orderA - orderB
-        })
-        .map((album) => ({
-          _type: 'album' as const,
-          _id: album._id,
-          albumSource: album.albumSource,
-          title:
-            album.albumSource === 'custom'
-              ? album.customAlbum?.title || 'Untitled Album'
-              : album.embeddedAlbum?.title || 'Untitled Album',
-          albumId: album._id,
-          customAlbum: album.customAlbum && {
-            ...album.customAlbum,
-            customImage: album.customAlbum.image
-              ? {
-                  asset: album.customAlbum.image.asset,
-                }
-              : undefined,
-          },
-          embeddedAlbum: album.embeddedAlbum && {
-            ...album.embeddedAlbum,
-            platform: album.embeddedAlbum.platform,
-            songs: album.embeddedAlbum.songs || [],
-          },
-        }))
-
-      return {
-        ...block,
-        resolvedAlbums: musicAlbums,
-      }
+      // Otherwise do the query now
+      return await batchResolveAlbums(block);
     } catch (error) {
-      handleError(error as Error, 'resolveAlbumReferences')
-      return block
+      console.error('Error resolving album references:', error);
+      return block;
     }
-  }
+  };
+
+  const batchResolveAlbums = async (currentBlock?: MusicBlockContent) => {
+    if (!pendingAlbumRefs.size) return currentBlock || null;
+
+    const refs = Array.from(pendingAlbumRefs);
+    pendingAlbumRefs.clear();
+    lastQueryTime = Date.now();
+
+    const query = `*[_type == "album" && _id in $refs]{
+      _id,
+      _type,
+      albumSource,
+      customAlbum {
+        title,
+        artist,
+        releaseType,
+        image {
+          asset {
+            _ref,
+            url
+          }
+        },
+        songs[]
+      },
+      embeddedAlbum {
+        platform,
+        embedCode,
+        title,
+        artist,
+        embedUrl,
+        imageUrl,
+        processedImageUrl,
+        releaseType,
+        customImage {
+          asset {
+            _ref,
+            url
+          }
+        },
+        songs[]
+      }
+    }`;
+
+    const resolvedAlbums = await getClient().fetch<SanityAlbum[]>(query, { refs });
+
+    if (!resolvedAlbums?.length) {
+      return currentBlock || null;
+    }
+
+    // Cache the resolved albums for future use
+    const albumsMap = new Map(resolvedAlbums.map(album => [album._id, album]));
+
+    if (!currentBlock) return null;
+
+    const refOrderMap = new Map(
+      currentBlock.albums.map((album, index) => [album._ref, index])
+    );
+
+    const musicAlbums = resolvedAlbums
+      .filter((album): album is SanityAlbum => Boolean(album && album._id))
+      .sort((a, b) => {
+        const orderA = refOrderMap.get(a._id) ?? Number.MAX_VALUE;
+        const orderB = refOrderMap.get(b._id) ?? Number.MAX_VALUE;
+        return orderA - orderB;
+      })
+      .map((album) => ({
+        _type: 'album' as const,
+        _id: album._id,
+        albumSource: album.albumSource,
+        title:
+          album.albumSource === 'custom'
+            ? album.customAlbum?.title || 'Untitled Album'
+            : album.embeddedAlbum?.title || 'Untitled Album',
+        albumId: album._id,
+        customAlbum: album.customAlbum && {
+          ...album.customAlbum,
+          customImage: album.customAlbum.image
+            ? {
+                asset: album.customAlbum.image.asset,
+              }
+            : undefined,
+        },
+        embeddedAlbum: album.embeddedAlbum && {
+          ...album.embeddedAlbum,
+          platform: album.embeddedAlbum.platform,
+          songs: album.embeddedAlbum.songs || [],
+        },
+      }));
+
+    return {
+      ...currentBlock,
+      resolvedAlbums: musicAlbums,
+    };
+  };
 
   useEffect(() => {
     const resolveBlocks = async () => {

@@ -33,6 +33,20 @@ const MAX_CONCURRENT_PROCESSES = 3; // Limit concurrent processes
 const processedDocs = new Map();
 const CACHE_TTL = 60 * 1000; // 1 minute
 
+// File processing cache with TTL
+const processedFiles = new Map();
+const FILE_CACHE_TTL = 30 * 60 * 1000; // 30 minutes
+
+// Cleanup processed files periodically
+setInterval(() => {
+  const now = Date.now();
+  Array.from(processedFiles.entries()).forEach(([key, value]) => {
+    if (now - value.timestamp > FILE_CACHE_TTL) {
+      processedFiles.delete(key);
+    }
+  });
+}, 5 * 60 * 1000); // Clean every 5 minutes
+
 // Add environment variable validation
 function validateEnvironment() {
   console.log('Environment state:', {
@@ -107,15 +121,27 @@ function hasContentChanged(document, headers) {
 
   // Check for actual file changes that need duration updates
   const needsUpdate = songs.some(song => {
-    const hasAudioFile = Boolean(song.file?.asset?._ref);  // Check for asset reference
+    const fileRef = song.file?.asset?._ref;
+    const hasAudioFile = Boolean(fileRef);
     const needsDuration = !song.duration;
+
+    // Check if file was recently processed
+    if (hasAudioFile && processedFiles.has(fileRef)) {
+      const cached = processedFiles.get(fileRef);
+      if (Date.now() - cached.timestamp < FILE_CACHE_TTL) {
+        console.log(`Skipping recently processed file: ${fileRef}`);
+        return false;
+      }
+    }
+
     const shouldProcess = hasAudioFile && needsDuration;
 
     console.log('Checking song:', {
       hasAudioFile,
       needsDuration,
       shouldProcess,
-      songKey: song._key
+      songKey: song._key,
+      fileRef
     });
 
     return shouldProcess;
@@ -168,54 +194,8 @@ async function fetchAlbumsToProcess(client) {
 }
 
 async function extractAndUpdateDurations(config) {
-  const client = createClient({
-    projectId: config.projectId,
-    dataset: config.dataset,
-    token: config.token,
-    apiVersion: config.apiVersion,
-    useCdn: false
-  });
-
-  // Helper function to wait
-  const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-
-  // Helper function to retry getting file asset
-  async function getFileAssetWithRetry(ref, maxRetries = 3, delay = 2000) {
-    for (let i = 0; i < maxRetries; i++) {
-      try {
-        const asset = await client.fetch(`*[_id == $ref][0]`, { ref });
-        if (asset?.url) {
-          return asset;
-        }
-        console.log(`Attempt ${i + 1}: No URL found for ${ref}, waiting ${delay}ms...`);
-        await wait(delay);
-      } catch (error) {
-        console.error(`Attempt ${i + 1} failed:`, error);
-        if (i < maxRetries - 1) await wait(delay);
-      }
-    }
-    return null;
-  }
-
-  // Query to get albums with songs
-  const query = `*[_type == "album" && albumSource == "custom"] {
-    _id,
-    customAlbum {
-      title,
-      songs[] {
-        _key,
-        trackTitle,
-        duration,
-        file {
-          _type,
-          asset
-        }
-      }
-    }
-  }`;
-
-  // Wait a bit for file processing
-  await wait(2000);
+  const query = `*[_type == "album" && albumSource == "custom" && !(_id in path("drafts.**"))]`;
+  console.log('Fetching albums with query:', query);
 
   const albums = await client.fetch(query);
   console.log('Found albums to process:', JSON.stringify(albums, null, 2));
@@ -234,14 +214,32 @@ async function extractAndUpdateDurations(config) {
         }
       };
 
-      if (!song.file?.asset?._ref) {
+      const fileRef = song.file?.asset?._ref;
+      if (!fileRef) {
         console.log(`Song "${song.trackTitle}" has no file reference. Skipping.`);
         return baseSong;
       }
 
-      console.log(`Getting file asset for "${song.trackTitle}":`, song.file.asset._ref);
+      // Check cache first
+      const cached = processedFiles.get(fileRef);
+      if (cached && Date.now() - cached.timestamp < FILE_CACHE_TTL) {
+        console.log(`Using cached duration for "${song.trackTitle}":`, cached.duration);
+        return {
+          ...baseSong,
+          duration: cached.duration,
+          file: {
+            _type: 'file',
+            asset: {
+              _type: 'reference',
+              _ref: fileRef
+            }
+          }
+        };
+      }
 
-      const fileAsset = await getFileAssetWithRetry(song.file.asset._ref);
+      console.log(`Getting file asset for "${song.trackTitle}":`, fileRef);
+
+      const fileAsset = await getFileAssetWithRetry(fileRef);
       if (!fileAsset) {
         console.log(`Could not get file asset for "${song.trackTitle}" after retries`);
         return baseSong;
@@ -251,6 +249,12 @@ async function extractAndUpdateDurations(config) {
         const duration = await getAudioDuration(fileAsset.url);
         console.log(`Got duration for "${song.trackTitle}":`, duration);
 
+        // Cache the processed file
+        processedFiles.set(fileRef, {
+          duration,
+          timestamp: Date.now()
+        });
+
         return {
           ...baseSong,
           duration: duration,
@@ -258,7 +262,7 @@ async function extractAndUpdateDurations(config) {
             _type: 'file',
             asset: {
               _type: 'reference',
-              _ref: song.file.asset._ref
+              _ref: fileRef
             }
           }
         };

@@ -7,6 +7,30 @@ import { ImageUrlBuilder } from '@sanity/image-url/lib/types/builder'
 import type { Environment } from './environment'
 import type { SanityImageSource } from '@sanity/image-url/lib/types/types'
 
+// Cache implementation
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
+const queryCache = new Map<string, { data: any; timestamp: number }>();
+const fileCache = new Map<string, { url: string; data: ArrayBuffer; timestamp: number }>();
+
+// Cache cleanup interval (every 10 minutes)
+if (typeof window !== 'undefined') {
+  setInterval(() => {
+    const now = Date.now();
+    // Cleanup query cache
+    Array.from(queryCache.entries()).forEach(([key, value]) => {
+      if (now - value.timestamp > CACHE_DURATION) {
+        queryCache.delete(key);
+      }
+    });
+    // Cleanup file cache
+    Array.from(fileCache.entries()).forEach(([key, value]) => {
+      if (now - value.timestamp > CACHE_DURATION) {
+        fileCache.delete(key);
+      }
+    });
+  }, 10 * 60 * 1000);
+}
+
 // Type guard to ensure valid environment
 function isValidEnvironment(env: string): env is Environment {
   return ['production', 'staging'].includes(env)
@@ -124,13 +148,96 @@ export const urlForImage = (
   }
 }
 
+// Enhanced fetchSanity with caching and tags
 export const fetchSanity = async <T>(
   query: string,
   params: QueryParams = {},
   preview = false,
-  options?: FilteredResponseQueryOptions
+  options?: FilteredResponseQueryOptions & {
+    tags?: string[];
+    next?: {
+      revalidate?: number | false;
+      tags?: string[];
+    };
+  }
 ): Promise<T> => {
-  return getClient(preview).fetch<T>(query, params, options)
+  const cacheKey = JSON.stringify({ query, params, preview });
+  const now = Date.now();
+  const cached = queryCache.get(cacheKey);
+
+  // Return cached data if valid and not in preview mode
+  if (!preview && cached && now - cached.timestamp < CACHE_DURATION) {
+    return cached.data as T;
+  }
+
+  // Determine cache tags based on query content
+  const defaultTags = ['sanity'];
+  if (query.includes('_type == "album"')) defaultTags.push('albums', 'music');
+  if (query.includes('_type == "post"')) defaultTags.push('posts', 'blog');
+  if (query.includes('_type == "product"')) defaultTags.push('products', 'shop');
+  if (query.includes('_type == "settings"')) defaultTags.push('settings', 'global');
+
+  // Merge default tags with provided tags
+  const tags = Array.from(new Set([...defaultTags, ...(options?.tags || [])]));
+
+  // Fetch fresh data with cache configuration
+  const data = await getClient(preview).fetch<T>(query, params, {
+    ...options,
+    next: {
+      ...options?.next,
+      tags,
+      // Default to no revalidation in preview mode, 60 seconds otherwise
+      revalidate: preview ? 0 : (options?.next?.revalidate ?? 60)
+    }
+  });
+
+  // Cache the result if not in preview mode
+  if (!preview) {
+    queryCache.set(cacheKey, { data, timestamp: now });
+  }
+
+  return data;
+}
+
+// Enhanced fetchSanityFile with caching and content-based cache duration
+export const fetchSanityFile = async (
+  fileUrl: string,
+  options?: {
+    maxAge?: number;
+    tags?: string[];
+  }
+): Promise<ArrayBuffer> => {
+  const now = Date.now();
+  const cached = fileCache.get(fileUrl);
+
+  // Determine cache duration based on file type
+  const isAudio = fileUrl.match(/\.(mp3|wav|ogg|m4a)$/i);
+  const isImage = fileUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i);
+  const maxAge = options?.maxAge || (isAudio ? 24 * 60 * 60 * 1000 : isImage ? 7 * 24 * 60 * 60 * 1000 : CACHE_DURATION);
+
+  // Return cached file if valid
+  if (cached && now - cached.timestamp < maxAge) {
+    return cached.data;
+  }
+
+  // Fetch fresh file
+  const response = await fetch(fileUrl, {
+    next: {
+      revalidate: maxAge / 1000, // Convert to seconds
+      tags: options?.tags
+    }
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch file: ${response.statusText}`);
+  }
+
+  const buffer = await response.arrayBuffer();
+
+  // Cache the file
+  fileCache.set(fileUrl, { url: fileUrl, data: buffer, timestamp: now });
+
+  return buffer;
 }
 
 const getPreviewUrl = (doc: any) => {
