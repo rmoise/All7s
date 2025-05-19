@@ -4,7 +4,8 @@ import { stripeCountryCodes } from './lib/stripe-countries'
 
 const handler: Handler = async (event, context) => {
   const headers = {
-    'Access-Control-Allow-Origin': event.headers.origin || 'http://localhost:3001',
+    'Access-Control-Allow-Origin':
+      event.headers.origin || 'http://localhost:3001',
     'Access-Control-Allow-Headers': 'Content-Type',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
   }
@@ -13,7 +14,7 @@ const handler: Handler = async (event, context) => {
     return {
       statusCode: 204,
       headers,
-      body: ''
+      body: '',
     }
   }
 
@@ -36,7 +37,7 @@ const handler: Handler = async (event, context) => {
     }
 
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: '2024-11-20.acacia',
+      apiVersion: '2025-02-24.acacia',
     })
 
     const body = JSON.parse(event.body || '{}')

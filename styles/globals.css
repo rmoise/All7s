@@ -1,4 +1,5 @@
-@import url("https://use.typekit.net/xiv3wpa.css");
+@import '@fortawesome/fontawesome-svg-core/styles.css';
+@import url('https://use.typekit.net/xiv3wpa.css');
 
 @tailwind base;
 @tailwind components;
@@ -76,151 +77,150 @@ a {
 
 @media (max-width: 768px) {
   /* Try using specific selector targeting */
-  [style*="z-index: 9999"][style*="position: fixed"] {
+  [style*='z-index: 9999'][style*='position: fixed'] {
     position: static !important;
     z-index: auto !important;
     pointer-events: auto !important;
   }
 }
 
-main.flex-grow.w-full.relative.z-20 > div[style*="position:fixed"] {
+main.flex-grow.w-full.relative.z-20 > div[style*='position:fixed'] {
   position: static !important;
   z-index: auto !important;
   pointer-events: auto !important;
 }
 
 .flip-container {
-          perspective: 1000px;
-          transform-style: preserve-3d;
-        }
+  perspective: 1000px;
+  transform-style: preserve-3d;
+}
 
-        .flip-front,
-        .flip-back {
-          backface-visibility: hidden;
-          transition: transform 0.6s;
-        }
+.flip-front,
+.flip-back {
+  backface-visibility: hidden;
+  transition: transform 0.6s;
+}
 
-        .flip-back {
-          transform: rotateY(180deg);
-        }
+.flip-back {
+  transform: rotateY(180deg);
+}
 
-        .flipped .flip-front {
-          transform: rotateY(180deg);
-        }
+.flipped .flip-front {
+  transform: rotateY(180deg);
+}
 
-        .flipped .flip-back {
-          transform: rotateY(0deg);
-        }
+.flipped .flip-back {
+  transform: rotateY(0deg);
+}
 
-        .backface-hidden {
-          backface-visibility: hidden;
-        }
+.backface-hidden {
+  backface-visibility: hidden;
+}
 
-        @media (max-width: 768px) {
-          .mobile-container {
-            transition: max-height 0.6s ease-in-out;
-            max-height: 500px;
-            overflow: hidden;
-          }
+@media (max-width: 768px) {
+  .mobile-container {
+    transition: max-height 0.6s ease-in-out;
+    max-height: 500px;
+    overflow: hidden;
+  }
 
-          .mobile-front,
-          .mobile-back {
-            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
-          }
+  .mobile-front,
+  .mobile-back {
+    transition:
+      opacity 0.3s ease-in-out,
+      visibility 0.3s ease-in-out;
+  }
 
-          .mobile-back {
-            opacity: 0;
-            visibility: hidden;
-            height: 0;
-            z-index: 2; /* Ensure back is above */
-          }
+  .mobile-back {
+    opacity: 0;
+    visibility: hidden;
+    height: 0;
+    z-index: 2; /* Ensure back is above */
+  }
 
-          .mobile-expanded {
-            max-height: 1000px;
-          }
+  .mobile-expanded {
+    max-height: 1000px;
+  }
 
-          .mobile-expanded .mobile-front {
-            opacity: 0;
-            visibility: hidden;
-            height: 0;
-            pointer-events: none; /* Prevent interaction */
-          }
+  .mobile-expanded .mobile-front {
+    opacity: 0;
+    visibility: hidden;
+    height: 0;
+    pointer-events: none; /* Prevent interaction */
+  }
 
-          .mobile-expanded .mobile-back {
-            opacity: 1;
-            visibility: visible;
-            height: auto;
-            z-index: 3; /* Higher z-index to ensure iframe is interactive */
-            pointer-events: auto; /* Allow interaction */
-          }
+  .mobile-expanded .mobile-back {
+    opacity: 1;
+    visibility: visible;
+    height: auto;
+    z-index: 3; /* Higher z-index to ensure iframe is interactive */
+    pointer-events: auto; /* Allow interaction */
+  }
 
-          .custom-player {
-            background-color: white;
-          }
+  .custom-player {
+    background-color: white;
+  }
 
-          .spotify-embed {
-            background-color: transparent;
-          }
+  .spotify-embed {
+    background-color: transparent;
+  }
 
-          /* Ensure iframe is on top */
-          .spotify-embed iframe {
-            z-index: 10;
-          }
-        }
+  /* Ensure iframe is on top */
+  .spotify-embed iframe {
+    z-index: 10;
+  }
+}
 
-        @media (min-width: 769px) {
-          .flip-container {
-            width: 100%;
-            padding-bottom: 100%; /* Square aspect ratio */
-          }
+@media (min-width: 769px) {
+  .flip-container {
+    width: 100%;
+    padding-bottom: 100%; /* Square aspect ratio */
+  }
 
-          .flip-front,
-          .flip-back {
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-          }
-        }
+  .flip-front,
+  .flip-back {
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+  }
+}
 
-        /* Ensure the iframe container occupies the full available space */
-        .spotify-embed-container {
-          width: 500px;
-          height: 600px;
-          position: relative;
-        }
+/* Ensure the iframe container occupies the full available space */
+.spotify-embed-container {
+  width: 500px;
+  height: 600px;
+  position: relative;
+}
 
-        .spotify-loading {
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background-color: rgba(255, 255, 255, 0.8);
-          z-index: 10;
-          border-radius: 12px;
-        }
+.spotify-loading {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 255, 255, 0.8);
+  z-index: 10;
+  border-radius: 12px;
+}
 
-      .spotify-embed-container {
-          overflow-y: auto;
-        }
-        .flip-back {
-          position: none !important;
-          border-radius: unset !important;
-        }
+.spotify-embed-container {
+  overflow-y: auto;
+}
+.flip-back {
+  position: none !important;
+  border-radius: unset !important;
+}
 
-           .spotify-iframe {
-          width: 100%;
-          border: none;
-          transition: opacity 0.3s ease-in;
-          z-index: 5; /* Ensure iframe is above other elements */
-        }
-
-
-
+.spotify-iframe {
+  width: 100%;
+  border: none;
+  transition: opacity 0.3s ease-in;
+  z-index: 5; /* Ensure iframe is above other elements */
+}
 
 /* Height setting for larger screens */
 @media (min-width: 768px) {
@@ -243,7 +243,6 @@ main.flex-grow.w-full.relative.z-20 > div[style*="position:fixed"] {
 .custom-gap {
   gap: 72px; /* Custom gap size between albums */
 }
-
 
 .soundcloud-embed-container {
   width: 100%;

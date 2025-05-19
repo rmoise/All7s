@@ -3,8 +3,9 @@ import Stripe from 'stripe'
 import { headers } from 'next/headers'
 import { stripeCountryObjs } from '../stripe/countries'
 
-const stripeCountryCodes = stripeCountryObjs.map(country =>
-  country.code as Stripe.Checkout.SessionCreateParams.ShippingAddressCollection.AllowedCountry
+const stripeCountryCodes = stripeCountryObjs.map(
+  (country) =>
+    country.code as Stripe.Checkout.SessionCreateParams.ShippingAddressCollection.AllowedCountry
 )
 
 export async function POST(request: NextRequest) {
@@ -13,7 +14,7 @@ export async function POST(request: NextRequest) {
     console.log('API Route: Checkout request received:', {
       timestamp: new Date().toISOString(),
       url: request.url,
-      method: request.method
+      method: request.method,
     })
 
     if (!process.env.STRIPE_SECRET_KEY) {
@@ -25,7 +26,7 @@ export async function POST(request: NextRequest) {
     }
 
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: '2024-11-20.acacia',
+      apiVersion: '2025-02-24.acacia',
     })
 
     const body = await request.json()
@@ -35,15 +36,13 @@ export async function POST(request: NextRequest) {
 
     if (!Array.isArray(line_items) || line_items.length === 0) {
       console.error('API Route: Invalid line items:', { line_items })
-      return NextResponse.json(
-        { error: 'Invalid line items' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Invalid line items' }, { status: 400 })
     }
 
-    const origin = (await headersList.get('origin')) ||
-                  (await headersList.get('referer')) ||
-                  'https://all7z.com'
+    const origin =
+      (await headersList.get('origin')) ||
+      (await headersList.get('referer')) ||
+      'https://all7z.com'
 
     try {
       const session = await stripe.checkout.sessions.create({
@@ -54,8 +53,8 @@ export async function POST(request: NextRequest) {
         payment_method_types: ['card'],
         billing_address_collection: 'required',
         shipping_address_collection: {
-          allowed_countries: stripeCountryCodes
-        }
+          allowed_countries: stripeCountryCodes,
+        },
       })
 
       console.log('API Route: Session created:', { sessionId: session.id })
