@@ -56,7 +56,11 @@ const debugEnv = {
   SANITY_STUDIO_DATASET: process.env.SANITY_STUDIO_DATASET,
   NEXT_PUBLIC_SANITY_DATASET: process.env.NEXT_PUBLIC_SANITY_DATASET,
 }
-console.log('Sanity Client Environment:', debugEnv)
+
+// Only log in development
+if (process.env.NODE_ENV === 'development') {
+  console.log('Sanity Client Environment:', debugEnv)
+}
 
 // Always use production dataset for development
 const environment =
