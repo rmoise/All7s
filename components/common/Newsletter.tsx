@@ -17,8 +17,8 @@ interface NewsletterProps {
       showSocialLinks?: boolean
       socialLinksTitle?: string
       socialLinks?: Array<{
-        platform: string
-        url: string
+        platform?: string
+        url?: string
         color?: {
           hex?: string
         }
@@ -34,8 +34,8 @@ interface NotificationState {
   description?: string
   showSocialLinks?: boolean
   socialLinks?: Array<{
-    platform: string
-    url: string
+    platform?: string
+    url?: string
     color?: {
       hex?: string
     }
@@ -295,32 +295,35 @@ const Newsletter: React.FC<NewsletterProps> = ({ newsletter }) => {
                       {newsletter?.notification?.showSocialLinks !== false && (
                         <div className="pt-4">
                           <p className="text-sm font-semibold mb-3">
-                            {newsletter?.notification?.socialLinksTitle || 'Follow us:'}
+                            {newsletter?.notification?.socialLinksTitle ||
+                              'Follow us:'}
                           </p>
                           <div className="flex justify-center space-x-6">
                             {(
                               newsletter?.notification?.socialLinks ||
                               defaultSocialLinks
-                            ).map((link, index) => (
-                              <a
-                                key={index}
-                                href={link.url}
-                                className="transition-all duration-200 hover:opacity-100 hover:scale-110"
-                                style={{
-                                  color: link.color?.hex || '#FFFFFF',
-                                  opacity: 0.9,
-                                }}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                aria-label={`Follow us on ${link.platform}`}
-                              >
-                                {link.platform.toLowerCase() === 'x' && (
-                                  <XIcon />
-                                )}
-                                {link.platform.toLowerCase() ===
-                                  'instagram' && <InstagramIcon />}
-                              </a>
-                            ))}
+                            )
+                              .filter((link) => link?.platform && link?.url)
+                              .map((link, index) => (
+                                <a
+                                  key={index}
+                                  href={link.url}
+                                  className="transition-all duration-200 hover:opacity-100 hover:scale-110"
+                                  style={{
+                                    color: link.color?.hex || '#FFFFFF',
+                                    opacity: 0.9,
+                                  }}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  aria-label={`Follow us on ${link.platform || 'social media'}`}
+                                >
+                                  {link.platform?.toLowerCase() === 'x' && (
+                                    <XIcon />
+                                  )}
+                                  {link.platform?.toLowerCase() ===
+                                    'instagram' && <InstagramIcon />}
+                                </a>
+                              ))}
                           </div>
                         </div>
                       )}
