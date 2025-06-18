@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { client } from '../lib/client'; // Ensure you're using the centralized client
 
-const siteSettingsQuery = `*[_type == "siteSettings"][0]{
+const siteSettingsQuery = `*[_type == "settings"][0]{
   title,
   favicon{
     asset->{

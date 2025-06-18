@@ -12,8 +12,8 @@ interface SEOProps {
 }
 
 export const SEO: React.FC<SEOProps> = ({
-  title = 'Explore Music',
-  description = 'Music and entertainment platform',
+  title = 'All7Z',
+  description = 'All7Z - West Coast lifestyle brand featuring music, culture, and streetwear',
   faviconUrl = '/favicon.ico',
   openGraphImageUrl = '/og-image.jpg',
   siteName = 'ALL7Z',
