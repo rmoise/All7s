@@ -9,7 +9,8 @@ export async function generateMetadata(): Promise<Metadata> {
   const homeData = await fetchSanity<HomeData>(
     `*[_type == "home"][0]`,
     undefined,
-    false
+    false,
+    { next: { revalidate: 0, tags: ['home-seo'] } }
   )
   return {
     title: homeData?.metaTitle ?? 'All7Z',
