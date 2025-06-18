@@ -7,7 +7,7 @@ import { headers } from 'next/headers'
 
 export async function generateMetadata(): Promise<Metadata> {
   const homeData = await fetchSanity<HomeData>(
-    `*[_type == "home"][0]`,
+    `*[_type == "home" && (_id == "singleton-home" || _id == "home")] | order(_id desc)[0]`,
     undefined,
     false,
     { next: { revalidate: 0, tags: ['home-seo'] } }
